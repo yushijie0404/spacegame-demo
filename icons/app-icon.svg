@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">星际快递员</title>
+  <desc id="desc">蓝色太空中的地球与起飞火箭</desc>
+  <defs>
+    <linearGradient id="space" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#18275d"/>
+      <stop offset="1" stop-color="#070b21"/>
+    </linearGradient>
+    <linearGradient id="flame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff3b0"/>
+      <stop offset=".55" stop-color="#ffb142"/>
+      <stop offset="1" stop-color="#ef476f"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#space)"/>
+  <g fill="#fff" opacity=".9">
+    <circle cx="91" cy="111" r="7"/><circle cx="399" cy="91" r="5"/><circle cx="431" cy="215" r="8"/><circle cx="122" cy="278" r="5"/>
+  </g>
+  <circle cx="238" cy="322" r="132" fill="#2794df" stroke="#bdeaff" stroke-width="12"/>
+  <path d="M114 321c24-25 46-20 67-5 26 18 37 0 61-6 29-8 42 14 62 31 22 19 44 13 62 4-11 62-65 109-130 109-70 0-125-54-132-122z" fill="#5fd068"/>
+  <path d="M142 239c29-36 69-52 108-48-4 20-18 34-39 43-25 11-46 6-69 5z" fill="#7bdc83"/>
+  <g transform="translate(317 185) rotate(38)">
+    <path d="M0-121C48-85 58-28 40 46H-40C-58-28-48-85 0-121z" fill="#f8fbff" stroke="#17213c" stroke-width="10"/>
+    <path d="M-39 18-83 69l49-10zM39 18 83 69l-49-10z" fill="#ef476f" stroke="#17213c" stroke-width="10" stroke-linejoin="round"/>
+    <circle cy="-37" r="22" fill="#4cc9f0" stroke="#17213c" stroke-width="9"/>
+    <path d="M-23 47 0 113 23 47z" fill="url(#flame)" stroke="#17213c" stroke-width="9" stroke-linejoin="round"/>
+  </g>
+</svg>
