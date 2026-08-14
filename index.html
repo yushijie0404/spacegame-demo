@@ -85,15 +85,15 @@
   <button class="icon-btn is-active" data-action="prediction" aria-label="切换轨迹预测" aria-pressed="true" title="轨迹预测 (T)"><span class="ico">⌁</span><span class="lbl">轨迹</span></button>
   <button class="icon-btn" data-action="camera" aria-label="切换视角模式" aria-pressed="false" title="视角：跟随飞船 (K)"><span class="ico">⌖</span><span class="lbl">跟随</span></button>
   <button class="icon-btn is-active" data-action="radar" aria-label="切换小地图模式，当前轨道" aria-pressed="true" title="小地图：轨道 (B)"><span class="ico">◌</span><span class="lbl">轨道</span></button>
-  <button class="icon-btn" data-action="attitude" aria-label="切换姿态模式" title="姿态模式 (C)"><span class="ico">◎</span><span class="lbl">姿态</span></button>
-  <button class="icon-btn" data-action="dial" aria-label="切换姿态表盘" title="表盘模式 (V)"><span class="ico">◉</span><span class="lbl">表盘</span></button>
+  <button class="icon-btn" data-action="attitude" aria-label="切换姿态模式" title="姿态模式 (C)"><span class="ico">↗</span><span class="lbl">姿态</span></button>
+  <button class="icon-btn" data-action="dial" aria-label="切换姿态表盘" title="表盘模式 (V)"><span class="ico">◴</span><span class="lbl">表盘</span></button>
   <button class="icon-btn is-active" data-action="guide" aria-label="切换任务指引" aria-pressed="true" title="任务指引 (H)"><span class="ico">?</span><span class="lbl">指引</span></button>
   <button class="icon-btn" data-action="briefing" aria-label="打开任务科普" title="任务简报与科普"><span class="ico">i</span><span class="lbl">科普</span></button>
   <button class="icon-btn is-active" data-action="assist" aria-label="切换飞行辅助" aria-pressed="true" title="飞行辅助 (M)"><span class="ico">◇</span><span class="lbl">辅助</span></button>
   <button class="icon-btn" data-action="level" aria-label="切换关卡" title="切换关卡 (L)"><span class="ico">⚑</span><span class="lbl">关卡</span></button>
   <button class="icon-btn" data-action="restart" aria-label="重试当前阶段" title="当前阶段重试 (R) · 从头开始 (Shift+R)"><span class="ico">↻</span><span class="lbl">重试</span></button>
   <button class="icon-btn" data-action="pause" aria-label="暂停游戏" aria-pressed="false" title="暂停 (P)"><span class="ico">Ⅱ</span><span class="lbl">暂停</span></button>
-  <button class="icon-btn" data-hold="Space" aria-label="按住八倍速" title="按住 8 倍速 (Space)"><span class="ico">»</span><span class="lbl">巡航</span></button>
+  <button class="icon-btn" data-hold="Space" aria-label="按住八倍速" title="按住 8 倍速 (Space)"><span class="ico">»</span><span class="lbl">倍速</span></button>
 </nav>
 <div class="flight-controls" aria-label="飞行控制">
   <button class="icon-btn turn" data-hold="KeyA" aria-label="向左转向"><span class="ico">↶</span><span class="lbl">左转</span></button>
@@ -156,6 +156,18 @@ const RING_IN = 14;                    // 内圈 = b.r - RING_IN（冲到这才�
 const CHUTE_ALT = 320;                 // 开伞高度（地表以上）
 const CHUTE_FAST_V = 90;               // 开伞后快速减速目标
 const CHUTE_SLOW_V = 25;               // 缓慢降落目标速度
+// 伞面朝向：跟随经过平滑的相对气流，同时强制保持在地表外侧半球。
+// 这样反推穿过低速区时伞不会瞬间翻到地面一侧，也不会反向拉扯飞船姿态。
+function chuteCanopyAngle(flowX,flowY,outX,outY){
+  const speed=Math.hypot(flowX,flowY);
+  const outwardAngle=Math.atan2(outY,outX);
+  if(speed<=6) return outwardAngle;
+  let delta=Math.atan2(-flowY,-flowX)-outwardAngle;
+  while(delta>Math.PI)delta-=TAU; while(delta<-Math.PI)delta+=TAU;
+  const maxSideAngle=Math.acos(0.35);
+  delta=Math.max(-maxSideAngle,Math.min(maxSideAngle,delta));
+  return outwardAngle+delta;
+}
 // 关卡定义
 const LEVELS = {
   1: { title:'🛰️ 第一关 · 地球同步卫星', sub:'缩比轨道物理 · 四步形成顺行同步轨道，按 E 释放卫星' },
@@ -257,7 +269,8 @@ function resetGame(){
       fuel:100, landed:false, alive:true, body:null,
       life:LIFE_MAX, crewDead:false, deadReason:'',
       maxG:0, lastG:0, overT:0, thrusting:false,
-      av:0, launchGrace:0, chute:false, _clearedPad:true, thrustPower:0
+      av:0, launchGrace:0, chute:false, chuteAngle:null, chuteFlowX:0, chuteFlowY:0,
+      _clearedPad:true, thrustPower:0
     };
     launched = true; // 已在轨，直接计时
   }else{
@@ -271,7 +284,8 @@ function resetGame(){
       fuel:100, landed:true, alive:true, body:EARTH,
       life:LIFE_MAX, crewDead:false, deadReason:'',
       maxG:0, lastG:0, overT:0, thrusting:false,
-      av:0, launchGrace:0, chute:false, _clearedPad:false, thrustPower:0
+      av:0, launchGrace:0, chute:false, chuteAngle:null, chuteFlowX:0, chuteFlowY:0,
+      _clearedPad:false, thrustPower:0
     };
     launched = false;
   }
@@ -567,6 +581,7 @@ function retryFromStage(reason){
   rocket.alive = true; rocket.crewDead = false; rocket.deadReason='';
   rocket.life = LIFE_MAX; rocket.maxG = 0; rocket.lastG = 0; rocket.overT = 0; rocket.av = 0;
   rocket._tooFar = false; rocket.launchGrace = 0; rocket.chute = false;
+  rocket.chuteAngle = null; rocket.chuteFlowX = 0; rocket.chuteFlowY = 0;
   trail = []; state = 'fly'; bulletT = 0; predictionCache = null;
   camInit = true;
   mission.holdT = 0; mission.done=false; mission.satReleased=false; mission.satellite=null;
@@ -725,7 +740,9 @@ function update(dt, dtReal){
     if(keys['ArrowLeft']||keys['KeyA'])  velOffset -= ROT*rdt;
     if(keys['ArrowRight']||keys['KeyD']) velOffset += ROT*rdt;
     rocket.av=0;
-    const padA = rocket.landed && rocket.body===EARTH && rocket._clearedPad ? Math.atan2(rocket.y-EARTH.y,rocket.x-EARTH.x) : padAngle();
+    const localUpA=Math.atan2(rocket.y-EARTH.y,rocket.x-EARTH.x);
+    // 第二关低速返回时以当前位置的“当地向上”为基准，不能沿用第一关发射台经度。
+    const padA = level===2 || (rocket.landed && rocket.body===EARTH && rocket._clearedPad) ? localUpA : padAngle();
     if(rocket.landed){
       velOffset = 0;
       rocket.a = padA;
@@ -841,7 +858,12 @@ function update(dt, dtReal){
 
     // ---- 降落伞（仅第二关、地球、低空自动开伞）----
     if(level===2 && b===EARTH && !rocket.landed && alt < CHUTE_ALT && alt > 0 && vOut < 0){
-      if(!rocket.chute){ rocket.chute = true; mission.toast='🪂 降落伞已打开'; mission.toastT=2; }
+      if(!rocket.chute){
+        rocket.chute = true;
+        rocket.chuteFlowX = groundVx; rocket.chuteFlowY = groundVy;
+        rocket.chuteAngle = chuteCanopyAngle(groundVx,groundVy,dx/d,dy/d);
+        mission.toast='🪂 降落伞已打开'; mission.toastT=2;
+      }
     }
     if(rocket.chute && b===EARTH && !rocket.landed){
       const target = alt > 120 ? CHUTE_FAST_V : CHUTE_SLOW_V;
@@ -853,14 +875,18 @@ function update(dt, dtReal){
         const dragAy = -groundVy/vRel * dec/dt;
         rocket.vx += dragAx*dt; rocket.vy += dragAy*dt;
       }
-      // 伞的稳定力矩：把机头掰向"相对空气速度"的反方向（气动稳定，返回舱底朝前）
-      if(vRel > 8){
-        const awayAng = Math.atan2(-groundVy, -groundVx);
-        let dd = awayAng - rocket.a;
-        while(dd>Math.PI)dd-=TAU; while(dd<-Math.PI)dd+=TAU;
-        rocket.av += dd * 4 * dt;
-        rocket.av *= (1-3*dt);
-      }
+      // 伞只抑制自旋，不再强行扭转机头；反推与姿态控制不会互相打架。
+      rocket.av *= Math.max(0,1-1.8*dt);
+      // 相对气流先低通滤波，再限速转动伞面，避免反推时速度过零造成 180° 翻转。
+      const flowBlend=1-Math.exp(-2.4*dt);
+      rocket.chuteFlowX+=(groundVx-rocket.chuteFlowX)*flowBlend;
+      rocket.chuteFlowY+=(groundVy-rocket.chuteFlowY)*flowBlend;
+      const desired=chuteCanopyAngle(rocket.chuteFlowX,rocket.chuteFlowY,dx/d,dy/d);
+      if(!Number.isFinite(rocket.chuteAngle)) rocket.chuteAngle=desired;
+      let chuteDelta=desired-rocket.chuteAngle;
+      while(chuteDelta>Math.PI)chuteDelta-=TAU; while(chuteDelta<-Math.PI)chuteDelta+=TAU;
+      const maxChuteTurn=1.25*dt;
+      rocket.chuteAngle+=Math.max(-maxChuteTurn,Math.min(maxChuteTurn,chuteDelta*flowBlend));
     }
 
     // ---- 细环形着陆判定（用相对速度 vRel）----
@@ -1028,6 +1054,18 @@ function drawRocket(){
   if(!rocket.alive) return;
   ctx.save();
   ctx.translate(rocket.x, rocket.y);
+  // 降落伞使用独立世界朝向：伞面随气流平滑变化，不再粘在机头上一起翻转。
+  if(rocket.chute){
+    ctx.save();
+    ctx.rotate((Number.isFinite(rocket.chuteAngle)?rocket.chuteAngle:rocket.a) + Math.PI/2);
+    ctx.strokeStyle='rgba(255,255,255,.8)'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(-3,-16); ctx.lineTo(-16,-46); ctx.moveTo(3,-16); ctx.lineTo(16,-46); ctx.moveTo(0,-16); ctx.lineTo(0,-46); ctx.stroke();
+    ctx.fillStyle='#ff9f43'; ctx.strokeStyle='#222'; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.arc(0,-46,20,Math.PI,0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.35)';
+    ctx.beginPath(); ctx.arc(0,-46,20,Math.PI,Math.PI*1.5); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
   ctx.rotate(rocket.a + Math.PI/2);
   // 尾焰
   if((keys['ArrowUp']||keys['KeyW']) && rocket.fuel>0 && state==='fly'){
@@ -1051,15 +1089,6 @@ function drawRocket(){
   ctx.lineWidth=1.8; ctx.stroke();
   // 条纹
   ctx.fillStyle='#ef476f'; ctx.fillRect(-7,9,14,3.2); ctx.strokeRect(-7,9,14,3.2);
-  // 降落伞（机头上方，橙色伞盖）
-  if(rocket.chute){
-    ctx.strokeStyle='rgba(255,255,255,.8)'; ctx.lineWidth=1.2;
-    ctx.beginPath(); ctx.moveTo(-3,-22); ctx.lineTo(-16,-46); ctx.moveTo(3,-22); ctx.lineTo(16,-46); ctx.moveTo(0,-22); ctx.lineTo(0,-46); ctx.stroke();
-    ctx.fillStyle='#ff9f43'; ctx.strokeStyle='#222'; ctx.lineWidth=1.8;
-    ctx.beginPath(); ctx.arc(0,-46,20,Math.PI,0); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle='rgba(255,255,255,.35)';
-    ctx.beginPath(); ctx.arc(0,-46,20,Math.PI,Math.PI*1.5); ctx.closePath(); ctx.fill();
-  }
   ctx.restore();
 }
 
@@ -1118,9 +1147,12 @@ function runPhysicsSelfChecks(){
   const pinchCamY=pinch.worldY-(pinch.midY-pinch.height/2)/pinchZoom;
   const anchorScreenX=(pinch.worldX-pinchCamX)*pinchZoom+pinch.width/2;
   const anchorScreenY=(pinch.worldY-pinchCamY)*pinchZoom+pinch.height/2;
+  const canopyAngle=chuteCanopyAngle(40,0,1,0);
+  const canopyOutwardDot=Math.cos(canopyAngle);
   return {progradeAccepted:pro.ok,retrogradeRejected:!retro.ok,wrongSpeedRejected:!wrong.ok,
     predictionCoversOrbit:horizon>=period,pinchZoomScales:Math.abs(pinchZoom-2.4)<1e-9,
-    pinchAnchorStable:Math.hypot(anchorScreenX-pinch.midX,anchorScreenY-pinch.midY)<1e-9,period,horizon};
+    pinchAnchorStable:Math.hypot(anchorScreenX-pinch.midX,anchorScreenY-pinch.midY)<1e-9,
+    chuteRemainsOutward:canopyOutwardDot>=0.35,period,horizon};
 }
 
 function drawRadar(){
@@ -1180,13 +1212,19 @@ function drawRadar(){
       ctx.fillStyle=body.col; ctx.beginPath(); ctx.arc(q.x,q.y,r,0,TAU); ctx.fill();
       ctx.fillStyle='rgba(255,255,255,.85)'; ctx.fillText(body.name,q.x,q.y-r-3);
     }
+    // 全局导航专属视角框：显示主画面当前观察区域；轨道雷达保持简洁，不绘制此框。
+    const viewCenter=map(cam.x,cam.y), minViewBox=portrait?9:12;
+    const viewW=Math.max(minViewBox,W/cam.zoom*scale), viewH=Math.max(minViewBox,H/cam.zoom*scale);
+    ctx.strokeStyle='#4cc9f0'; ctx.lineWidth=1.25; ctx.setLineDash([3,2]);
+    ctx.strokeRect(viewCenter.x-viewW/2,viewCenter.y-viewH/2,viewW,viewH);
+    ctx.setLineDash([]);
     ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(mx,my,3.5,0,TAU); ctx.fill();
   }
   ctx.restore();
   ctx.fillStyle='#fff'; ctx.font=`800 ${portrait?8:9}px sans-serif`; ctx.textAlign='left';
   ctx.fillText(radarMode===0?'轨道雷达':'全局导航',cx+5,cy+11);
   ctx.fillStyle='rgba(255,255,255,.65)'; ctx.font=`700 ${portrait?7:8}px sans-serif`;
-  ctx.fillText(radarMode===0?'蓝近 · 橙远 · 绿目标':'地球 · 月球 · 火星',cx+5,cy+RS-5);
+  ctx.fillText(radarMode===0?'蓝近 · 橙远 · 绿目标':'青框 = 当前视野',cx+5,cy+RS-5);
   ctx.textAlign='left';
 }
 
@@ -1293,7 +1331,9 @@ function draw(){
   // 姿态模式指示
   const showSurvival=level===2 || !mission.assistMode;
   ctx.fillStyle='rgba(255,255,255,.6)'; ctx.font='700 11px "Baloo 2",sans-serif';
-  ctx.fillText('🎛 姿态:' + ATT_MODES[attMode] + '（C 切换）', 26, H-(showSurvival?94:54));
+  const portraitHUD=W<760&&H>650;
+  const attitudeModeY=portraitHUD ? H-232 : H-(showSurvival?94:54);
+  ctx.fillText('🎛 姿态:' + ATT_MODES[attMode] + '（C 切换）', 26, attitudeModeY);
   // 生命维持倒计时条（燃料条上方）
   const lifePct = rocket.life/LIFE_MAX;
   const lm = Math.floor(rocket.life/60), ls = Math.floor(rocket.life%60);
@@ -1453,11 +1493,18 @@ function draw(){
     ctx.fillStyle='rgba(255,255,255,.4)'; ctx.font='600 11px "Baloo 2",sans-serif';
     ctx.textAlign='right'; ctx.fillText('H 隐藏指引', bx+bw-14, by+bh-10); ctx.textAlign='left';
   }
-  // 提示 toast（中央）
+  // 提示 toast：手机放在工具面板下方左侧，避免切换模式时文字被按钮遮住。
   if(mission && mission.toastT>0){
     ctx.globalAlpha = Math.min(1, mission.toastT);
-    ctx.fillStyle='#fff'; ctx.font='800 18px "Baloo 2",sans-serif'; ctx.textAlign='center';
-    ctx.fillText(mission.toast, W/2, 110);
+    if(W<760&&H>650){
+      ctx.fillStyle='rgba(8,14,38,.82)'; roundRect(10,270,180,32,12); ctx.fill();
+      ctx.strokeStyle='rgba(76,201,240,.55)'; ctx.lineWidth=1; roundRect(10,270,180,32,12); ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.font='800 14px "Baloo 2",sans-serif'; ctx.textAlign='left';
+      fitText(mission.toast,20,291,160,10);
+    }else{
+      ctx.fillStyle='#fff'; ctx.font='800 18px "Baloo 2",sans-serif'; ctx.textAlign='center';
+      ctx.fillText(mission.toast, W/2, H<520?145:110);
+    }
     ctx.textAlign='left'; ctx.globalAlpha = 1;
   }
 }
