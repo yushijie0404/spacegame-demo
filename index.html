@@ -28,7 +28,7 @@
   .pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:3px 9px;font-size:11px;color:#dbe7ff}
   kbd{min-width:20px;padding:1px 5px;text-align:center;color:#152044;background:#fff;border-radius:6px;box-shadow:0 2px 0 #8e9abc;font-family:inherit;font-size:10px;font-weight:800;text-shadow:none}
   .tool-rail{position:fixed;z-index:7;top:116px;right:16px;display:grid;grid-template-columns:repeat(2,48px);gap:8px;padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.28);backdrop-filter:blur(8px)}
-  .icon-btn{position:relative;width:48px;height:48px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#dce7ff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:13px;cursor:pointer;transition:transform .08s,background .15s,border-color .15s;color-scheme:dark}
+  .icon-btn{position:relative;width:48px;height:48px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#dce7ff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:13px;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent;transition:transform .08s,background .15s,border-color .15s;color-scheme:dark}
   .icon-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3)}
   .icon-btn:active,.icon-btn.is-pressed{transform:translateY(2px) scale(.96)}
   .icon-btn.is-active{color:#10203c;background:var(--cyan);border-color:#bff3ff;box-shadow:0 0 18px rgba(76,201,240,.3)}
@@ -57,8 +57,8 @@
   #msg button:active{transform:translateY(4px);box-shadow:0 1px 0 #222}
   @media (max-width:760px){
     .hud{top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));max-width:none;padding:9px 10px}.brand-mark{width:34px;height:34px}.hud .title{font-size:17px}.hud .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.key-strip{display:none}
-    .tool-rail{top:calc(86px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));grid-template-columns:repeat(4,50px);gap:7px;padding:8px;border-radius:20px}.icon-btn{width:50px;height:50px;border-radius:15px}.icon-btn .ico{font-size:22px}.tool-rail .lbl{display:none}.tool-rail [data-action="camera"] .lbl{display:block}
-    .flight-controls{right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));grid-template-columns:60px 72px 60px;gap:6px}.flight-controls .icon-btn{width:60px;height:60px}.flight-controls .thrust{width:72px;height:82px}.flight-controls .thrust .ico{font-size:31px}.flight-controls .turn .ico{font-size:28px}.flight-controls .lbl{font-size:10px}
+    .tool-rail{top:calc(86px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));grid-template-columns:repeat(4,50px);gap:7px;padding:8px;border-radius:20px}.icon-btn{width:50px;height:50px;border-radius:15px}.icon-btn .ico{font-size:22px}.tool-rail .lbl{display:none}.tool-rail [data-action="camera"] .lbl,.tool-rail [data-action="radar"] .lbl{display:block}
+    .flight-controls{right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));grid-template-columns:60px 72px 60px;gap:10px}.flight-controls .icon-btn{width:60px;height:60px}.flight-controls .thrust{width:72px;height:82px}.flight-controls .thrust .ico{font-size:31px}.flight-controls .turn .ico{font-size:28px}.flight-controls .lbl{font-size:10px}
     #msg .card{max-width:calc(100vw - 28px);padding:22px 14px}#msg h1{font-size:24px}#msg p{font-size:14px}#msg button{font-size:14px;padding:9px 14px}
     #briefing{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}#briefing .brief-card{padding:18px 15px;border-radius:18px}.brief-title{font-size:21px}.brief-grid{grid-template-columns:1fr}.brief-actions{position:sticky;bottom:-18px;margin:16px -15px -18px;padding:12px 15px;background:#f8fbff}.brief-actions button{min-height:48px}
   }
@@ -68,7 +68,7 @@
   @media (max-height:520px) and (min-width:761px){
     .hud{top:8px;left:8px}.key-strip{display:none}
     .tool-rail{top:108px;right:8px;grid-template-columns:repeat(6,50px);gap:7px;padding:8px}.icon-btn{width:50px;height:50px}
-    .flight-controls{right:12px;bottom:max(12px,env(safe-area-inset-bottom));grid-template-columns:60px 72px 60px;gap:6px}.flight-controls .icon-btn{width:60px;height:60px}.flight-controls .thrust{width:72px;height:82px}
+    .flight-controls{right:12px;bottom:max(12px,env(safe-area-inset-bottom));grid-template-columns:60px 72px 60px;gap:10px}.flight-controls .icon-btn{width:60px;height:60px}.flight-controls .thrust{width:72px;height:82px}
   }
   @media (pointer:fine) and (min-width:1100px){.flight-controls{opacity:.64}.flight-controls:hover{opacity:1}}
 </style>
@@ -78,12 +78,13 @@
 <div class="hud">
   <div class="brand-row"><div class="brand-mark" aria-hidden="true">🚀</div><div><div class="title">🛰️ 第一关 · 地球同步卫星</div><div class="sub">跟着底部指引完成轨道机动，绿色区域是额外挑战目标</div></div></div>
   <div class="key-strip" aria-label="键盘操作提示">
-    <span class="pill"><kbd>W</kbd>推进</span><span class="pill"><kbd>A D</kbd>转向</span><span class="pill"><kbd>E</kbd>任务</span><span class="pill"><kbd>K</kbd>视角</span><span class="pill"><kbd>Space</kbd>8 倍速</span>
+    <span class="pill"><kbd>W</kbd>推进</span><span class="pill"><kbd>A D</kbd>转向</span><span class="pill"><kbd>E</kbd>任务</span><span class="pill"><kbd>K</kbd>视角</span><span class="pill"><kbd>B</kbd>雷达</span><span class="pill"><kbd>Space</kbd>8 倍速</span>
   </div>
 </div>
 <nav class="tool-rail" aria-label="飞船工具栏">
   <button class="icon-btn is-active" data-action="prediction" aria-label="切换轨迹预测" aria-pressed="true" title="轨迹预测 (T)"><span class="ico">⌁</span><span class="lbl">轨迹</span></button>
   <button class="icon-btn" data-action="camera" aria-label="切换视角模式" aria-pressed="false" title="视角：跟随飞船 (K)"><span class="ico">⌖</span><span class="lbl">跟随</span></button>
+  <button class="icon-btn is-active" data-action="radar" aria-label="切换小地图模式，当前轨道" aria-pressed="true" title="小地图：轨道 (B)"><span class="ico">◌</span><span class="lbl">轨道</span></button>
   <button class="icon-btn" data-action="attitude" aria-label="切换姿态模式" title="姿态模式 (C)"><span class="ico">◎</span><span class="lbl">姿态</span></button>
   <button class="icon-btn" data-action="dial" aria-label="切换姿态表盘" title="表盘模式 (V)"><span class="ico">◉</span><span class="lbl">表盘</span></button>
   <button class="icon-btn is-active" data-action="guide" aria-label="切换任务指引" aria-pressed="true" title="任务指引 (H)"><span class="ico">?</span><span class="lbl">指引</span></button>
@@ -202,6 +203,8 @@ let showPred = true; // T 开关：未来轨迹辅助线
 let cameraMode = 0;
 let cameraDebugAt = 0;
 const CAMERA_MODES = ['跟随飞船','地球静止'];
+let radarMode = 0;
+const RADAR_MODES = ['轨道','全局','关闭'];
 let predictionCache = null;
 const keys = {};
 
@@ -316,12 +319,18 @@ function closeBriefing(){
 function setPrediction(){ showPred=!showPred; syncUI(); }
 function toggleCameraMode(){
   cameraMode=(cameraMode+1)%CAMERA_MODES.length;
+  cameraPointers.clear(); pinchState=null;
   cam.dragging=false; cam.pointerId=null; cv.classList.remove('is-panning');
   mission.toast=cameraMode===0
     ? '视角：跟随飞船｜拖动查看，松手返回'
     : '视角：地球静止｜拖动后停留';
   mission.toastT=2.6;
   syncUI();
+}
+function cycleRadar(){
+  radarMode=(radarMode+1)%RADAR_MODES.length;
+  mission.toast='小地图：'+RADAR_MODES[radarMode]+(radarMode===0?'｜显示轨迹、近远地点与任务区':'');
+  mission.toastT=2.4; syncUI();
 }
 function cycleAttitude(){
   attMode=(attMode+1)%3; rocket.av=0;
@@ -345,6 +354,7 @@ function togglePause(){ paused=!paused; keys['Space']=keys['KeyA']=keys['KeyD']=
 function syncUI(){
   const pred=document.querySelector('[data-action="prediction"]');
   const camera=document.querySelector('[data-action="camera"]');
+  const radar=document.querySelector('[data-action="radar"]');
   const guide=document.querySelector('[data-action="guide"]');
   const assist=document.querySelector('[data-action="assist"]');
   const pause=document.querySelector('[data-action="pause"]');
@@ -357,6 +367,15 @@ function syncUI(){
     camera.title='视角：'+CAMERA_MODES[cameraMode]+' (K)';
     camera.querySelector('.lbl').textContent=isStatic?'静止':'跟随';
     camera.querySelector('.ico').textContent=isStatic?'⊕':'⌖';
+  }
+  if(radar){
+    const visible=radarMode!==2;
+    radar.classList.toggle('is-active',visible);
+    radar.setAttribute('aria-pressed',String(visible));
+    radar.setAttribute('aria-label','切换小地图模式，当前'+RADAR_MODES[radarMode]);
+    radar.title='小地图：'+RADAR_MODES[radarMode]+' (B)';
+    radar.querySelector('.lbl').textContent=RADAR_MODES[radarMode];
+    radar.querySelector('.ico').textContent=radarMode===0?'◌':radarMode===1?'⊙':'×';
   }
   if(guide && mission){ guide.classList.toggle('is-active',!mission.hintsHidden); guide.setAttribute('aria-pressed',String(!mission.hintsHidden)); }
   if(assist && mission){ assist.classList.toggle('is-active',mission.assistMode); assist.setAttribute('aria-pressed',String(mission.assistMode)); }
@@ -398,10 +417,11 @@ for(let i=0;i<420;i++){
 addEventListener('keydown', e=>{
   keys[e.code]=true;
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
-  if(e.repeat && ['KeyR','KeyT','KeyK','KeyV','KeyH','KeyM','KeyL','KeyC','KeyP'].includes(e.code)) return;
+  if(e.repeat && ['KeyR','KeyT','KeyK','KeyB','KeyV','KeyH','KeyM','KeyL','KeyC','KeyP'].includes(e.code)) return;
   if(e.code==='KeyR') restartCurrent(e.shiftKey);
   if(e.code==='KeyT') setPrediction();
   if(e.code==='KeyK') toggleCameraMode();
+  if(e.code==='KeyB') cycleRadar();
   if(e.code==='KeyV') cycleDial();
   if(e.code==='KeyH') toggleGuide();
   if(e.code==='KeyM') toggleAssist();
@@ -418,6 +438,7 @@ document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('cl
   const action=btn.dataset.action;
   if(action==='prediction') setPrediction();
   else if(action==='camera') toggleCameraMode();
+  else if(action==='radar') cycleRadar();
   else if(action==='attitude') cycleAttitude();
   else if(action==='dial') cycleDial();
   else if(action==='guide') toggleGuide();
@@ -429,30 +450,75 @@ document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('cl
 }));
 document.querySelectorAll('[data-hold]').forEach(btn=>{
   const code=btn.dataset.hold;
-  const release=()=>{ keys[code]=false; btn.classList.remove('is-pressed'); };
-  btn.addEventListener('pointerdown',e=>{ e.preventDefault(); btn.setPointerCapture(e.pointerId); keys[code]=true; btn.classList.add('is-pressed'); });
+  const activePointers=new Set();
+  const release=e=>{
+    activePointers.delete(e.pointerId);
+    keys[code]=activePointers.size>0;
+    btn.classList.toggle('is-pressed',activePointers.size>0);
+  };
+  btn.addEventListener('pointerdown',e=>{
+    e.preventDefault(); e.stopPropagation();
+    activePointers.add(e.pointerId); btn.setPointerCapture(e.pointerId);
+    keys[code]=true; btn.classList.add('is-pressed');
+  });
   btn.addEventListener('pointerup',release); btn.addEventListener('pointercancel',release); btn.addEventListener('lostpointercapture',release);
 });
 cam = {x:0,y:0,zoom:1.2,dragging:false,pointerId:null,startX:0,startY:0,startCamX:0,startCamY:0};
+const cameraPointers=new Map();
+let pinchState=null;
+function setCameraDragging(active){
+  cam.dragging=active;
+  cv.classList.toggle('is-panning',active);
+}
+function beginSingleCameraPan(point){
+  pinchState=null; setCameraDragging(true);
+  cam.startX=point.x; cam.startY=point.y; cam.startCamX=cam.x; cam.startCamY=cam.y;
+}
+function beginCameraPinch(){
+  const pts=[...cameraPointers.values()].slice(0,2);
+  if(pts.length<2) return;
+  const midX=(pts[0].x+pts[1].x)/2, midY=(pts[0].y+pts[1].y)/2;
+  pinchState={
+    distance:Math.max(8,Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y)),
+    zoom:cam.zoom,
+    worldX:cam.x+(midX-W/2)/cam.zoom,
+    worldY:cam.y+(midY-H/2)/cam.zoom
+  };
+  setCameraDragging(true);
+}
 cv.addEventListener('pointerdown',e=>{
-  if((e.pointerType==='mouse' && e.button!==0) || cam.dragging) return;
+  if(e.pointerType==='mouse' && e.button!==0) return;
   e.preventDefault();
-  cam.dragging=true; cam.pointerId=e.pointerId;
-  cam.startX=e.clientX; cam.startY=e.clientY; cam.startCamX=cam.x; cam.startCamY=cam.y;
-  cv.setPointerCapture(e.pointerId); cv.classList.add('is-panning');
+  cameraPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  cv.setPointerCapture(e.pointerId);
+  if(cameraPointers.size===1) beginSingleCameraPan(cameraPointers.get(e.pointerId));
+  else if(cameraPointers.size===2) beginCameraPinch();
 });
 cv.addEventListener('pointermove',e=>{
-  if(!cam.dragging || e.pointerId!==cam.pointerId) return;
-  cam.x=cam.startCamX-(e.clientX-cam.startX)/cam.zoom;
-  cam.y=cam.startCamY-(e.clientY-cam.startY)/cam.zoom;
+  if(!cameraPointers.has(e.pointerId)) return;
+  cameraPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(cameraPointers.size>=2 && pinchState){
+    const pts=[...cameraPointers.values()].slice(0,2);
+    const midX=(pts[0].x+pts[1].x)/2, midY=(pts[0].y+pts[1].y)/2;
+    const distance=Math.max(8,Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y));
+    cam.zoom=Math.min(6,Math.max(0.02,pinchState.zoom*distance/pinchState.distance));
+    cam.x=pinchState.worldX-(midX-W/2)/cam.zoom;
+    cam.y=pinchState.worldY-(midY-H/2)/cam.zoom;
+  }else if(cameraPointers.size===1){
+    cam.x=cam.startCamX-(e.clientX-cam.startX)/cam.zoom;
+    cam.y=cam.startCamY-(e.clientY-cam.startY)/cam.zoom;
+  }
 });
-function endCameraDrag(e){
-  if(!cam.dragging || e.pointerId!==cam.pointerId) return;
-  cam.dragging=false; cam.pointerId=null; cv.classList.remove('is-panning');
+function endCameraPointer(e){
+  if(!cameraPointers.has(e.pointerId)) return;
+  cameraPointers.delete(e.pointerId);
+  if(cameraPointers.size>=2) beginCameraPinch();
+  else if(cameraPointers.size===1) beginSingleCameraPan([...cameraPointers.values()][0]);
+  else{ pinchState=null; setCameraDragging(false); }
 }
-cv.addEventListener('pointerup',endCameraDrag);
-cv.addEventListener('pointercancel',endCameraDrag);
-cv.addEventListener('lostpointercapture',endCameraDrag);
+cv.addEventListener('pointerup',endCameraPointer);
+cv.addEventListener('pointercancel',endCameraPointer);
+cv.addEventListener('lostpointercapture',endCameraPointer);
 
 // ---------- 更新 ----------
 let particles = [];
@@ -1046,14 +1112,89 @@ function runPhysicsSelfChecks(){
   const wrongSpeed={x:EARTH.x+R_GEO,y:EARTH.y,vx:0,vy:v*0.78};
   const pro=syncOrbitStatus(prograde), retro=syncOrbitStatus(retrograde), wrong=syncOrbitStatus(wrongSpeed);
   const period=TAU/EARTH_OMEGA, horizon=predictPath(prograde).horizon;
+  const pinch={startZoom:1.2,startDistance:100,distance:200,worldX:340,worldY:-80,midX:240,midY:360,width:390,height:844};
+  const pinchZoom=pinch.startZoom*pinch.distance/pinch.startDistance;
+  const pinchCamX=pinch.worldX-(pinch.midX-pinch.width/2)/pinchZoom;
+  const pinchCamY=pinch.worldY-(pinch.midY-pinch.height/2)/pinchZoom;
+  const anchorScreenX=(pinch.worldX-pinchCamX)*pinchZoom+pinch.width/2;
+  const anchorScreenY=(pinch.worldY-pinchCamY)*pinchZoom+pinch.height/2;
   return {progradeAccepted:pro.ok,retrogradeRejected:!retro.ok,wrongSpeedRejected:!wrong.ok,
-    predictionCoversOrbit:horizon>=period,period,horizon};
+    predictionCoversOrbit:horizon>=period,pinchZoomScales:Math.abs(pinchZoom-2.4)<1e-9,
+    pinchAnchorStable:Math.hypot(anchorScreenX-pinch.midX,anchorScreenY-pinch.midY)<1e-9,period,horizon};
+}
+
+function drawRadar(){
+  if(radarMode===2) return;
+  const portrait=W<760&&H>650, landscape=W>=760&&H<=520, desktop=W>760&&H>520;
+  if(!portrait&&!landscape&&!desktop) return;
+  const RS=landscape?76:portrait?(H<720?76:108):130;
+  const cx=landscape?W-322:W-RS-(portrait?12:14);
+  const cy=landscape?16:portrait?H-220-RS-12:H-RS-14;
+  const mx=cx+RS/2, my=cy+RS/2+3;
+  ctx.save();
+  ctx.fillStyle='rgba(8,14,38,.82)'; roundRect(cx-8,cy-8,RS+16,RS+16,15); ctx.fill();
+  ctx.strokeStyle=radarMode===0?'rgba(76,201,240,.75)':'rgba(255,209,102,.65)';
+  ctx.lineWidth=1.5; roundRect(cx-8,cy-8,RS+16,RS+16,15); ctx.stroke();
+  ctx.beginPath(); ctx.rect(cx,cy+16,RS,RS-31); ctx.clip();
+
+  if(radarMode===0){
+    const ap=orbitApsis();
+    const outer=ap.bound&&Number.isFinite(ap.ra)?Math.max(R_GEO+GEO_BAND,Math.min(ap.ra,12000)):R_GEO*1.6;
+    const range=Math.max(R_GEO*1.25,outer*1.12), scale=RS*0.39/range;
+    const map=(wx,wy)=>({x:mx+(wx-EARTH.x)*scale,y:my+(wy-EARTH.y)*scale});
+    const er=Math.max(4,EARTH.r*scale), geoR=R_GEO*scale;
+    ctx.fillStyle=EARTH.col; ctx.beginPath(); ctx.arc(mx,my,er,0,TAU); ctx.fill();
+    ctx.strokeStyle='rgba(255,209,102,.65)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(mx,my,geoR,0,TAU); ctx.stroke();
+    ctx.strokeStyle='#5fd068'; ctx.lineWidth=3;
+    const targetAng=level===1?padAngle():landAngle(), targetR=(level===1?R_GEO:EARTH.r)*scale;
+    const targetHalf=level===1?SLOT_HALF:LAND_HALF;
+    ctx.beginPath(); ctx.arc(mx,my,targetR,targetAng-targetHalf,targetAng+targetHalf); ctx.stroke();
+
+    if(state==='fly'&&!rocket.landed){
+      const pred=getPredictedPath();
+      if(pred.pts.length>1){
+        ctx.strokeStyle='rgba(255,209,102,.7)'; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+        ctx.beginPath();
+        pred.pts.forEach((p,i)=>{ const q=map(p.x,p.y); i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y); });
+        ctx.stroke(); ctx.setLineDash([]);
+      }
+      ctx.font=`800 ${portrait?7:8}px sans-serif`; ctx.textAlign='center';
+      for(const marker of pred.markers){
+        const q=map(marker.x,marker.y), col=marker.apo?'#ffb142':'#4cc9f0';
+        ctx.fillStyle=col; ctx.beginPath(); ctx.arc(q.x,q.y,portrait?3:3.5,0,TAU); ctx.fill();
+        ctx.fillText(marker.apo?'远':'近',q.x,q.y-5);
+      }
+    }
+    const rq=map(rocket.x,rocket.y);
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(rq.x,rq.y,portrait?3.5:4,0,TAU); ctx.fill();
+    ctx.strokeStyle='#ef476f'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(rq.x,rq.y); ctx.lineTo(rq.x+Math.cos(rocket.a)*9,rq.y+Math.sin(rocket.a)*9); ctx.stroke();
+    if(mission.satellite){ const sq=map(mission.satellite.x,mission.satellite.y); ctx.fillStyle='#5fd068'; ctx.fillRect(sq.x-2,sq.y-2,4,4); }
+  }else{
+    const range=45000, scale=RS*0.42/range;
+    const map=(wx,wy)=>({x:mx+(wx-rocket.x)*scale,y:my+(wy-rocket.y)*scale});
+    ctx.font=`700 ${portrait?7:8}px sans-serif`; ctx.textAlign='center';
+    for(const body of BODIES){
+      const q=map(body.x,body.y), r=Math.max(3,body.r*scale);
+      ctx.fillStyle=body.col; ctx.beginPath(); ctx.arc(q.x,q.y,r,0,TAU); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.85)'; ctx.fillText(body.name,q.x,q.y-r-3);
+    }
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(mx,my,3.5,0,TAU); ctx.fill();
+  }
+  ctx.restore();
+  ctx.fillStyle='#fff'; ctx.font=`800 ${portrait?8:9}px sans-serif`; ctx.textAlign='left';
+  ctx.fillText(radarMode===0?'轨道雷达':'全局导航',cx+5,cy+11);
+  ctx.fillStyle='rgba(255,255,255,.65)'; ctx.font=`700 ${portrait?7:8}px sans-serif`;
+  ctx.fillText(radarMode===0?'蓝近 · 橙远 · 绿目标':'地球 · 月球 · 火星',cx+5,cy+RS-5);
+  ctx.textAlign='left';
 }
 
 function draw(){
   // 摄像机
   if(camInit){
     cam.zoom=1.1; cam.x=rocket.x; cam.y=rocket.y;
+    cameraPointers.clear(); pinchState=null;
     cam.dragging=false; cam.pointerId=null; cv.classList.remove('is-panning');
     camInit=false;
   }
@@ -1250,26 +1391,7 @@ function draw(){
   const offsetDeg=Math.round(velOffset*180/Math.PI), offsetText=(offsetDeg>=0?'+':'')+offsetDeg+'°';
   ctx.fillText(dialNames[dialMode]+' · 偏角 '+offsetText, attX, attY+attR+16);
   ctx.textAlign='left';
-  // 雷达小地图（窄屏为触控按钮让位）
-  if(W>760 && H>520){
-  const RS=130, cx=W-RS-14, cy=H-RS-14, range=32000;
-  ctx.fillStyle='rgba(10,14,35,.6)'; roundRect(cx-8,cy-8,RS+16,RS+16,14); ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=2; roundRect(cx-8,cy-8,RS+16,RS+16,14); ctx.stroke();
-  const dot=(wx,wy,r,c)=>{ ctx.fillStyle=c; ctx.beginPath();
-    ctx.arc(cx+RS/2+wx/range*RS/2, cy+RS/2+wy/range*RS/2, r, 0, TAU); ctx.fill(); };
-  // 以火箭为中心的小地图
-  dot((EARTH.x-rocket.x),(EARTH.y-rocket.y),7,EARTH.col);
-  dot((MARS.x-rocket.x),(MARS.y-rocket.y),5,MARS.col);
-  dot((MOON.x-rocket.x),(MOON.y-rocket.y),3.5,MOON.col);
-  // 同步带参考圈 + 定点方向（绿点，跟随自转）
-  const gx=cx+RS/2+(EARTH.x-rocket.x)/range*RS/2, gy=cy+RS/2+(EARTH.y-rocket.y)/range*RS/2;
-  ctx.strokeStyle='rgba(255,209,102,.5)'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.arc(gx, gy, R_GEO/range*RS/2, 0, TAU); ctx.stroke();
-  const sa=padAngle();
-  ctx.fillStyle='#5fd068';
-  ctx.beginPath(); ctx.arc(gx+Math.cos(sa)*R_GEO/range*RS/2, gy+Math.sin(sa)*R_GEO/range*RS/2, 3, 0, TAU); ctx.fill();
-  dot(0,0,3.5,'#fff');
-  }
+  drawRadar();
 
   // 子弹时间视觉：暗角 + 提示
   if(bulletT>0){
