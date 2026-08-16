@@ -67,8 +67,7 @@
     .hud{top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));max-width:none;padding:9px 10px}.brand-mark{width:34px;height:34px}.hud .title{font-size:17px}.hud .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.key-strip{display:none}
     .tool-rail{top:calc(86px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));grid-template-columns:repeat(4,50px);gap:7px;padding:8px;border-radius:20px}.tool-rail .mobile-secondary{display:none}.icon-btn{width:50px;height:50px;border-radius:15px}.icon-btn .ico{font-size:22px}.tool-rail .lbl{display:none}.tool-rail [data-action="camera"] .lbl,.tool-rail [data-action="radar"] .lbl,.tool-rail [data-action="pause"] .lbl,.tool-rail [data-hold="Space"] .lbl{display:block}
     .flight-controls{left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));justify-content:space-between;gap:0}.turn-controls{gap:12px}.flight-controls .icon-btn{width:64px;height:64px}.flight-controls .thrust{width:84px;height:92px}.flight-controls .thrust .ico{font-size:34px}.flight-controls .turn .ico{font-size:30px}.flight-controls .lbl{font-size:10px}
-    .mission-action{left:auto;right:max(14px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));transform:none;width:84px;height:92px}
-    body.can-deploy .flight-controls .thrust{visibility:hidden}
+    .mission-action{left:auto;right:max(14px,env(safe-area-inset-right));top:calc(158px + env(safe-area-inset-top));bottom:auto;transform:none;width:104px;height:58px}
     .pause-card{padding:19px 15px;border-radius:20px}.pause-grid{gap:8px}.pause-grid button{font-size:13px}
     #msg .card{max-width:calc(100vw - 28px);padding:22px 14px}#msg h1{font-size:24px}#msg p{font-size:14px}#msg button{font-size:14px;padding:9px 14px}
     #briefing{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}#briefing .brief-card{padding:18px 15px;border-radius:18px}.brief-title{font-size:21px}.brief-grid{grid-template-columns:1fr}.brief-actions{position:sticky;bottom:-18px;margin:16px -15px -18px;padding:12px 15px;background:#f8fbff}.brief-actions button{min-height:48px}
@@ -113,7 +112,7 @@
   </div>
   <button class="icon-btn thrust" data-hold="KeyW" data-cue="thrust" aria-label="推进"><span class="ico">▲</span><span class="lbl">推进</span></button>
 </div>
-<button class="icon-btn mission-action" data-action="deploy" data-cue="deploy" aria-label="释放同步卫星"><span class="ico">🛰</span><span class="lbl">释放卫星</span></button>
+<button type="button" class="icon-btn mission-action" data-action="deploy" data-cue="deploy" aria-label="释放同步卫星"><span class="ico">🛰</span><span class="lbl">释放卫星</span></button>
 <div id="pauseMenu" role="dialog" aria-modal="true" aria-labelledby="pauseTitle"><div class="pause-card">
   <h2 id="pauseTitle">飞行已暂停</h2><p>常用设置都收在这里，飞行画面只保留必要操作。</p>
   <button class="pause-resume" data-menu-action="resume">▶ 继续飞行</button>
@@ -426,7 +425,6 @@ function syncUI(){
   if(pause){ pause.classList.toggle('is-active',paused); pause.setAttribute('aria-pressed',String(paused)); pause.querySelector('.ico').textContent=paused?'▶':'Ⅱ'; pause.querySelector('.lbl').textContent=paused?'继续':'暂停'; }
   const canDeploy=level===1&&mission&&mission.stage===3&&!mission.done&&state==='fly';
   if(deploy) deploy.classList.toggle('is-visible',canDeploy);
-  document.body.classList.toggle('can-deploy',canDeploy);
   document.getElementById('pauseMenu').classList.toggle('is-visible',paused);
   const menuPrediction=document.getElementById('menuPrediction'), menuAttitude=document.getElementById('menuAttitude');
   const menuDial=document.getElementById('menuDial'), menuGuide=document.getElementById('menuGuide'), menuAssist=document.getElementById('menuAssist');
@@ -685,7 +683,7 @@ function retryFromStage(reason){
   syncUI();
 }
 
-// 释放卫星：必须是顺行同步轨道；绿色扇区代表目标经度挑战
+// 进入最终阶段即代表同步轨道已经验收；绿色扇区只影响精确部署评价
 function tryDeploy(){
   if(level!==1 || !mission || mission.done || mission.stage!==3 || state!=='fly' || rocket.landed) return;
   const d = Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y);
@@ -693,22 +691,16 @@ function tryDeploy(){
   while(ang>Math.PI) ang-=TAU; while(ang<-Math.PI) ang+=TAU;
   const sync=syncOrbitStatus(rocket,mission.assistMode?1.6:1);
   const inSlot = Math.abs(ang)<=SLOT_HALF;
-  if(sync.ok){
-    mission.satReleased = true; mission.done = true;
-    mission.satellite={x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,releaseAngle:Math.atan2(rocket.y-EARTH.y,rocket.x-EARTH.x)};
-    state='complete';
-    const challenge = inSlot;
-    showMsg(challenge?'🛰️':'🎉',
-      challenge?'目标经度部署成功！':'地球静止轨道部署成功！',
-      `已形成顺行同步轨道（缩比高度 ${(d-EARTH.r).toFixed(0)} u）<br>` +
-      (challenge ? '🌟 精确位于绿色目标经度，卫星将相对地面定点！<br>' : '<span style="color:#888">轨道同步，但未位于绿色目标经度；卫星会定点在当前经度</span><br>') +
-      `同步残差 ${sync.residual.toFixed(4)} rad/s · 耗时 ${flightT.toFixed(1)}s<br><span style="color:#888">R 从头再来 · L 下一关</span>`);
-  }else{
-    if(!sync.directionOk) mission.toast='当前是逆行轨道，无法与地球同步；请改为顺行';
-    else if(!sync.radiusOk) mission.toast='只有当前高度在同步带还不够：近、远地点都要进入金色带';
-    else mission.toast='同步残差仍偏大：继续圆化并匹配地球自转角速度';
-    mission.toastT = 3;
-  }
+  mission.satReleased = true; mission.done = true;
+  mission.satellite={x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,releaseAngle:Math.atan2(rocket.y-EARTH.y,rocket.x-EARTH.x)};
+  state='complete';
+  syncUI();
+  const challenge = inSlot;
+  showMsg(challenge?'🛰️':'🎉',
+    challenge?'目标经度部署成功！':'地球静止轨道部署成功！',
+    `已形成顺行同步轨道（缩比高度 ${(d-EARTH.r).toFixed(0)} u）<br>` +
+    (challenge ? '🌟 精确位于绿色目标经度，卫星将相对地面定点！<br>' : '<span style="color:#888">轨道同步，但未位于绿色目标经度；卫星会定点在当前经度</span><br>') +
+    `当前同步残差 ${sync.residual.toFixed(4)} rad/s · 耗时 ${flightT.toFixed(1)}s<br><span style="color:#888">R 从头再来 · L 下一关</span>`);
 }
 
 // 任务阶段推进（每帧调用）
