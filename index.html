@@ -157,10 +157,14 @@
 <script>
 "use strict";
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
-let W = 0, H = 0, DPR = Math.min(devicePixelRatio || 1, 2), bgGradient=null;
+let W = 0, H = 0, DPR = 1, lowPowerMode=false, bgGradient=null, bulletGradient=null, farGradient=null;
 function resize(){
+  lowPowerMode=innerWidth<900&&(innerWidth<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches));
+  DPR=Math.min(devicePixelRatio||1,lowPowerMode?1.35:2);
   W = innerWidth; H = innerHeight; cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
   bgGradient=ctx.createLinearGradient(0,0,0,H); bgGradient.addColorStop(0,'#0b1026'); bgGradient.addColorStop(1,'#1b2350');
+  bulletGradient=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75); bulletGradient.addColorStop(0,'rgba(0,0,0,0)'); bulletGradient.addColorStop(1,'rgba(20,30,80,.55)');
+  farGradient=ctx.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.7); farGradient.addColorStop(0,'rgba(0,0,0,0)'); farGradient.addColorStop(1,'rgba(0,0,0,.72)');
 }
 addEventListener('resize', resize); resize();
 
@@ -311,6 +315,7 @@ const RADAR_MODES = ['轨道','全局'];
 let radarHitBox = null, attitudeHitBox = null;
 let predictionCache = null;
 let actionCue = null;
+let missionActionVisual = '';
 const keys = {};
 
 // 轨道要素：近/远地点半径
@@ -505,7 +510,7 @@ function resetGame(){
     };
     launched = false;
   }
-  trail = []; state = 'fly'; flightT = 0; shake = 0;
+  trail = []; particles=[]; exhaustAccumulator=0; trailSampleT=0; state = 'fly'; flightT = 0; shake = 0;
   bulletT = 0; predictionCache = null;
   actionCue = null;
   mission = {stage:0, holdT:0, finalHoldT:0, hintsHidden:false, assistMode:true, done:false, satReleased:false, satellite:null, deployReady:false, dockReady:false, toast:'', toastT:0, checkpoint:null, dynHint:'', dockDistance:Infinity, dockRelSpeed:Infinity};
@@ -581,7 +586,7 @@ function toggleAssist(){ mission.assistMode=!mission.assistMode; mission.toast=m
 function togglePause(){ paused=!paused; clearFlightInputs(); syncUI(); }
 function missionActionState(){
   if(!mission||mission.done||state!=='fly'||rocket.landed) return {visible:false};
-  if(level===1&&(mission.stage===3||mission.deployReady)) return {visible:true,icon:'🛰',label:'释放卫星',aria:'释放同步卫星'};
+  if(level===1&&mission.deployReady&&directSyncStatus(rocket,1).ok) return {visible:true,icon:'🛰',label:'释放卫星',aria:'释放同步卫星'};
   if(level===2&&!rocket.chute){
     const dx=rocket.x-EARTH.x,dy=rocket.y-EARTH.y,d=Math.hypot(dx,dy),alt=d-EARTH.r;
     const rvx=rocket.vx-(EARTH.vx||0),rvy=rocket.vy-(EARTH.vy||0),vOut=(rvx*dx+rvy*dy)/Math.max(1,d);
@@ -594,6 +599,9 @@ function syncMissionAction(){
   const button=document.getElementById('missionAction');
   if(!button) return;
   const action=missionActionState();
+  const visualKey=action.visible?`${level}:${action.label}`:'hidden';
+  if(visualKey===missionActionVisual) return;
+  missionActionVisual=visualKey;
   button.classList.toggle('is-visible',action.visible);
   if(action.visible){ button.querySelector('.ico').textContent=action.icon; button.querySelector('.lbl').textContent=action.label; button.setAttribute('aria-label',action.aria); }
 }
@@ -742,7 +750,7 @@ function finishDocking(){
 
 // 星星背景
 stars = [];
-for(let i=0;i<(W<760?220:280);i++){
+for(let i=0;i<(lowPowerMode?120:260);i++){
   stars.push({ x:(Math.random()-0.5)*9000, y:(Math.random()-0.5)*7000,
     r:Math.random()*1.8+0.5, tw:Math.random()*TAU, c:['#ffffff','#ffe9a8','#a8d8ff'][i%3] });
 }
@@ -920,7 +928,7 @@ cv.addEventListener('pointercancel',endCameraPointer);
 cv.addEventListener('lostpointercapture',endCameraPointer);
 
 // ---------- 更新 ----------
-let particles = [];
+let particles = [], exhaustAccumulator=0, trailSampleT=0;
 function boom(x,y){
   for(let i=0;i<50;i++){
     const a=Math.random()*TAU, s=Math.random()*160+30;
@@ -978,7 +986,7 @@ function retryFromStage(reason){
   rocket.life = LIFE_MAX; rocket.maxG = 0; rocket.lastG = 0; rocket.overT = 0; rocket.av = 0;
   rocket._tooFar = false; rocket.launchGrace = 0; rocket.chute = false;
   rocket.chuteAngle = null; rocket.chuteFlowX = 0; rocket.chuteFlowY = 0;
-  trail = []; state = 'fly'; bulletT = 0; predictionCache = null;
+  trail = []; particles=[]; exhaustAccumulator=0; trailSampleT=0; state = 'fly'; bulletT = 0; predictionCache = null;
   camInit = true;
   mission.holdT = 0; mission.finalHoldT=0; mission.deployReady=false; mission.dockReady=false; mission.done=false; mission.satReleased=false; mission.satellite=null;
   mission.toast = '💥 ' + reason + ' —— 回到「' + stageInfo()[mission.stage].name + '」';
@@ -989,7 +997,12 @@ function retryFromStage(reason){
 
 // 进入最终阶段即代表同步轨道已经验收；绿色扇区只影响精确部署评价
 function tryDeploy(){
-  if(level!==1 || !mission || mission.done || (mission.stage!==3&&!mission.deployReady) || state!=='fly' || rocket.landed) return;
+  if(level!==1 || !mission || mission.done || !mission.deployReady || state!=='fly' || rocket.landed) return;
+  const releaseStatus=directSyncStatus(rocket,1);
+  if(!releaseStatus.ok){
+    mission.toast=releaseStatus.inBand?'⚠️ 仍在同步带内，但速度或升降率还不稳定':'⚠️ 已离开黄色同步带，返回带内稳定后再释放';
+    mission.toastT=3; mission.deployReady=false; syncUI(); return;
+  }
   const d = Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y);
   let ang = Math.atan2(rocket.y-EARTH.y, rocket.x-EARTH.x) - padAngle();
   while(ang>Math.PI) ang-=TAU; while(ang<-Math.PI) ang+=TAU;
@@ -1035,7 +1048,7 @@ function updateMission(dt){
   if(level===3){ updateMissionL3(dt); return; }
   if(level===4){ updateMissionL4(dt); return; }
   if(rocket.landed) return;
-  const direct=directSyncStatus(rocket,mission.assistMode?1.6:1);
+  const direct=directSyncStatus(rocket,1);
   if(mission.stage<3){
     mission.finalHoldT=direct.ok?mission.finalHoldT+dt:0;
     if(mission.finalHoldT>=1.5){
@@ -1066,14 +1079,22 @@ function updateMission(dt){
     if(ok){ advanceStage(); return; }
     dyn = ap.bound ? '橙点 '+(ap.ra-EARTH.r).toFixed(0)+'｜继续抬高' : '黄线未闭合｜掉头反推';
   }else if(mission.stage===2){
-    const sync=syncOrbitStatus(rocket,mission.assistMode?1.6:1);
-    ok=sync.ok;
+    const direct=directSyncStatus(rocket,1),sync=direct.sync;
+    ok=direct.ok;
     if(!sync.directionOk) dyn='方向反了｜改为顺行';
-    else if(!sync.radiusOk) dyn='蓝 '+(sync.ap.rp-EARTH.r).toFixed(0)+'｜橙 '+(sync.ap.ra-EARTH.r).toFixed(0)+'｜目标金带';
+    else if(!direct.inBand) dyn='当前高度不在黄色同步带内';
+    else if(!sync.radiusOk&&!direct.ok) dyn='蓝 '+(sync.ap.rp-EARTH.r).toFixed(0)+'｜橙 '+(sync.ap.ra-EARTH.r).toFixed(0)+'｜目标金带';
     else dyn='保持 '+Math.max(0,need-mission.holdT).toFixed(1)+' 秒';
   }else if(mission.stage===3){
-    const sync=syncOrbitStatus(rocket,mission.assistMode?1.6:1);
-    mission.dynHint=sync.ok?'同步稳定｜点击释放卫星':'还差一点｜调整蓝点和橙点';
+    const direct=directSyncStatus(rocket,1);
+    if(!direct.ok){
+      if(mission.deployReady){ mission.deployReady=false; mission.finalHoldT=0; syncUI(); }
+      mission.dynHint=direct.inBand?'带内但速度未稳定':'返回黄色同步带内';
+    }else if(!mission.deployReady){
+      mission.finalHoldT+=dt;
+      mission.dynHint='重新稳定 '+Math.max(0,1.5-mission.finalHoldT).toFixed(1)+' 秒';
+      if(mission.finalHoldT>=1.5){ mission.deployReady=true; mission.toast='✅ 同步轨道重新稳定！可以释放卫星'; mission.toastT=3; syncUI(); }
+    }else mission.dynHint='同步稳定｜点击释放卫星';
     return;
   }
   mission.dynHint = dyn;
@@ -1202,7 +1223,7 @@ function advanceStage(){
   saveCheckpoint();
   mission.toast = '✅ ' + stageInfo()[mission.stage-1].name + ' 完成！';
   mission.toastT = 3;
-  if(level===1 && mission.stage===3){ mission.toast='✅ 同步稳定！点击“释放卫星”'; mission.toastT=4; }
+  if(level===1 && mission.stage===3){ mission.deployReady=true; mission.toast='✅ 同步稳定！点击“释放卫星”'; mission.toastT=4; }
   if(level===2 && mission.stage===1){ mission.toast='✅ 已进入返回轨道！准备再入减速'; mission.toastT=3; }
   if(level===2 && mission.stage===2){ mission.toast='✅ 速度受控！最后垂直着陆'; mission.toastT=3; }
   if(level===3 && mission.stage===1){ mission.toast='✅ 已进入近地轨道！开始追赶空间站'; mission.toastT=3.5; }
@@ -1242,9 +1263,14 @@ function update(dt, dtReal){
   if(launched) flightT += dt; // 起飞后才开始计航行时间
   updateMission(dt);
   if(mission && mission.toastT>0) mission.toastT -= dt;
-  // 粒子
-  for(const p of particles){ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vx*=0.985; p.vy*=0.985; p.life-=dt; }
-  particles = particles.filter(p=>p.life>0);
+  // 尾焰是视觉效果，按真实时间更新；不能跟随子弹时间变慢后越积越多。
+  let particleWrite=0;
+  for(const p of particles){
+    p.x+=p.vx*dtReal; p.y+=p.vy*dtReal;
+    const drag=Math.pow(.985,dtReal*60); p.vx*=drag; p.vy*=drag; p.life-=dtReal;
+    if(p.life>0) particles[particleWrite++]=p;
+  }
+  particles.length=particleWrite;
   shake = Math.max(0, shake - dt*30);
 
   // 生命维持（飞行辅助开启时暂停消耗）
@@ -1335,10 +1361,16 @@ function update(dt, dtReal){
     rocket.thrustPower=thrustPower;
     rocket.vx += fx*THRUST*thrustPower*dt; rocket.vy += fy*THRUST*thrustPower*dt;
     if(!infiniteFuel) rocket.fuel = Math.max(0, rocket.fuel - 9*thrustPower*dt);
-    for(let i=0;i<Math.ceil(3*thrustPower);i++) particles.push({
-      x:rocket.x - fx*14 + (Math.random()-0.5)*5, y:rocket.y - fy*14 + (Math.random()-0.5)*5,
-      vx:-fx*(60+Math.random()*40)+(Math.random()-0.5)*25, vy:-fy*(60+Math.random()*40)+(Math.random()-0.5)*25,
-      life:Math.random()*0.35+0.15, c:['#ffb142','#ff7043','#fff3b0'][i%3]});
+    // 固定“每秒”生成量，避免 8 倍速子步或低帧率时一帧生成几十个粒子。
+    exhaustAccumulator=Math.min(3,exhaustAccumulator+dtReal*(lowPowerMode?42:78)*thrustPower);
+    const spawnCount=Math.floor(exhaustAccumulator),particleCap=lowPowerMode?80:180;
+    exhaustAccumulator-=spawnCount;
+    for(let i=0;i<spawnCount&&particles.length<particleCap;i++) particles.push({
+      x:rocket.x-fx*14+(Math.random()-.5)*5,y:rocket.y-fy*14+(Math.random()-.5)*5,
+      vx:-fx*(60+Math.random()*40)+(Math.random()-.5)*25,vy:-fy*(60+Math.random()*40)+(Math.random()-.5)*25,
+      life:Math.random()*.35+.15,c:['#ffb142','#ff7043','#fff3b0'][i%3]});
+  }else{
+    exhaustAccumulator=0;
   }
 
   // 引力（所有天体叠加）
@@ -1389,16 +1421,17 @@ function update(dt, dtReal){
   }
   if(rocket.launchGrace>0) rocket.launchGrace -= dt;
   rocket.x += rocket.vx*dt; rocket.y += rocket.vy*dt;
-  trail.push({x:rocket.x, y:rocket.y});
+  trailSampleT+=dt;
+  const trailInterval=lowPowerMode?.055:.032;
+  if(trail.length===0||trailSampleT>=trailInterval){ trail.push({x:rocket.x,y:rocket.y}); trailSampleT=0; }
 
-  // 子弹时间：新手模式下，仅在推进时触发（边推边调姿态时给反应时间）；单独转姿态不触发，更跟手
+  // 子弹时间只服务于“边推边转”的精细机动；单独长按推进（尤其起飞）绝不能让游戏看似卡住。
   if(mission.assistMode && !mission.done && launched && state==='fly'){
-    if(rocket.thrusting){
-      bulletT = 0.4; // 推进期间持续刷新
-    }
+    const turning=keys['ArrowLeft']||keys['KeyA']||keys['ArrowRight']||keys['KeyD'];
+    if(rocket.thrusting&&turning&&!launchLocked) bulletT=.28;
   }
-  if(bulletT>0) bulletT -= dt;
-  if(trail.length>(W<760?420:650)) trail.shift();
+  if(bulletT>0) bulletT=Math.max(0,bulletT-dtReal);
+  if(trail.length>(lowPowerMode?280:600)) trail.shift();
 
   // 碰撞检测（起飞宽限期内跳过，避免点火瞬间误判）
   for(const b of BODIES){
@@ -1561,6 +1594,7 @@ function drawLunarFarSideZone(){
   // 月球公转路径仅作导航，不代表火箭目标轨道。
   ctx.strokeStyle='rgba(207,216,220,.22)'; ctx.lineWidth=2/cam.zoom; ctx.setLineDash([10/cam.zoom,12/cam.zoom]);
   ctx.beginPath(); ctx.arc(EARTH.x,EARTH.y,MOON_ORBIT_R,0,TAU); ctx.stroke(); ctx.setLineDash([]);
+  if(!worldCircleVisible(MOON,900)) return;
   const a=moonAngle, r=MOON.r;
   // 背向地球的整半球为基础通关区；中央亮绿色弧为精准着陆区。
   ctx.strokeStyle='rgba(95,208,104,.48)'; ctx.lineWidth=13/cam.zoom;
@@ -1616,6 +1650,10 @@ function drawLandingZone(){
   ctx.beginPath(); ctx.arc(fx, fy, 7, 0, TAU); ctx.fill();
 }
 // 细环形地面厚度（伪3D）：外圈地表外延 → 内圈地表内缩
+function worldCircleVisible(body,padding=80){
+  const r=(body.r||0)+padding/Math.max(.02,cam.zoom);
+  return Math.abs(body.x-cam.x)<=W/(2*Math.max(.02,cam.zoom))+r&&Math.abs(body.y-cam.y)<=H/(2*Math.max(.02,cam.zoom))+r;
+}
 function drawGroundRing(b){
   ctx.strokeStyle='rgba(255,255,255,.10)';
   ctx.lineWidth = RING_OUT + RING_IN;
@@ -1624,7 +1662,7 @@ function drawGroundRing(b){
 function drawBody(b){
   if(b===EARTH){
     ctx.save();
-    ctx.shadowColor='rgba(76,201,240,.75)'; ctx.shadowBlur=Math.max(8,b.r*.11*cam.zoom);
+    ctx.shadowColor='rgba(76,201,240,.75)'; ctx.shadowBlur=lowPowerMode?0:Math.max(8,b.r*.07*cam.zoom);
     ctx.strokeStyle='rgba(106,220,255,.32)'; ctx.lineWidth=Math.max(5/cam.zoom,b.r*.045);
     ctx.beginPath(); ctx.arc(b.x,b.y,b.r*1.018,0,TAU); ctx.stroke(); ctx.restore();
   }
@@ -1736,7 +1774,7 @@ function drawRocket(){
 }
 
 function drawStation(){
-  if(!station) return;
+  if(!station||!worldCircleVisible({x:station.x,y:station.y,r:50},100)) return;
   ctx.save(); ctx.translate(station.x,station.y); ctx.rotate(station.a+Math.PI/2);
   ctx.strokeStyle='rgba(255,255,255,.72)'; ctx.lineWidth=2/cam.zoom;
   ctx.beginPath(); ctx.moveTo(-35,0); ctx.lineTo(35,0); ctx.stroke();
@@ -1764,8 +1802,8 @@ function predictPath(ship=rocket){
     const a=-EARTH.mu/(2*energy), period=TAU*Math.sqrt(a*a*a/EARTH.mu);
     horizon=Math.min(level===4?280:180,Math.max(level===4?70:40,period*1.1));
   }
-  const coarse=W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches);
-  const steps=coarse?360:520, dt=horizon/steps, pts=[];
+  const coarse=lowPowerMode||W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches);
+  const steps=coarse?240:520, dt=horizon/steps, pts=[];
   let vrPrev=null, markers=[];
   for(let i=0;i<steps;i++){
     let ax=0, ay=0;
@@ -1797,7 +1835,7 @@ function getPredictedPath(){
   if(predictionCache){
     const moved=Math.hypot(rocket.x-predictionCache.x,rocket.y-predictionCache.y);
     const dv=Math.hypot(rocket.vx-predictionCache.vx,rocket.vy-predictionCache.vy);
-    const cacheMs=W<760?180:120;
+    const cacheMs=lowPowerMode?280:120;
     if(now-predictionCache.t<cacheMs && moved<30 && dv<15 && Math.abs(moonAngle-predictionCache.moonAngle)<.004) return predictionCache.result;
   }
   const result=predictPath();
@@ -1933,7 +1971,7 @@ function draw(){
     cam.x += (rocket.x - cam.x)*0.12; cam.y += (rocket.y - cam.y)*0.12;
   }
   const cameraNow=performance.now();
-  if(cameraNow-cameraDebugAt>200){
+  if(!lowPowerMode&&cameraNow-cameraDebugAt>500){
     cameraDebugAt=cameraNow;
     document.documentElement.dataset.cameraState=JSON.stringify({mode:CAMERA_MODES[cameraMode],x:cam.x,y:cam.y,rocketX:rocket.x,rocketY:rocket.y,dragging:cam.dragging});
   }
@@ -1995,7 +2033,7 @@ function draw(){
   }
 
   drawMissionZones();
-  for(const b of BODIES){ drawGroundRing(b); drawBody(b); }
+  for(const b of BODIES){ if(worldCircleVisible(b,120)){ drawGroundRing(b); drawBody(b); } }
   drawStation();
 
   // 粒子
@@ -2144,18 +2182,14 @@ function draw(){
 
   // 子弹时间视觉：暗角 + 提示
   if(bulletT>0){
-    const vg = ctx.createRadialGradient(W/2,H/2,H*0.3, W/2,H/2,H*0.75);
-    vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(20,30,80,.55)');
-    ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle=bulletGradient; ctx.fillRect(0,0,W,H);
     ctx.fillStyle='#ffd166'; ctx.font='800 20px "Baloo 2",sans-serif'; ctx.textAlign='center';
     ctx.fillText('🕐 子弹时间 —— 从容操作', W/2, W<760?390:135);
     ctx.textAlign='left';
   }
   // 飞离地球太远：四周变暗 + 提示重置（不强制）
   if(rocket._tooFar && mission.assistMode && !mission.done){
-    const vg2 = ctx.createRadialGradient(W/2,H/2,H*0.25, W/2,H/2,H*0.7);
-    vg2.addColorStop(0,'rgba(0,0,0,0)'); vg2.addColorStop(1,'rgba(0,0,0,.72)');
-    ctx.fillStyle=vg2; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle=farGradient; ctx.fillRect(0,0,W,H);
     ctx.fillStyle='#ffb142'; ctx.font='800 19px "Baloo 2",sans-serif'; ctx.textAlign='center';
     ctx.fillText('⚠️ 已飞离目标空域', W/2, H*0.4);
     ctx.fillStyle='rgba(255,255,255,.9)'; ctx.font='600 15px "Baloo 2",sans-serif';
