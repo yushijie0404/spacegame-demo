@@ -56,6 +56,12 @@
   .brief-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}.brief-box{padding:15px 16px;border-radius:16px;background:#eaf2ff;border:1px solid #c8daf7}.brief-box.science{background:#fff5d7;border-color:#f2d88c}.brief-box h3{margin:0 0 8px;font-size:15px}.brief-box ol{margin:0;padding-left:20px}.brief-box li{margin:6px 0;line-height:1.45}.brief-box p{margin:0;line-height:1.55}
   .brief-success{margin:14px 0 0;padding:11px 14px;color:#174e28;background:#dcf6df;border:1px solid #9dddA5;border-radius:13px;font-weight:700}.brief-scale{margin:10px 0 0;color:#667085;font-size:12px}
   .brief-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}.brief-actions button{padding:9px 18px;border:2px solid #17213c;border-radius:12px;background:#fff;font-weight:800;cursor:pointer}.brief-actions .primary{background:#ffd166;box-shadow:0 4px 0 #17213c}
+  #levelSelect{position:fixed;inset:0;z-index:12;display:none;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 20%,rgba(44,72,145,.72),rgba(5,9,27,.96) 64%);color:#eef4ff;overflow:auto}
+  #levelSelect.is-visible{display:flex}
+  .level-shell{width:min(980px,100%);margin:auto}.level-head{text-align:center;margin-bottom:20px}.level-kicker{color:var(--cyan);font-size:12px;font-weight:900;letter-spacing:2px}.level-head h1{margin:5px 0 5px;font-size:clamp(28px,5vw,44px)}.level-head p{margin:0;color:#aebde0}
+  .level-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.level-card{min-height:250px;padding:18px;display:flex;flex-direction:column;text-align:left;color:#eef4ff;background:linear-gradient(155deg,rgba(31,48,100,.96),rgba(13,23,58,.96));border:2px solid rgba(255,255,255,.16);border-radius:22px;box-shadow:0 14px 38px rgba(0,0,0,.3);cursor:pointer;transition:transform .16s,border-color .16s,box-shadow .16s}.level-card:hover{transform:translateY(-5px);border-color:var(--cyan);box-shadow:0 18px 42px rgba(0,0,0,.36),0 0 24px rgba(76,201,240,.18)}.level-card:active{transform:translateY(-1px)}
+  .level-number{color:#94a7d5;font-size:11px;font-weight:900;letter-spacing:1.4px}.level-icon{margin:10px 0 7px;font-size:38px}.level-card h2{margin:0 0 7px;font-size:20px}.level-card p{margin:0;color:#b7c5e5;font-size:13px;line-height:1.5}.level-meta{margin-top:auto;padding-top:15px;display:flex;align-items:end;justify-content:space-between;gap:8px}.level-stars{color:#ffd166;font-size:20px;letter-spacing:2px}.level-score{color:#fff;font-size:12px;font-weight:800}.level-score strong{display:block;font-size:19px}.level-play{margin-top:13px;min-height:43px;border:0;border-radius:12px;color:#17213c;background:#ffd166;font-weight:900;cursor:pointer}
+  .level-footer{display:flex;justify-content:center;gap:10px;margin-top:18px}.level-footer button{min-height:45px;padding:9px 18px;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);border-radius:12px;font-weight:800;cursor:pointer}.level-footer button[hidden]{display:none}
   #msg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:10;background:rgba(10,14,35,.55);backdrop-filter:blur(3px)}
   #msg .card{background:#fff;border-radius:22px;padding:28px 40px;text-align:center;border:4px solid #222;box-shadow:0 12px 0 rgba(0,0,0,.35);max-width:70vw}
   #msg .emoji{font-size:56px}
@@ -71,6 +77,7 @@
     .pause-card{padding:19px 15px;border-radius:20px}.pause-grid{gap:8px}.pause-grid button{font-size:13px}
     #msg .card{max-width:calc(100vw - 28px);padding:22px 14px}#msg h1{font-size:24px}#msg p{font-size:14px}#msg button{font-size:14px;padding:9px 14px}
     #briefing{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}#briefing .brief-card{padding:18px 15px;border-radius:18px}.brief-title{font-size:21px}.brief-grid{grid-template-columns:1fr}.brief-actions{position:sticky;bottom:-18px;margin:16px -15px -18px;padding:12px 15px;background:#f8fbff}.brief-actions button{min-height:48px}
+    #levelSelect{align-items:flex-start;padding:max(16px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}.level-head{margin-bottom:14px}.level-head p{font-size:13px}.level-grid{grid-template-columns:1fr;gap:11px}.level-card{min-height:0;padding:14px 15px}.level-icon{float:left;margin:5px 0;font-size:31px}.level-card h2{font-size:18px}.level-card p{font-size:12px}.level-meta{padding-top:10px}.level-play{min-height:48px;margin-top:10px}
   }
   @media (pointer:coarse) and (min-width:761px){
     .tool-rail{grid-template-columns:repeat(6,54px)}.icon-btn{width:54px;height:54px}.flight-controls .icon-btn{width:64px;height:64px}.flight-controls .thrust{width:76px;height:86px}
@@ -100,7 +107,7 @@
   <button class="icon-btn is-active mobile-secondary" data-action="guide" aria-label="切换任务指引" aria-pressed="true" title="任务指引 (H)"><span class="ico">?</span><span class="lbl">指引</span></button>
   <button class="icon-btn mobile-secondary" data-action="briefing" aria-label="打开任务科普" title="任务简报与科普"><span class="ico">i</span><span class="lbl">科普</span></button>
   <button class="icon-btn is-active mobile-secondary" data-action="assist" aria-label="切换飞行辅助" aria-pressed="true" title="飞行辅助 (M)"><span class="ico">◇</span><span class="lbl">辅助</span></button>
-  <button class="icon-btn mobile-secondary" data-action="level" aria-label="切换关卡" title="切换关卡 (L)"><span class="ico">⚑</span><span class="lbl">关卡</span></button>
+  <button class="icon-btn mobile-secondary" data-action="level" aria-label="打开任务目录" title="任务目录 (L)"><span class="ico">▦</span><span class="lbl">目录</span></button>
   <button class="icon-btn mobile-secondary" data-action="restart" aria-label="重试当前阶段" title="当前阶段重试 (R) · 从头开始 (Shift+R)"><span class="ico">↻</span><span class="lbl">重试</span></button>
   <button class="icon-btn" data-action="pause" aria-label="暂停游戏" aria-pressed="false" title="暂停 (P)"><span class="ico">Ⅱ</span><span class="lbl">暂停</span></button>
   <button class="icon-btn" data-hold="Space" data-cue="speed" aria-label="按住八倍速" title="按住 8 倍速 (Space)"><span class="ico">»</span><span class="lbl">倍速</span></button>
@@ -124,7 +131,7 @@
     <button data-menu-action="briefing">📖 本阶段科普</button>
     <button id="menuAssist" data-menu-action="assist">飞行辅助</button>
     <button data-menu-action="restart">↻ 本阶段重来</button>
-    <button data-menu-action="level">⚑ 切换关卡</button>
+    <button data-menu-action="level">▦ 任务目录</button>
   </div>
 </div></div>
 <div id="briefing" role="dialog" aria-modal="true" aria-labelledby="briefTitle"><div class="brief-card">
@@ -133,11 +140,20 @@
   <div class="brief-success" id="briefSuccess"></div><p class="brief-scale">本作使用缩比轨道物理，HUD 的 u / u/s 是游戏单位；操作规律与真实轨道力学方向一致，但数值不代表真实地球。</p>
   <div class="brief-actions"><button id="briefGuideToggle" onclick="toggleGuide()">隐藏游戏提示</button><button class="primary" onclick="closeBriefing()">明白，继续飞行</button></div>
 </div></div>
+<div id="levelSelect" role="dialog" aria-modal="true" aria-labelledby="levelSelectTitle"><div class="level-shell">
+  <header class="level-head"><div class="level-kicker">MISSION CONTROL</div><h1 id="levelSelectTitle">🚀 任务目录</h1><p>选择任务；最高得分与星级会保存在这台设备上</p></header>
+  <div class="level-grid">
+    <article class="level-card" data-level-card="1" tabindex="0"><div class="level-number">MISSION 01</div><div class="level-icon">🛰️</div><h2>地球同步卫星</h2><p>发射入轨，两次变轨形成同步轨道，并把卫星部署到目标经度。</p><div class="level-meta"><div class="level-stars" data-level-stars="1">☆☆☆</div><div class="level-score"><strong data-level-score="1">—</strong>最高分</div></div><button class="level-play" data-start-level="1">开始任务</button></article>
+    <article class="level-card" data-level-card="2" tabindex="0"><div class="level-number">MISSION 02</div><div class="level-icon">🪂</div><h2>载人航天返回</h2><p>从同步轨道反推再入，等待开伞并把返回舱安全降落到地球。</p><div class="level-meta"><div class="level-stars" data-level-stars="2">☆☆☆</div><div class="level-score"><strong data-level-score="2">—</strong>最高分</div></div><button class="level-play" data-start-level="2">开始任务</button></article>
+    <article class="level-card" data-level-card="3" tabindex="0"><div class="level-number">MISSION 03</div><div class="level-icon">🧩</div><h2>空间站交会对接</h2><p>从地面发射，追赶轨道空间站，匹配速度后完成低速精密对接。</p><div class="level-meta"><div class="level-stars" data-level-stars="3">☆☆☆</div><div class="level-score"><strong data-level-score="3">—</strong>最高分</div></div><button class="level-play" data-start-level="3">开始任务</button></article>
+  </div>
+  <div class="level-footer"><button id="continueLevel" onclick="closeLevelSelect()">继续当前任务</button></div>
+</div></div>
 <div id="msg"><div class="card">
   <div class="emoji" id="mEmoji">🎉</div>
   <h1 id="mTitle">登陆成功！</h1>
   <p id="mText">任务完成</p>
-  <button onclick="resetGame()">再玩一次 (R)</button><button id="mNext" onclick="nextLevel()" style="display:none;background:#5fd068">下一关 (L)</button>
+  <button onclick="resetGame()">再玩一次 (R)</button><button id="mNext" onclick="nextLevel()" style="display:none;background:#5fd068">下一关 (L)</button><button onclick="openLevelSelect()" style="background:#4cc9f0">任务目录</button>
 </div></div>
 <script>
 "use strict";
@@ -165,6 +181,8 @@ const EARTH_OMEGA = 0.045;             // 地球自转角速度（rad/s，逆时
 const R_GEO = Math.cbrt(EARTH.mu / (EARTH_OMEGA*EARTH_OMEGA)); // 同步轨道半径 ≈ 2146
 const GEO_BAND = 150;                  // 环形带半宽
 const SLOT_HALF = 0.22;                // 定点区域半角宽（弧度）
+const STATION_R = 1250;                // 第三关空间站圆轨道半径
+const STATION_OMEGA = Math.sqrt(EARTH.mu/(STATION_R*STATION_R*STATION_R));
 const ROT_ACC = 3.0;                   // 转动惯量：角加速度
 // 姿态控制模式（C 切换）：0=随速偏转 1=手动转向 2=纯惯性
 const ATT_MODES = ['随速偏转','手动转向','纯惯性'];
@@ -197,7 +215,8 @@ function chuteCanopyAngle(flowX,flowY,outX,outY){
 // 关卡定义
 const LEVELS = {
   1: { title:'🛰️ 第一关 · 地球同步卫星', sub:'缩比轨道物理 · 跟随发光按钮完成四步任务' },
-  2: { title:'🪂 第二关 · 载人航天返回', sub:'缩比轨道物理 · 从同步轨道反推返回地球并安全着陆' }
+  2: { title:'🪂 第二关 · 载人航天返回', sub:'缩比轨道物理 · 从同步轨道反推返回地球并安全着陆' },
+  3: { title:'🧩 第三关 · 空间站交会对接', sub:'发射入轨 · 追赶空间站 · 匹配速度后低速对接' }
 };
 let level = 1;
 const stageInfoL1 = [
@@ -232,11 +251,30 @@ const stageInfoL2 = [
     science:'安全着陆看的是相对地面的速度，而不是绝对速度。地球在自转，所以程序会扣除当地地表线速度后再判断冲击。',
     success:'成功标志：相对地面速度 ≤17 u/s；绿色着陆区只影响完美评价，不影响基础通关。'}
 ];
+const stageInfoL3 = [
+  {name:'① 发射进入近地轨道', hint:'推进起飞 · 向右压平 · 形成顺行轨道',
+    steps:['按住推进离开发射台，高度约 50 u 后逐渐向右转。','让黄色预测线闭合，并保持顺时针画面中的顺行方向。','把轨道抬到空间站所在的青色轨道附近。'],
+    science:'交会对接的第一步不是直接瞄准空间站，而是先进入同方向的近地轨道。直接朝目标飞通常会因为引力和目标持续运动而错过。',
+    success:'成功标志：形成顺行闭合轨道，远地点接近空间站轨道。'},
+  {name:'② 追赶空间站', hint:'看绿色目标线 · 用轨道高低改变追赶速度',
+    steps:['观察空间站和绿色连线，不要直接长时间朝它推进。','在较低轨道会绕得更快，可从后方追赶；需要减小相位差时短促点火。','距离降到 350 u 内后进入近距离操作。'],
+    science:'较低轨道速度更快、周期更短，这是轨道交会最反直觉也最关键的规律。追赶前方目标有时要先减速进入更低轨道。',
+    success:'成功标志：右侧遥测显示“空间站距离 <350 u”。'},
+  {name:'③ 匹配相对速度', hint:'对准相对速度反方向 · 短促点火刹车',
+    steps:['接近后重点看“相对速度”，不要只看绝对速度。','机头朝相对运动的反方向，用短促点火把速度差降下来。','保持距离小于 120 u、相对速度小于 22 u/s。'],
+    science:'两艘飞船即使都在轨道上，速度方向和大小仍可能不同。对接前必须先把相对速度消掉，否则接触瞬间仍相当于高速碰撞。',
+    success:'成功标志：距离 <120 u 且相对速度 <22 u/s。'},
+  {name:'④ 最终对接', hint:'慢慢靠近 · 距离 <30 · 相对速度 <8',
+    steps:['用非常短的点火逐步靠近空间站中央的绿色对接口。','让相对速度保持在 8 u/s 以下；越慢越容易获得高分。','满足条件并稳定片刻后，飞船会自动捕获并完成对接。'],
+    science:'真实对接最后几米通常以厘米每秒计，并由姿态控制和对接机构共同完成。本关进行了缩比，但仍强调“先消速度，再靠近”。',
+    success:'成功标志：绿色对接环闭合，火箭与空间站一起沿轨道飞行。'}
+];
 let mission;
 
-let rocket, trail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
+let rocket, station, trail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
 let paused = false, retryTimer = null;
 let briefingWasPaused = false, lastBriefedLevel = 0;
+let levelSelectOpen = false, gameStarted = false;
 let showPred = true; // T 开关：未来轨迹辅助线
 let cameraMode = 0;
 let cameraDebugAt = 0;
@@ -273,9 +311,86 @@ function syncOrbitStatus(ship=rocket,tolerance=1){
 function padAngle(){ return PAD_ANG0 + earthAngle; }
 // 着陆区当前角度（跟随地球自转，第二关）
 function landAngle(){ return LAND_ANG0 + earthAngle; }
+function updateStation(dt){
+  if(!station) return;
+  station.angle+=STATION_OMEGA*dt;
+  const c=Math.cos(station.angle), s=Math.sin(station.angle), v=STATION_OMEGA*STATION_R;
+  station.x=EARTH.x+c*STATION_R; station.y=EARTH.y+s*STATION_R;
+  station.vx=-s*v; station.vy=c*v; station.a=station.angle+Math.PI/2;
+  if(station.docked){
+    rocket.x=station.x; rocket.y=station.y; rocket.vx=station.vx; rocket.vy=station.vy; rocket.a=station.a;
+  }
+}
+function stationMetrics(){
+  if(!station) return {distance:Infinity,relSpeed:Infinity,closing:0};
+  const dx=station.x-rocket.x, dy=station.y-rocket.y, distance=Math.hypot(dx,dy);
+  const rvx=rocket.vx-station.vx, rvy=rocket.vy-station.vy, relSpeed=Math.hypot(rvx,rvy);
+  const closing=distance>0?(rvx*dx+rvy*dy)/distance:0;
+  return {dx,dy,distance,rvx,rvy,relSpeed,closing};
+}
+function applyDockingAssist(dt){
+  if(level!==3||!station||!mission.assistMode||mission.stage<2||mission.done) return;
+  const m=stationMetrics();
+  if(m.distance>220||m.distance<1) return;
+  const ux=m.dx/m.distance, uy=m.dy/m.distance;
+  const desiredApproach=mission.stage===3?Math.min(4,m.distance*.08):Math.min(8,m.distance*.06);
+  const targetVx=station.vx+ux*desiredApproach, targetVy=station.vy+uy*desiredApproach;
+  const blend=1-Math.exp(-(mission.stage===3?.8:.35)*dt);
+  rocket.vx+=(targetVx-rocket.vx)*blend; rocket.vy+=(targetVy-rocket.vy)*blend;
+}
 // 当前关卡的教学步骤
-function stageInfo(){ return level===2 ? stageInfoL2 : stageInfoL1; }
-function nextLevel(){ level = level===1 ? 2 : 1; resetGame(); }
+function stageInfo(){ return level===1 ? stageInfoL1 : level===2 ? stageInfoL2 : stageInfoL3; }
+
+const SAVE_KEY='spacegame-progress-v1';
+function loadProgress(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
+    return saved&&typeof saved==='object'?saved:{};
+  }catch(_){ return {}; }
+}
+function starsForScore(score){ return score>=850?3:score>=650?2:score>0?1:0; }
+function starText(count){ return '★'.repeat(count)+'☆'.repeat(3-count); }
+function saveLevelResult(levelId,score){
+  const progress=loadProgress(), previous=progress[levelId]||{score:0,stars:0};
+  const best=Math.max(previous.score||0,Math.max(0,Math.min(1000,Math.round(score))));
+  progress[levelId]={score:best,stars:starsForScore(best)};
+  try{ localStorage.setItem(SAVE_KEY,JSON.stringify(progress)); }catch(_){}
+  updateLevelCards();
+  return progress[levelId];
+}
+function updateLevelCards(){
+  const progress=loadProgress();
+  for(let i=1;i<=3;i++){
+    const result=progress[i]||{score:0,stars:0};
+    const scoreEl=document.querySelector(`[data-level-score="${i}"]`), starsEl=document.querySelector(`[data-level-stars="${i}"]`);
+    if(scoreEl) scoreEl.textContent=result.score||'—';
+    if(starsEl){ starsEl.textContent=starText(result.stars||0); starsEl.setAttribute('aria-label',(result.stars||0)+' 星'); }
+  }
+}
+function openLevelSelect(initial=false){
+  levelSelectOpen=true; paused=true;
+  document.getElementById('briefing').classList.remove('is-visible');
+  document.getElementById('msg').style.display='none';
+  document.getElementById('continueLevel').hidden=initial||!gameStarted;
+  document.getElementById('levelSelect').classList.add('is-visible');
+  updateLevelCards(); syncUI();
+}
+function closeLevelSelect(){
+  if(!gameStarted) return;
+  levelSelectOpen=false; paused=false;
+  document.getElementById('levelSelect').classList.remove('is-visible');
+  syncUI();
+}
+function startLevel(levelId){
+  level=Math.max(1,Math.min(3,Number(levelId)||1));
+  gameStarted=true; levelSelectOpen=false; paused=false; lastBriefedLevel=0;
+  document.getElementById('levelSelect').classList.remove('is-visible');
+  resetGame();
+}
+function nextLevel(){
+  if(level<3) startLevel(level+1);
+  else openLevelSelect();
+}
 function restartCurrent(full=false){
   if(full || mission.done || !mission.checkpoint) resetGame();
   else retryFromStage('主动重新尝试');
@@ -285,6 +400,8 @@ function resetGame(){
   if(retryTimer!==null){ clearTimeout(retryTimer); retryTimer=null; }
   paused = false;
   earthAngle = 0;
+  station = level===3 ? {angle:.55,x:0,y:0,vx:0,vy:0,a:0,docked:false} : null;
+  if(station) updateStation(0);
   if(level===2){
     // 第二关：从同步轨道起步（第一关通关状态）， circular 轨道
     const ang = 0; // 初始在 +x 方向的同步轨道上
@@ -301,7 +418,7 @@ function resetGame(){
     };
     launched = true; // 已在轨，直接计时
   }else{
-    // 第一关：发射台起步
+    // 第一、三关：发射台起步
     const pad = padAngle();
     const px = EARTH.x + Math.cos(pad)*(EARTH.r+1), py = EARTH.y + Math.sin(pad)*(EARTH.r+1);
     rocket = {
@@ -319,7 +436,7 @@ function resetGame(){
   trail = []; state = 'fly'; flightT = 0; shake = 0;
   bulletT = 0; predictionCache = null;
   actionCue = null;
-  mission = {stage:0, holdT:0, hintsHidden:false, assistMode:true, done:false, satReleased:false, satellite:null, toast:'', toastT:0, checkpoint:null, dynHint:''};
+  mission = {stage:0, holdT:0, hintsHidden:false, assistMode:true, done:false, satReleased:false, satellite:null, toast:'', toastT:0, checkpoint:null, dynHint:'', dockDistance:Infinity, dockRelSpeed:Infinity};
   camInit = true;
   hideMsg();
   // 更新标题
@@ -335,7 +452,7 @@ function showMsg(emoji,title,text){
   document.getElementById('mText').innerHTML = text;
   const next = document.getElementById('mNext');
   next.style.display = mission && mission.done ? 'inline-block' : 'none';
-  next.textContent = level===1 ? '下一关 (L)' : '回到第一关 (L)';
+  next.textContent = level<3 ? '下一关 (L)' : '返回目录 (L)';
   document.getElementById('msg').style.display = 'flex';
 }
 function openBriefing(){
@@ -425,7 +542,8 @@ function syncUI(){
   if(pause){ pause.classList.toggle('is-active',paused); pause.setAttribute('aria-pressed',String(paused)); pause.querySelector('.ico').textContent=paused?'▶':'Ⅱ'; pause.querySelector('.lbl').textContent=paused?'继续':'暂停'; }
   const canDeploy=level===1&&mission&&mission.stage===3&&!mission.done&&state==='fly';
   if(deploy) deploy.classList.toggle('is-visible',canDeploy);
-  document.getElementById('pauseMenu').classList.toggle('is-visible',paused);
+  const briefingOpen=document.getElementById('briefing').classList.contains('is-visible');
+  document.getElementById('pauseMenu').classList.toggle('is-visible',paused&&!levelSelectOpen&&!briefingOpen);
   const menuPrediction=document.getElementById('menuPrediction'), menuAttitude=document.getElementById('menuAttitude');
   const menuDial=document.getElementById('menuDial'), menuGuide=document.getElementById('menuGuide'), menuAssist=document.getElementById('menuAssist');
   if(menuPrediction){ menuPrediction.textContent='轨迹预测：'+(showPred?'开启':'关闭'); menuPrediction.classList.toggle('is-on',showPred); }
@@ -464,13 +582,25 @@ function updateActionCue(){
       if(radial>8) cues=['speed'];
       else { const turn=cueTurnTo(vAng); cues=turn?[turn]:['thrust']; }
     }else if(mission.stage===3) cues=['deploy'];
-  }else if(mission.stage<2){
+  }else if(level===2 && mission.stage<2){
     const turn=cueTurnTo(vAng+Math.PI);
     cues=turn?[turn]:['thrust'];
-  }else{
+  }else if(level===2){
     const turn=cueTurnTo(localUp,0.2);
     if(turn) cues=[turn];
     else if(alt<90&&radial<-9) cues=['thrust'];
+  }else if(level===3){
+    if(mission.stage===0){
+      if(rocket.landed||alt<35) cues=['thrust'];
+      else if(alt<170){ const turn=cueTurnTo(localUp+Math.PI/2,0.35); cues=turn?[turn,'thrust']:['thrust']; }
+      else { const turn=cueTurnTo(vAng); cues=turn?[turn]:['thrust']; }
+    }else{
+      const m=stationMetrics();
+      const cancelAngle=Math.atan2(-m.rvy,-m.rvx), approachAngle=Math.atan2(m.dy,m.dx);
+      const target=m.relSpeed>(mission.stage>=2?8:18)?cancelAngle:approachAngle;
+      const turn=cueTurnTo(target,mission.stage===3?0.18:0.28);
+      cues=turn?[turn]:['thrust'];
+    }
   }
   setActionCue(cues);
 }
@@ -498,6 +628,24 @@ function calcScore(){
     fuel:rocket.fuel.toFixed(0), time:flightT.toFixed(1),
     maxG:(rocket.maxG/G_REF).toFixed(1)};
 }
+function resultLine(result){
+  return `得分 <b style="font-size:24px">${result.score}</b> · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br>`;
+}
+function scoreLevel1(challenge){ return Math.min(1000,520+(challenge?180:0)+Math.max(0,300-flightT*2)); }
+function scoreLevel2(inZone,vRel){ return Math.min(1000,540+(inZone?170:0)+Math.max(0,220-flightT*1.5)+Math.max(0,70-vRel*4)); }
+function scoreLevel3(relSpeed){ return Math.min(1000,560+Math.max(0,260-flightT*1.5)+Math.max(0,180-relSpeed*18)); }
+
+function finishDocking(){
+  if(level!==3||!station||mission.done) return;
+  const metrics=stationMetrics();
+  station.docked=true; mission.done=true; state='complete';
+  rocket.x=station.x; rocket.y=station.y; rocket.vx=station.vx; rocket.vy=station.vy; rocket.a=station.a;
+  const result=saveLevelResult(3,scoreLevel3(metrics.relSpeed));
+  syncUI();
+  showMsg('🧩','空间站对接成功！',
+    resultLine(result)+`捕获距离 ${metrics.distance.toFixed(1)} u · 相对速度 ${metrics.relSpeed.toFixed(1)} u/s<br>`+
+    `耗时 ${flightT.toFixed(1)}s<br><span style="color:#888">先匹配速度再靠近，这正是轨道交会的核心。</span>`);
+}
 
 // 星星背景
 stars = [];
@@ -518,7 +666,7 @@ addEventListener('keydown', e=>{
   if(e.code==='KeyH') toggleGuide();
   if(e.code==='KeyM') toggleAssist();
   if(e.code==='KeyE') tryDeploy();
-  if(e.code==='KeyL') nextLevel();
+  if(e.code==='KeyL') mission&&mission.done?nextLevel():openLevelSelect();
   if(e.code==='KeyC') cycleAttitude();
   if(e.code==='KeyP') togglePause();
 });
@@ -536,7 +684,7 @@ document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('cl
   else if(action==='guide') toggleGuide();
   else if(action==='briefing') openBriefing();
   else if(action==='assist') toggleAssist();
-  else if(action==='level') nextLevel();
+  else if(action==='level') openLevelSelect();
   else if(action==='restart') restartCurrent(false);
   else if(action==='pause') togglePause();
   else if(action==='deploy') tryDeploy();
@@ -551,9 +699,14 @@ document.querySelectorAll('[data-menu-action]').forEach(btn=>btn.addEventListene
   else if(action==='briefing') openBriefing();
   else if(action==='assist') toggleAssist();
   else if(action==='restart'){ paused=false; restartCurrent(false); }
-  else if(action==='level'){ paused=false; nextLevel(); }
+  else if(action==='level'){ openLevelSelect(); }
   syncUI();
 }));
+document.querySelectorAll('[data-level-card]').forEach(card=>{
+  const launch=()=>startLevel(card.dataset.levelCard);
+  card.addEventListener('click',launch);
+  card.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); launch(); } });
+});
 document.querySelectorAll('[data-hold]').forEach(btn=>{
   const code=btn.dataset.hold;
   const activePointers=new Set();
@@ -641,7 +794,8 @@ function boom(x,y){
 function saveCheckpoint(){
   mission.checkpoint = {
     x:rocket.x, y:rocket.y, vx:rocket.vx, vy:rocket.vy, a:rocket.a,
-    fuel:rocket.fuel, flightT:flightT, earthAngle:earthAngle, stage:mission.stage, velOffset:velOffset
+    fuel:rocket.fuel, flightT:flightT, earthAngle:earthAngle, stage:mission.stage, velOffset:velOffset,
+    stationAngle:station?station.angle:null
   };
 }
 // 失败回退：优先回到检查点（当前阶段起点），否则回发射场
@@ -652,6 +806,7 @@ function retryFromStage(reason){
     rocket.x=cp.x; rocket.y=cp.y; rocket.vx=cp.vx; rocket.vy=cp.vy; rocket.a=cp.a;
     rocket.fuel=cp.fuel; flightT=cp.flightT; earthAngle=cp.earthAngle; mission.stage=cp.stage;
     velOffset=cp.velOffset||0;
+    if(station&&Number.isFinite(cp.stationAngle)){ station.angle=cp.stationAngle; updateStation(0); }
     rocket.landed=false; rocket.body=null; launched=true; rocket._clearedPad=true;
   }else if(level===2){
     // 第二关无检查点 → 回同步轨道起点
@@ -696,9 +851,10 @@ function tryDeploy(){
   state='complete';
   syncUI();
   const challenge = inSlot;
+  const result=saveLevelResult(1,scoreLevel1(challenge));
   showMsg(challenge?'🛰️':'🎉',
     challenge?'目标经度部署成功！':'地球静止轨道部署成功！',
-    `已形成顺行同步轨道（缩比高度 ${(d-EARTH.r).toFixed(0)} u）<br>` +
+    resultLine(result)+`已形成顺行同步轨道（缩比高度 ${(d-EARTH.r).toFixed(0)} u）<br>` +
     (challenge ? '🌟 精确位于绿色目标经度，卫星将相对地面定点！<br>' : '<span style="color:#888">轨道同步，但未位于绿色目标经度；卫星会定点在当前经度</span><br>') +
     `当前同步残差 ${sync.residual.toFixed(4)} rad/s · 耗时 ${flightT.toFixed(1)}s<br><span style="color:#888">R 从头再来 · L 下一关</span>`);
 }
@@ -707,6 +863,7 @@ function tryDeploy(){
 function updateMission(dt){
   if(!mission || mission.done || state!=='fly' || !launched) return;
   if(level===2){ updateMissionL2(dt); return; }
+  if(level===3){ updateMissionL3(dt); return; }
   if(rocket.landed) return;
   const ap = orbitApsis();
   const need = [1.3, 0, 1.3][mission.stage];
@@ -775,6 +932,39 @@ function updateMissionL2(dt){
   const vRad = (rocket.vx*(rocket.x-EARTH.x)+rocket.vy*(rocket.y-EARTH.y))/ap.r;
   mission.dynHint = '高度 '+Math.max(0,alt).toFixed(0)+'｜下降 '+Math.max(0,-vRad).toFixed(1);
 }
+// 第三关：发射入轨 → 轨道交会 → 匹配速度 → 低速自动捕获
+function updateMissionL3(dt){
+  if(!station||rocket.landed) return;
+  const m=stationMetrics(), ap=orbitApsis();
+  mission.dockDistance=m.distance; mission.dockRelSpeed=m.relSpeed;
+  let ok=false, need=0;
+  if(mission.stage===0){
+    const alt=ap.r-EARTH.r;
+    ok=ap.bound&&orbitalAngularRate()>0&&ap.rp>EARTH.r+90&&ap.ra>STATION_R-260&&ap.ra<STATION_R+520;
+    need=1.2;
+    if(!ap.bound) mission.dynHint='速度过高｜停火并沿青线调整';
+    else if(orbitalAngularRate()<=0) mission.dynHint='方向反了｜向右进入顺行轨道';
+    else mission.dynHint=`高度 ${alt.toFixed(0)}｜远点 ${(ap.ra-EARTH.r).toFixed(0)}｜目标约 ${STATION_R-EARTH.r}`;
+  }else if(mission.stage===1){
+    ok=m.distance<(mission.assistMode?440:350); need=.45;
+    mission.dynHint=`距离 ${m.distance.toFixed(0)}｜${m.closing>0?'正在接近':'正在远离｜试试较低轨道'}`;
+  }else if(mission.stage===2){
+    ok=m.distance<(mission.assistMode?145:120)&&m.relSpeed<(mission.assistMode?28:22); need=.65;
+    mission.dynHint=`距离 ${m.distance.toFixed(0)}｜相对速度 ${m.relSpeed.toFixed(1)}`;
+  }else{
+    ok=m.distance<(mission.assistMode?42:30)&&m.relSpeed<(mission.assistMode?12:8); need=.8;
+    mission.dynHint=`对接距离 ${m.distance.toFixed(1)}｜相对 ${m.relSpeed.toFixed(1)}`;
+    if(ok){
+      mission.holdT+=dt;
+      if(mission.holdT>=need) finishDocking();
+    }else mission.holdT=0;
+    return;
+  }
+  if(ok){
+    mission.holdT+=dt;
+    if(mission.holdT>=need) advanceStage();
+  }else mission.holdT=0;
+}
 function advanceStage(){
   mission.stage++;
   mission.holdT = 0;
@@ -788,6 +978,9 @@ function advanceStage(){
   if(level===1 && mission.stage===3){ mission.toast='✅ 同步稳定！点击“释放卫星”'; mission.toastT=4; }
   if(level===2 && mission.stage===1){ mission.toast='✅ 已进入返回轨道！准备再入减速'; mission.toastT=3; }
   if(level===2 && mission.stage===2){ mission.toast='✅ 速度受控！最后垂直着陆'; mission.toastT=3; }
+  if(level===3 && mission.stage===1){ mission.toast='✅ 已进入近地轨道！开始追赶空间站'; mission.toastT=3.5; }
+  if(level===3 && mission.stage===2){ mission.toast='✅ 已进入交会区！先消除相对速度'; mission.toastT=3.5; }
+  if(level===3 && mission.stage===3){ mission.toast='✅ 速度接近！低速靠近绿色对接口'; mission.toastT=3.5; }
   syncUI();
 }
 
@@ -795,6 +988,7 @@ function update(dt, dtReal){
   if(dtReal===undefined) dtReal = dt; // 实时时间（旋转用），默认=平移dt
   // 地球自转（同步卫星的前提）；着陆时发射架随之转动
   earthAngle += EARTH_OMEGA*dt;
+  updateStation(dt);
   if(rocket.landed && rocket.body===EARTH && !rocket._clearedPad){
     const pad = padAngle();
     rocket.x = EARTH.x + Math.cos(pad)*(EARTH.r+1);
@@ -868,7 +1062,7 @@ function update(dt, dtReal){
   if(rocket.thrusting){
     if(rocket.landed){ rocket.landed=false; rocket.body=null; launched=true; rocket.launchGrace=1.2; } // 起飞离地宽限
     let thrustPower=1;
-    if(mission.assistMode && level===1 && mission.stage===0){
+    if(mission.assistMode && (level===1||level===3) && mission.stage===0){
       const rr=Math.hypot(rocket.x-EARTH.x,rocket.y-EARTH.y), alt=rr-EARTH.r;
       if(alt<140){
         const speedNow=Math.hypot(rocket.vx,rocket.vy), safeSpeed=0.78*Math.sqrt(2*EARTH.mu/rr);
@@ -893,6 +1087,7 @@ function update(dt, dtReal){
     ax+=dx/d*g; ay+=dy/d*g;
   }
   rocket.vx += ax*dt; rocket.vy += ay*dt;
+  applyDockingAssist(dt);
 
   // 过载监测：点火时的推进加速度（点火期间重力被发动机抵消，不计入体感过载）
   const gNow = rocket.thrusting ? THRUST*rocket.thrustPower : 0;
@@ -1012,9 +1207,10 @@ function update(dt, dtReal){
         while(ang>Math.PI)ang-=TAU; while(ang<-Math.PI)ang+=TAU;
         const inZone = Math.abs(ang) <= LAND_HALF;
         state='win'; mission.done = true;
+        const result=saveLevelResult(2,scoreLevel2(inZone,vRel));
         showMsg(inZone?'🌟':'🎉',
           inZone?'完美着陆！精准落入着陆区':'着陆成功！',
-          `载人返回舱安全着陆<br>` +
+          resultLine(result)+`载人返回舱安全着陆<br>` +
           (inZone ? '🌟 完美通关：精确落入指定着陆区！<br>' : '<span style="color:#888">挑战目标未达成：未落入绿色着陆区，下次试试瞄准</span><br>') +
           `着陆速度 ${vRel.toFixed(1)} u/s · 耗时 ${flightT.toFixed(1)}s<br><span style="color:#888">按 R 再来一次 · 按 L 切回第一关</span>`);
         return;
@@ -1045,9 +1241,10 @@ function update(dt, dtReal){
 }
 
 // ---------- 绘制 ----------
-// 任务区域渲染：第一关=同步带+定点扇形；第二关=着陆区
+// 任务区域渲染：第一关=同步带；第二关=着陆区；第三关=空间站交会区
 function drawMissionZones(){
   if(level===2){ drawLandingZone(); return; }
+  if(level===3){ drawStationOrbitZone(); return; }
   const slot = padAngle();
   // 同步轨道环形带（金色）
   ctx.strokeStyle='rgba(255,209,102,.35)'; ctx.lineWidth=GEO_BAND*2;
@@ -1075,6 +1272,18 @@ function drawMissionZones(){
     ctx.beginPath(); ctx.arc(sx, sy, 8, 0, TAU); ctx.fill(); ctx.stroke();
     ctx.strokeStyle='#4cc9f0'; ctx.lineWidth=3/cam.zoom;
     ctx.beginPath(); ctx.moveTo(sx-16,sy); ctx.lineTo(sx-8,sy); ctx.moveTo(sx+8,sy); ctx.lineTo(sx+16,sy); ctx.stroke();
+  }
+}
+function drawStationOrbitZone(){
+  if(!station) return;
+  ctx.strokeStyle='rgba(76,201,240,.32)'; ctx.lineWidth=3/cam.zoom; ctx.setLineDash([9/cam.zoom,10/cam.zoom]);
+  ctx.beginPath(); ctx.arc(EARTH.x,EARTH.y,STATION_R,0,TAU); ctx.stroke(); ctx.setLineDash([]);
+  const m=stationMetrics();
+  if(mission.stage>=1){
+    ctx.strokeStyle='rgba(95,208,104,.52)'; ctx.lineWidth=1.8/cam.zoom; ctx.setLineDash([5/cam.zoom,7/cam.zoom]);
+    ctx.beginPath(); ctx.moveTo(rocket.x,rocket.y); ctx.lineTo(station.x,station.y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle=mission.stage===3?'rgba(95,208,104,.88)':'rgba(255,209,102,.52)'; ctx.lineWidth=2/cam.zoom;
+    ctx.beginPath(); ctx.arc(station.x,station.y,mission.stage===3?42:120,0,TAU); ctx.stroke();
   }
 }
 // 第二关：着陆区（绿色地表弧段，随地球自转）
@@ -1184,6 +1393,25 @@ function drawRocket(){
   ctx.restore();
 }
 
+function drawStation(){
+  if(!station) return;
+  ctx.save(); ctx.translate(station.x,station.y); ctx.rotate(station.a+Math.PI/2);
+  ctx.strokeStyle='rgba(255,255,255,.72)'; ctx.lineWidth=2/cam.zoom;
+  ctx.beginPath(); ctx.moveTo(-35,0); ctx.lineTo(35,0); ctx.stroke();
+  ctx.fillStyle='#3577c8'; ctx.strokeStyle='#9fd8ff'; ctx.lineWidth=1.5/cam.zoom;
+  ctx.fillRect(-43,-10,25,20); ctx.strokeRect(-43,-10,25,20);
+  ctx.fillRect(18,-10,25,20); ctx.strokeRect(18,-10,25,20);
+  ctx.fillStyle='#f4f7fb'; ctx.strokeStyle='#20263c'; ctx.lineWidth=2/cam.zoom;
+  ctx.beginPath(); ctx.arc(0,0,13,0,TAU); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#ffd166'; ctx.fillRect(-7,-16,14,32);
+  ctx.fillStyle='#20263c'; ctx.beginPath(); ctx.arc(0,0,5,0,TAU); ctx.fill();
+  ctx.strokeStyle=mission&&mission.stage===3?'#5fd068':'rgba(76,201,240,.8)'; ctx.lineWidth=2.5/cam.zoom;
+  ctx.beginPath(); ctx.arc(0,0,20,0,TAU); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle='#dff7ff'; ctx.font=`800 ${12/cam.zoom}px "Microsoft YaHei",sans-serif`; ctx.textAlign='center';
+  ctx.fillText(station.docked?'已对接':'天宫实验站',station.x,station.y-30/cam.zoom); ctx.textAlign='left';
+}
+
 // 预测未来轨迹（无动力滑行，与主物理同模型）；同时标注近/远地点
 function predictPath(ship=rocket){
   let px=ship.x, py=ship.y, pvx=ship.vx, pvy=ship.vy;
@@ -1271,9 +1499,13 @@ function drawRadar(){
     ctx.strokeStyle='rgba(255,209,102,.65)'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.arc(mx,my,geoR,0,TAU); ctx.stroke();
     ctx.strokeStyle='#5fd068'; ctx.lineWidth=3;
-    const targetAng=level===1?padAngle():landAngle(), targetR=(level===1?R_GEO:EARTH.r)*scale;
-    const targetHalf=level===1?SLOT_HALF:LAND_HALF;
-    ctx.beginPath(); ctx.arc(mx,my,targetR,targetAng-targetHalf,targetAng+targetHalf); ctx.stroke();
+    if(level!==3){
+      const targetAng=level===1?padAngle():landAngle(), targetR=(level===1?R_GEO:EARTH.r)*scale;
+      const targetHalf=level===1?SLOT_HALF:LAND_HALF;
+      ctx.beginPath(); ctx.arc(mx,my,targetR,targetAng-targetHalf,targetAng+targetHalf); ctx.stroke();
+    }else{
+      ctx.beginPath(); ctx.arc(mx,my,STATION_R*scale,0,TAU); ctx.stroke();
+    }
 
     if(state==='fly'&&!rocket.landed){
       const pred=getPredictedPath();
@@ -1294,6 +1526,11 @@ function drawRadar(){
     ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(rq.x,rq.y,portrait?3.5:4,0,TAU); ctx.fill();
     ctx.strokeStyle='#ef476f'; ctx.lineWidth=2;
     ctx.beginPath(); ctx.moveTo(rq.x,rq.y); ctx.lineTo(rq.x+Math.cos(rocket.a)*9,rq.y+Math.sin(rocket.a)*9); ctx.stroke();
+    if(level===3&&station){
+      const sq=map(station.x,station.y);
+      ctx.strokeStyle='rgba(95,208,104,.65)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(rq.x,rq.y); ctx.lineTo(sq.x,sq.y); ctx.stroke();
+      ctx.fillStyle='#5fd068'; ctx.beginPath(); ctx.arc(sq.x,sq.y,4,0,TAU); ctx.fill();
+    }
     if(mission.satellite){ const sq=map(mission.satellite.x,mission.satellite.y); ctx.fillStyle='#5fd068'; ctx.fillRect(sq.x-2,sq.y-2,4,4); }
   }else{
     const range=45000, scale=RS*0.42/range;
@@ -1316,7 +1553,7 @@ function drawRadar(){
   ctx.fillStyle='#fff'; ctx.font=`800 ${portrait?8:9}px sans-serif`; ctx.textAlign='left';
   ctx.fillText(radarMode===0?'轨道雷达':'全局导航',cx+5,cy+11);
   ctx.fillStyle='rgba(255,255,255,.65)'; ctx.font=`700 ${portrait?7:8}px sans-serif`;
-  ctx.fillText(radarMode===0?'蓝近 · 橙远 · 绿目标':'青框 = 当前视野',cx+5,cy+RS-5);
+  ctx.fillText(radarMode===0?(level===3?'白船 · 绿站 · 青轨道':'蓝近 · 橙远 · 绿目标'):'青框 = 当前视野',cx+5,cy+RS-5);
   ctx.textAlign='left';
 }
 
@@ -1398,6 +1635,7 @@ function draw(){
 
   drawMissionZones();
   for(const b of BODIES){ drawGroundRing(b); drawBody(b); }
+  drawStation();
 
   // 粒子
   for(const p of particles){
@@ -1459,7 +1697,7 @@ function draw(){
   const saE=Math.atan2(dyE,dxE);
   const relEvx=rocket.vx-(-Math.sin(saE)*EARTH_OMEGA*dE), relEvy=rocket.vy-(Math.cos(saE)*EARTH_OMEGA*dE);
   const vRelEarth=Math.hypot(relEvx,relEvy);
-  const teleCompact=W<760, teleX=teleCompact?W-190:W-222, teleY=teleCompact?278:14, teleW=teleCompact?174:206, teleH=level===1?86:66;
+  const teleCompact=W<760, teleX=teleCompact?W-190:W-222, teleY=teleCompact?278:14, teleW=teleCompact?174:206, teleH=level===1?86:level===3?106:66;
   ctx.fillStyle='rgba(8,14,38,.68)'; roundRect(teleX,teleY,teleW,teleH,14); ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1; roundRect(teleX,teleY,teleW,teleH,14); ctx.stroke();
   ctx.textAlign='right';
@@ -1477,6 +1715,11 @@ function draw(){
   ctx.fillText(`高度 ${alt.toFixed(0)} u`, W-20, teleY+56);
   ctx.fillStyle='rgba(255,209,102,.9)';
   if(level===1) ctx.fillText(`同步带高度 ${(R_GEO-EARTH.r-GEO_BAND).toFixed(0)}~${(R_GEO-EARTH.r+GEO_BAND).toFixed(0)}`, W-20, teleY+76);
+  if(level===3&&station){
+    const m=stationMetrics();
+    ctx.fillStyle='#5fd068'; ctx.fillText(`空间站距离 ${m.distance.toFixed(0)} u`,W-20,teleY+76);
+    ctx.fillStyle='#ffd166'; ctx.fillText(`相对速度 ${m.relSpeed.toFixed(1)} u/s`,W-20,teleY+96);
+  }
   ctx.fillStyle='#fff';
   ctx.textAlign='left';
 
@@ -1636,6 +1879,7 @@ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
   addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }
 resetGame();
+openLevelSelect(true);
 requestAnimationFrame(loop);
 </script>
 </body>
