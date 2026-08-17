@@ -2,7 +2,7 @@
   "id": "./",
   "name": "星际快递员",
   "short_name": "星际快递员",
-  "description": "用缩比轨道物理完成卫星部署与载人返回任务。",
+  "description": "用缩比轨道物理完成卫星部署、载人返回、空间站对接与月背着陆任务。",
   "lang": "zh-CN",
   "start_url": "./index.html",
   "scope": "./",
