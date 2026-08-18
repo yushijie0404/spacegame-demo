@@ -1468,9 +1468,9 @@ function unlockFinalStage(targetStage,message){
   saveCheckpoint(); mission.toast=message; mission.toastT=4; syncUI();
 }
 const GUIDE_DEMOS={
-  1:{duration:38,budget:32,burnRate:2.65},
+  1:{duration:38,budget:32,burnRate:2.0},
   2:{duration:38,budget:14,burnRate:1.75},
-  3:{duration:46,budget:35,burnRate:2.0},
+  3:{duration:46,budget:35,burnRate:1.25},
   4:{duration:74,budget:44,burnRate:1.6}
 };
 function smooth01(v){ v=Math.max(0,Math.min(1,v)); return v*v*(3-2*v); }
@@ -1480,7 +1480,8 @@ function createRecordedGuide(levelId){
   const startAngle=Math.atan2(rocket.y-EARTH.y,rocket.x-EARTH.x);
   return {mode:'recorded',level:levelId,x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,a:rocket.a,
     fuel:cfg.budget,fuelMax:cfg.budget,burnRate:cfg.burnRate,duration:cfg.duration,time:0,trailT:0,
-    startAngle,started:false,active:true,complete:false,thrusting:false,chute:false,label:'等待首次推进 · 世界暂停'};
+    startAngle,startMoonAngle:moonAngle,startStationAngle:station?.angle,
+    started:false,active:true,complete:false,thrusting:false,chute:false,label:'等待首次推进 · 世界暂停'};
 }
 function guideDemoPosition(g,t){
   const a0=g.startAngle;
@@ -1490,28 +1491,54 @@ function guideDemoPosition(g,t){
     const a=a0+1.2+Math.PI+(t-26)*.08; return {x:EARTH.x+Math.cos(a)*R_GEO,y:EARTH.y+Math.sin(a)*R_GEO,thrust:t<30,label:t<30?'远地点加速':'同步轨道完成'};
   }
   if(g.level===2){
-    if(t<5){ const a=a0+EARTH_OMEGA*t; return {x:EARTH.x+Math.cos(a)*R_GEO,y:EARTH.y+Math.sin(a)*R_GEO,thrust:true,label:'反向点火降轨'}; }
-    if(t<34){ const u=smooth01((t-5)/29),a=a0+.23+Math.PI*1.12*u,r=R_GEO-(R_GEO-EARTH.r-1)*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:t>31,chute:t>25,label:t>25?'开伞并轻点反推':'滑向地球'}; }
-    const a=a0+.23+Math.PI*1.12; return {x:EARTH.x+Math.cos(a)*(EARTH.r+1),y:EARTH.y+Math.sin(a)*(EARTH.r+1),thrust:false,chute:true,label:'安全着陆'};
+    if(t<5){ const a=a0+EARTH_OMEGA*t; return {x:EARTH.x+Math.cos(a)*R_GEO,y:EARTH.y+Math.sin(a)*R_GEO,heading:a-Math.PI/2,thrust:true,label:'机头朝后 · 反向点火降轨'}; }
+    if(t<34){
+      const u=smooth01((t-5)/29),a=a0+EARTH_OMEGA*5+Math.PI*1.12*u,r=R_GEO-(R_GEO-EARTH.r-1)*u;
+      const chute=t>25,thrust=t>31,heading=chute?a:a-Math.PI/2;
+      return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,heading,thrust,chute,label:thrust?'机头朝上 · 反推缓冲':chute?'打开降落伞':'保持反向姿态滑向地球'};
+    }
+    const a=a0+EARTH_OMEGA*5+Math.PI*1.12; return {x:EARTH.x+Math.cos(a)*(EARTH.r+1),y:EARTH.y+Math.sin(a)*(EARTH.r+1),heading:a,thrust:false,chute:true,label:'安全着陆'};
   }
   if(g.level===3){
     if(t<8){ const u=smooth01(t/8),a=a0+1.25*u,r=EARTH.r+1+299*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:true,label:'发射入轨'}; }
-    if(t<29){ const u=smooth01((t-8)/21),a=a0+1.25+2.5*u,r=900+(STATION_R-900)*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:t<12,label:'从低轨追赶'}; }
+    if(t<29){
+      const u=smooth01((t-8)/21),startA=a0+1.25,arrivalA=g.startStationAngle+STATION_OMEGA*29;
+      const sx=EARTH.x+Math.cos(arrivalA)*STATION_R,sy=EARTH.y+Math.sin(arrivalA)*STATION_R;
+      const tx=-Math.cos(arrivalA+Math.PI/2),ty=-Math.sin(arrivalA+Math.PI/2);
+      const targetX=sx+tx*260,targetY=sy+ty*260,targetA=Math.atan2(targetY-EARTH.y,targetX-EARTH.x),targetR=Math.hypot(targetX-EARTH.x,targetY-EARTH.y);
+      const a=startA+normalizeAngle(targetA-startA)*u,r=900+(targetR-900)*u;
+      return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:t<12,label:'从低轨追赶'};
+    }
     const u=smooth01((t-29)/17),sv=Math.max(1,Math.hypot(station?.vx||0,station?.vy||0)),tx=-(station?.vx||0)/sv,ty=-(station?.vy||0)/sv,offset=260*(1-u);
-    return {x:(station?.x||0)+tx*offset,y:(station?.y||0)+ty*offset,thrust:t<43,label:u>.94?'低速对接':'匹配速度并靠近'};
+    const x=(station?.x||0)+tx*offset,y=(station?.y||0)+ty*offset;
+    const heading=t<36?Math.atan2(station?.vy||0,station?.vx||0):t<43?Math.atan2(-(station?.vy||0),-(station?.vx||0)):Math.atan2((station?.y||0)-y,(station?.x||0)-x);
+    return {x,y,heading,thrust:t<43,label:t<36?'顺向点火完成追赶':t<43?'反向点火匹配速度':u>.94?'低速对接':'关机漂移靠近'};
   }
   if(g.level===4){
     if(t<8){ const u=smooth01(t/8),a=a0+1.2*u,r=EARTH.r+1+299*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:true,label:'发射入轨'}; }
-    if(t<56){
-      // 用始终位于地球外侧的极坐标转移弧。旧二次贝塞尔控制点在部分月相下会切进地球。
-      const u=smooth01((t-8)/48),startA=a0+1.2,entryA=moonAngle-1.15;
-      const tx=MOON.x+Math.cos(entryA)*900,ty=MOON.y+Math.sin(entryA)*900;
-      const targetA=Math.atan2(ty-EARTH.y,tx-EARTH.x),targetR=Math.hypot(tx-EARTH.x,ty-EARTH.y);
-      const a=startA+normalizeAngle(targetA-startA)*u,r=Math.max(EARTH.r+260,900+(targetR-900)*u);
-      return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:t<13,label:t<13?'抬高远地点':'滑向月球'};
+    // 预先按共同起跑钟计算月球抵达位置：转移轨道在远地点与月球相遇。
+    const arrivalMoonA=g.startMoonAngle+MOON_OMEGA*58,entryA=arrivalMoonA-1.15;
+    const arrivalMoonX=EARTH.x+Math.cos(arrivalMoonA)*MOON_ORBIT_R,arrivalMoonY=EARTH.y+Math.sin(arrivalMoonA)*MOON_ORBIT_R;
+    const tx=arrivalMoonX+Math.cos(entryA)*900,ty=arrivalMoonY+Math.sin(entryA)*900;
+    const targetA=Math.atan2(ty-EARTH.y,tx-EARTH.x),targetR=Math.hypot(tx-EARTH.x,ty-EARTH.y);
+    const perigeeA=targetA-Math.PI;
+    if(t<14){
+      const u=smooth01((t-8)/6),a=a0+1.2+normalizeAngle(perigeeA-(a0+1.2))*u;
+      return {x:EARTH.x+Math.cos(a)*900,y:EARTH.y+Math.sin(a)*900,thrust:t<10,label:t<10?'建立近地停泊轨道':'滑向近地点'};
     }
-    const u=smooth01((t-56)/18),a=moonAngle-1.15*(1-u),r=900-(900-MOON.r-1)*u;
-    return {x:MOON.x+Math.cos(a)*r,y:MOON.y+Math.sin(a)*r,thrust:t>60,chute:false,label:u>.96?'月背安全着陆':'反推减速下降'};
+    if(t<18){
+      const u=smooth01((t-14)/4),a=perigeeA+.04*u,r=900+30*u;
+      return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:true,label:'近地点顺向点火 · 抬高远地点'};
+    }
+    if(t<58){
+      // 近地点加速后沿椭圆无动力滑行：rp≈930，ra=月球进近点；不是直线飞向月球。
+      const u=(t-18)/40,nu=(Math.PI-.04)*(1-Math.pow(1-u,1.7))+.04;
+      const rp=930,ra=targetR,e=(ra-rp)/(ra+rp),p=rp*(1+e),r=p/(1+e*Math.cos(nu));
+      const a=perigeeA+nu;
+      return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:false,label:'发动机关机 · 沿转移椭圆滑行'};
+    }
+    const u=smooth01((t-58)/16),a=moonAngle-1.15*(1-u),r=900-(900-MOON.r-1)*u;
+    return {x:MOON.x+Math.cos(a)*r,y:MOON.y+Math.sin(a)*r,heading:a,thrust:t>62,chute:false,label:u>.96?'月背安全着陆':'月球反推捕获并下降'};
   }
   return {x:g.x,y:g.y,thrust:false,label:'示范完成'};
 }
@@ -1525,7 +1552,8 @@ function updateRecordedGuide(dt){
   ghostShip.time=Math.min(ghostShip.duration,ghostShip.time+dt);
   const sample=guideDemoPosition(ghostShip,ghostShip.time),next=guideDemoPosition(ghostShip,Math.min(ghostShip.duration,ghostShip.time+.05));
   ghostShip.x=sample.x;ghostShip.y=sample.y;ghostShip.vx=(sample.x-previous.x)/Math.max(dt,.001);ghostShip.vy=(sample.y-previous.y)/Math.max(dt,.001);
-  ghostShip.a=Math.atan2(next.y-sample.y,next.x-sample.x);ghostShip.thrusting=!!sample.thrust;ghostShip.chute=!!sample.chute;ghostShip.label=sample.label;
+  ghostShip.a=Number.isFinite(sample.heading)?sample.heading:Math.atan2(next.y-sample.y,next.x-sample.x);
+  ghostShip.thrusting=!!sample.thrust&&ghostShip.fuel>0;ghostShip.chute=!!sample.chute;ghostShip.label=sample.label;
   if(ghostShip.thrusting)ghostShip.fuel=Math.max(0,ghostShip.fuel-ghostShip.burnRate*dt);
   ghostShip.trailT+=dt;
   if(ghostTrail.length===0||ghostShip.trailT>=(lowPowerMode?.18:.1)){ghostTrail.push({x:ghostShip.x,y:ghostShip.y});ghostShip.trailT=0;if(ghostTrail.length>(lowPowerMode?260:700))ghostTrail.shift();}
@@ -2160,7 +2188,7 @@ function drawGuideGhost(){
   ctx.restore();
   const ghostLabel=level===5
     ? (!ghostShip.started?'示范：等待首次推进 · 世界暂停':ghostShip.complete?'示范完成：已逃逸':ghostShip.thrusting?(ghostShip.turning?'示范：推进 + 右转':'示范：只按推进'):'示范：滑行')
-    : (ghostShip.complete?'理想示范完成':`示范：${ghostShip.label||'等待点火'}`);
+    : (ghostShip.complete?'标准示范完成':`示范：${ghostShip.label||'等待点火'}`);
   drawGuideRocket(ghostShip,ghostLabel+` · 燃料 ${ghostShip.fuel.toFixed(1)}%`);
 }
 
