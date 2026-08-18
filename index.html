@@ -1480,7 +1480,7 @@ function createRecordedGuide(levelId){
   const startAngle=Math.atan2(rocket.y-EARTH.y,rocket.x-EARTH.x);
   return {mode:'recorded',level:levelId,x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,a:rocket.a,
     fuel:cfg.budget,fuelMax:cfg.budget,burnRate:cfg.burnRate,duration:cfg.duration,time:0,trailT:0,
-    startAngle,started:false,active:true,complete:false,thrusting:false,chute:false,label:'等待点火'};
+    startAngle,started:false,active:true,complete:false,thrusting:false,chute:false,label:'等待首次推进 · 世界暂停'};
 }
 function guideDemoPosition(g,t){
   const a0=g.startAngle;
@@ -1503,10 +1503,12 @@ function guideDemoPosition(g,t){
   if(g.level===4){
     if(t<8){ const u=smooth01(t/8),a=a0+1.2*u,r=EARTH.r+1+299*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:true,label:'发射入轨'}; }
     if(t<56){
-      const u=smooth01((t-8)/48),p0x=EARTH.x+Math.cos(a0+1.2)*900,p0y=EARTH.y+Math.sin(a0+1.2)*900;
-      const mv=Math.max(1,Math.hypot(MOON.vx,MOON.vy)),tx=MOON.x-MOON.vx/mv*950,ty=MOON.y-MOON.vy/mv*950;
-      const cx=(p0x+tx)*.5-Math.sin(a0+1.2)*2100,cy=(p0y+ty)*.5+Math.cos(a0+1.2)*2100,om=1-u;
-      return {x:om*om*p0x+2*om*u*cx+u*u*tx,y:om*om*p0y+2*om*u*cy+u*u*ty,thrust:t<13,label:t<13?'抬高远地点':'滑向月球'};
+      // 用始终位于地球外侧的极坐标转移弧。旧二次贝塞尔控制点在部分月相下会切进地球。
+      const u=smooth01((t-8)/48),startA=a0+1.2,entryA=moonAngle-1.15;
+      const tx=MOON.x+Math.cos(entryA)*900,ty=MOON.y+Math.sin(entryA)*900;
+      const targetA=Math.atan2(ty-EARTH.y,tx-EARTH.x),targetR=Math.hypot(tx-EARTH.x,ty-EARTH.y);
+      const a=startA+normalizeAngle(targetA-startA)*u,r=Math.max(EARTH.r+260,900+(targetR-900)*u);
+      return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:t<13,label:t<13?'抬高远地点':'滑向月球'};
     }
     const u=smooth01((t-56)/18),a=moonAngle-1.15*(1-u),r=900-(900-MOON.r-1)*u;
     return {x:MOON.x+Math.cos(a)*r,y:MOON.y+Math.sin(a)*r,thrust:t>60,chute:false,label:u>.96?'月背安全着陆':'反推减速下降'};
@@ -1575,10 +1577,15 @@ function updateSlingshotGhost(dt,dtReal=dt){
 
 function update(dt, dtReal){
   if(dtReal===undefined) dtReal = dt; // 实时时间（旋转用），默认=平移dt
-  // 第五关的月球窗口在首次点火前冻结，避免玩家阅读界面时错过唯一发射时机。
-  const waitingForSlingLaunch=level===5&&rocket.landed&&!launched;
-  if(!waitingForSlingLaunch) earthAngle += EARTH_OMEGA*dt;
-  updateMoon(waitingForSlingLaunch?0:dt);
+  // 所有关卡的示范、玩家与天体共用同一只起跑钟：首次推进前整个物理世界保持静止。
+  // 这样地球、月球、空间站和轨道中的第二关飞船都不会在示范仍“等待点火”时自行移动。
+  const waitingForGuideIgnition=ghostShip&&!ghostShip.started;
+  if(waitingForGuideIgnition){
+    if(!(keys['ArrowUp']||keys['KeyW'])) return;
+    ghostShip.started=true;
+  }
+  earthAngle += EARTH_OMEGA*dt;
+  updateMoon(dt);
   updateStation(dt);
   updateRecordedGuide(dt);
   updateSlingshotGhost(dt,dtReal);
@@ -2152,7 +2159,7 @@ function drawGuideGhost(){
   }
   ctx.restore();
   const ghostLabel=level===5
-    ? (ghostShip.complete?'示范完成：已逃逸':ghostShip.thrusting?(ghostShip.turning?'示范：推进 + 右转':'示范：只按推进'):'示范：滑行')
+    ? (!ghostShip.started?'示范：等待首次推进 · 世界暂停':ghostShip.complete?'示范完成：已逃逸':ghostShip.thrusting?(ghostShip.turning?'示范：推进 + 右转':'示范：只按推进'):'示范：滑行')
     : (ghostShip.complete?'理想示范完成':`示范：${ghostShip.label||'等待点火'}`);
   drawGuideRocket(ghostShip,ghostLabel+` · 燃料 ${ghostShip.fuel.toFixed(1)}%`);
 }
