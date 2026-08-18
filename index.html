@@ -27,7 +27,7 @@
   .key-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
   .pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:3px 9px;font-size:11px;color:#dbe7ff}
   kbd{min-width:20px;padding:1px 5px;text-align:center;color:#152044;background:#fff;border-radius:6px;box-shadow:0 2px 0 #8e9abc;font-family:inherit;font-size:10px;font-weight:800;text-shadow:none}
-  .tool-rail{position:fixed;z-index:7;top:132px;right:16px;display:grid;grid-template-columns:repeat(3,48px);gap:8px;padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.28);backdrop-filter:blur(8px)}
+  .tool-rail{position:fixed;z-index:7;top:132px;right:16px;display:grid;grid-template-columns:repeat(4,48px);gap:8px;padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.28);backdrop-filter:blur(8px)}
   .icon-btn{position:relative;width:48px;height:48px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#dce7ff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:13px;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent;transition:transform .08s,background .15s,border-color .15s;color-scheme:dark}
   .icon-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3)}
   .icon-btn:active,.icon-btn.is-pressed{transform:translateY(2px) scale(.96)}
@@ -80,7 +80,7 @@
   #msg button:active{transform:translateY(4px);box-shadow:0 1px 0 #222}
   @media (max-width:760px){
     .hud{top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));max-width:none;padding:9px 10px}.brand-mark{width:34px;height:34px}.hud .title{font-size:17px}.hud .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.key-strip{display:none}
-    .tool-rail{top:calc(82px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));grid-template-columns:repeat(3,50px);gap:7px;padding:8px;border-radius:20px}.icon-btn{width:50px;height:50px;border-radius:15px}.icon-btn .ico{font-size:22px}.tool-rail .lbl{display:block}
+    .tool-rail{top:calc(82px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));grid-template-columns:repeat(4,50px);gap:7px;padding:8px;border-radius:20px}.icon-btn{width:50px;height:50px;border-radius:15px}.icon-btn .ico{font-size:22px}.tool-rail .lbl{display:block}
     .flight-controls{left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));justify-content:space-between;gap:0}.turn-controls{gap:12px}.flight-controls .icon-btn{width:64px;height:64px}.flight-controls .thrust{width:84px;height:92px}.flight-controls .thrust .ico{font-size:34px}.flight-controls .turn .ico{font-size:30px}.flight-controls .lbl{font-size:10px}
     .mission-action{left:auto;right:max(14px,env(safe-area-inset-right));top:calc(158px + env(safe-area-inset-top));bottom:auto;transform:none;width:104px;height:58px}
     .pause-card{padding:19px 15px;border-radius:20px}.pause-close{top:9px;right:9px}.pause-actions{gap:8px}.pause-actions button{min-height:50px;font-size:15px}.pause-grid{gap:8px}.pause-grid button{font-size:13px}.key-help-grid{display:none}.touch-help{display:block}
@@ -89,11 +89,11 @@
     #levelSelect{align-items:flex-start;padding:max(16px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}.level-head{margin-bottom:14px}.level-head p{font-size:13px}.level-grid{gap:11px;padding-bottom:16px}.level-card{flex-basis:min(84vw,310px);min-height:255px;padding:14px 15px}.level-icon{margin:5px 0;font-size:31px}.level-card h2{font-size:18px}.level-card p{font-size:12px}.level-meta{padding-top:10px}.level-play{min-height:48px;margin-top:10px}
   }
   @media (pointer:coarse) and (min-width:761px){
-    .tool-rail{grid-template-columns:repeat(3,54px)}.icon-btn{width:54px;height:54px}.flight-controls .icon-btn{width:64px;height:64px}.flight-controls .thrust{width:76px;height:86px}
+    .tool-rail{grid-template-columns:repeat(4,54px)}.icon-btn{width:54px;height:54px}.flight-controls .icon-btn{width:64px;height:64px}.flight-controls .thrust{width:76px;height:86px}
   }
   @media (max-height:520px){
     .hud{top:8px;left:8px;right:auto;max-width:max(190px,calc(100vw - 360px));padding:8px 10px}.hud .brand-mark{display:none}.hud .title{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hud .sub{display:none}.key-strip{display:none}
-    .tool-rail{top:8px;right:8px;grid-template-columns:repeat(3,50px);gap:7px;padding:8px}.icon-btn{width:50px;height:50px}
+    .tool-rail{top:8px;right:8px;grid-template-columns:repeat(4,50px);gap:7px;padding:8px}.icon-btn{width:50px;height:50px}
     .flight-controls{left:auto;right:12px;bottom:max(12px,env(safe-area-inset-bottom));gap:24px}.flight-controls .icon-btn{width:60px;height:60px}.flight-controls .thrust{width:72px;height:82px}
     .mission-action{left:12px;right:auto;top:auto;bottom:max(12px,env(safe-area-inset-bottom));transform:none;width:104px;height:58px}
   }
@@ -109,6 +109,7 @@
   <button class="icon-btn" data-action="camera" aria-label="切换视角模式" aria-pressed="false" title="视角：跟随飞船 (K)"><span class="ico">⌖</span><span class="lbl">跟随</span></button>
   <button class="icon-btn" data-action="pause" aria-label="暂停游戏" aria-pressed="false" title="暂停 (P)"><span class="ico">Ⅱ</span><span class="lbl">暂停</span></button>
   <button class="icon-btn" data-hold="Space" data-cue="speed" aria-label="按住八倍速" title="按住 8 倍速 (Space)"><span class="ico">»</span><span class="lbl">倍速</span></button>
+  <button class="icon-btn" data-action="rewind" aria-label="回到当前子任务，连续点击可继续向前回退" title="阶段回退 (R)"><span class="ico">↶</span><span class="lbl">阶段回退</span></button>
 </nav>
 <div class="flight-controls" aria-label="飞行控制">
   <div class="turn-controls">
@@ -124,7 +125,7 @@
   <p id="perfStatus" aria-live="polite"></p>
   <div class="pause-actions">
     <button class="pause-resume" data-menu-action="resume">▶ 继续飞行</button>
-    <button class="pause-restart" data-menu-action="restart">↻ 重新开始</button>
+    <button class="pause-restart" data-menu-action="restart">↻ 整关重来</button>
     <button class="pause-home" data-menu-action="level">⌂ 回主菜单</button>
   </div>
   <div class="pause-grid">
@@ -139,7 +140,7 @@
   <section class="key-help" aria-label="操作说明">
     <h3>⌨️ 电脑按键</h3>
     <div class="key-help-grid">
-      <span class="pill"><kbd>W</kbd>推进</span><span class="pill"><kbd>A D</kbd>转向</span><span class="pill"><kbd>E</kbd>任务动作</span><span class="pill"><kbd>Space</kbd>8 倍速</span><span class="pill"><kbd>K</kbd>视角</span><span class="pill"><kbd>B</kbd>地图</span><span class="pill"><kbd>C</kbd>姿态</span><span class="pill"><kbd>V</kbd>表盘</span><span class="pill"><kbd>T</kbd>轨迹</span><span class="pill"><kbd>R</kbd>重试</span><span class="pill"><kbd>P</kbd>暂停</span>
+      <span class="pill"><kbd>W</kbd>推进</span><span class="pill"><kbd>A D</kbd>转向</span><span class="pill"><kbd>E</kbd>任务动作</span><span class="pill"><kbd>Space</kbd>8 倍速</span><span class="pill"><kbd>K</kbd>视角</span><span class="pill"><kbd>B</kbd>地图</span><span class="pill"><kbd>C</kbd>姿态</span><span class="pill"><kbd>V</kbd>表盘</span><span class="pill"><kbd>T</kbd>轨迹</span><span class="pill"><kbd>R</kbd>阶段回退</span><span class="pill"><kbd>Shift R</kbd>整关重来</span><span class="pill"><kbd>P</kbd>暂停</span>
     </div>
     <div class="touch-help">触屏：双指缩放、按住画面拖动视角；点击左侧姿态表或右下角地图可直接切换模式。</div>
   </section>
@@ -148,15 +149,16 @@
   <div class="brief-kicker" id="briefKicker">任务简报</div><h2 class="brief-title" id="briefTitle"></h2><p class="brief-goal" id="briefGoal"></p>
   <div class="brief-grid"><section class="brief-box"><h3>🎮 这一步怎么做</h3><ol id="briefSteps"></ol></section><section class="brief-box science"><h3>💡 为什么这样做</h3><p id="briefScience"></p></section></div>
   <div class="brief-success" id="briefSuccess"></div><p class="brief-scale">本作使用缩比轨道物理，HUD 的 u / u/s 是游戏单位；操作规律与真实轨道力学方向一致，但数值不代表真实地球。</p>
-  <div class="brief-actions"><button id="briefGuideToggle" onclick="toggleGuide()">隐藏游戏提示</button><button class="primary" onclick="closeBriefing()">明白，继续飞行</button></div>
+  <div class="brief-actions"><button id="briefGuideToggle" onclick="toggleGuide()">关闭新手指引</button><button class="primary" onclick="closeBriefing()">明白，继续飞行</button></div>
 </div></div>
 <div id="levelSelect" role="dialog" aria-modal="true" aria-labelledby="levelSelectTitle"><div class="level-shell">
   <header class="level-head"><div class="level-kicker">MISSION CONTROL</div><h1 id="levelSelectTitle">🚀 任务目录</h1><p>按住卡片区域左右拖动 · 最高得分与星级保存在本设备</p></header>
   <div class="level-grid">
-    <article class="level-card" data-level-card="1" tabindex="0"><div class="level-number">MISSION 01</div><div class="level-icon">🛰️</div><h2>地球同步卫星</h2><p>发射入轨，两次变轨形成同步轨道，并把卫星部署到目标经度。</p><div class="level-meta"><div class="level-stars" data-level-stars="1">☆☆☆</div><div class="level-score"><strong data-level-score="1">—</strong>最高分</div></div><button class="level-play" data-start-level="1">开始任务</button></article>
-    <article class="level-card" data-level-card="2" tabindex="0"><div class="level-number">MISSION 02</div><div class="level-icon">🪂</div><h2>载人航天返回</h2><p>从同步轨道反推再入，手动开伞并把返回舱安全降落到地球。</p><div class="level-meta"><div class="level-stars" data-level-stars="2">☆☆☆</div><div class="level-score"><strong data-level-score="2">—</strong>最高分</div></div><button class="level-play" data-start-level="2">开始任务</button></article>
-    <article class="level-card" data-level-card="3" tabindex="0"><div class="level-number">MISSION 03</div><div class="level-icon">🧩</div><h2>空间站交会对接</h2><p>从地面发射，追赶轨道空间站，匹配速度后完成低速精密对接。</p><div class="level-meta"><div class="level-stars" data-level-stars="3">☆☆☆</div><div class="level-score"><strong data-level-score="3">—</strong>最高分</div></div><button class="level-play" data-start-level="3">开始任务</button></article>
-    <article class="level-card" data-level-card="4" tabindex="0"><div class="level-number">MISSION 04</div><div class="level-icon">🌘</div><h2>月背动力着陆</h2><p>从地球发射完成地月转移，在潮汐锁定的月球背面无伞动力着陆。</p><div class="level-meta"><div class="level-stars" data-level-stars="4">☆☆☆</div><div class="level-score"><strong data-level-score="4">—</strong>最高分</div></div><button class="level-play" data-start-level="4">开始任务</button></article>
+    <article class="level-card" data-level-card="1" tabindex="0"><div class="level-number">MISSION 01</div><div class="level-icon">🛰️</div><h2>地球同步卫星</h2><p>把火箭飞进黄色同步轨道，再按按钮释放卫星。</p><div class="level-meta"><div class="level-stars" data-level-stars="1">☆☆☆</div><div class="level-score"><strong data-level-score="1">—</strong>最高分</div></div><button class="level-play" data-start-level="1">开始任务</button></article>
+    <article class="level-card" data-level-card="2" tabindex="0"><div class="level-number">MISSION 02</div><div class="level-icon">🪂</div><h2>载人航天返回</h2><p>反向点火降回地球，打开降落伞并安全落地。</p><div class="level-meta"><div class="level-stars" data-level-stars="2">☆☆☆</div><div class="level-score"><strong data-level-score="2">—</strong>最高分</div></div><button class="level-play" data-start-level="2">开始任务</button></article>
+    <article class="level-card" data-level-card="3" tabindex="0"><div class="level-number">MISSION 03</div><div class="level-icon">🧩</div><h2>空间站交会对接</h2><p>追上空间站，先把速度调成一样，再慢慢靠近对接。</p><div class="level-meta"><div class="level-stars" data-level-stars="3">☆☆☆</div><div class="level-score"><strong data-level-score="3">—</strong>最高分</div></div><button class="level-play" data-start-level="3">开始任务</button></article>
+    <article class="level-card" data-level-card="4" tabindex="0"><div class="level-number">MISSION 04</div><div class="level-icon">🌘</div><h2>月背动力着陆</h2><p>飞到月球背面，不用降落伞，只靠发动机安全落地。</p><div class="level-meta"><div class="level-stars" data-level-stars="4">☆☆☆</div><div class="level-score"><strong data-level-score="4">—</strong>最高分</div></div><button class="level-play" data-start-level="4">开始任务</button></article>
+    <article class="level-card" data-level-card="5" tabindex="0"><div class="level-number">MISSION 05</div><div class="level-icon">🪃</div><h2>月球引力弹弓</h2><p>燃料不够直接逃走；借月球甩出去，飞出绿色大圈且不再掉回来。</p><div class="level-meta"><div class="level-stars" data-level-stars="5">☆☆☆</div><div class="level-score"><strong data-level-score="5">—</strong>最高分</div></div><button class="level-play" data-start-level="5">开始任务</button></article>
   </div>
   <div class="level-footer"><button id="continueLevel" onclick="closeLevelSelect()">继续当前任务</button></div>
 </div></div>
@@ -209,6 +211,13 @@ const MOON_ORBIT_R = Math.hypot(MOON.x-EARTH.x,MOON.y-EARTH.y);
 const MOON_ANG0 = Math.atan2(MOON.y-EARTH.y,MOON.x-EARTH.x);
 const MOON_OMEGA = Math.sqrt((EARTH.mu+MOON.mu)/(MOON_ORBIT_R*MOON_ORBIT_R*MOON_ORBIT_R));
 const MOON_TARGET_HALF = 0.36;         // 月背中央的高分着陆区
+const SLING_LAUNCH_FUEL = 29;          // 与公平示范完全相同；玩家可用真实转向速度复刻
+const SLING_GHOST_PITCH = 76.5*Math.PI/180;
+const SLING_CORRECTION_FUEL = 2;       // 进入地月转移后分离一级，解锁少量修正燃料
+const SLING_FUEL = SLING_LAUNCH_FUEL;
+const SLING_APPROACH_R = 2200;         // 进入近月飞越阶段
+const SLING_DEPART_R = 1700;           // 离开月球后结算弹弓效果
+const SLING_EXIT_R = 12000;            // 地心逃逸门半径
 const LAUNCH_LOCK_ALT = 90;            // 地球发射初段保持当地垂直，之后交还转向
 const ROT_ACC = 3.0;                   // 转动惯量：角加速度
 // 姿态控制模式（C 切换）：0=随速偏转 1=手动转向 2=纯惯性
@@ -242,84 +251,104 @@ function chuteCanopyAngle(flowX,flowY,outX,outY){
 }
 // 关卡定义
 const LEVELS = {
-  1: { title:'🛰️ 第一关 · 地球同步卫星', sub:'缩比轨道物理 · 跟随发光按钮完成四步任务' },
-  2: { title:'🪂 第二关 · 载人航天返回', sub:'缩比轨道物理 · 从同步轨道反推返回地球并安全着陆' },
-  3: { title:'🧩 第三关 · 空间站交会对接', sub:'发射入轨 · 追赶空间站 · 匹配速度后低速对接' },
-  4: { title:'🌘 第四关 · 月背动力着陆', sub:'地月转移 · 潮汐锁定 · 无降落伞手动软着陆' }
+  1: { title:'🛰️ 第一关 · 地球同步卫星', sub:'飞进黄色同步轨道，再释放卫星' },
+  2: { title:'🪂 第二关 · 载人航天返回', sub:'反向点火降回地球，开伞安全落地' },
+  3: { title:'🧩 第三关 · 空间站交会对接', sub:'追上空间站，速度一致后慢慢对接' },
+  4: { title:'🌘 第四关 · 月背动力着陆', sub:'飞到月球背面，只靠发动机安全落地' },
+  5: { title:'🪃 第五关 · 月球引力弹弓', sub:'借月球甩出去，飞出绿圈且不再掉回来' }
 };
 let level = 1;
 const stageInfoL1 = [
-  {name:'① 进入环绕轨道', hint:'手动模式：向上推进 · 逐渐右转压平',
+  {name:'① 进入环绕轨道', hint:'先向上飞，再向右转，把黄线飞成一整圈',
     steps:['默认是手动转向：先保持机头朝当地上方，短按推进离开发射台。','高度约 40～60 u 后，同时按住 D / 右转和 W / 推进，让机头逐渐朝右侧压平。','看到黄色预测线首尾相接、完整围住地球后，松开所有按键并稳定保持 3 秒。'],
     science:'只向上飞会变成抛物线甚至逃逸；进入轨道需要足够的横向速度，让飞船一边下落、一边不断“错过”地面。这里选择右转，是顺着地球自转的顺行方向。',
     success:'成功标志：黄色线闭合、没有穿过地球，并且近地点和远地点都在地表之外。'},
-  {name:'② 抬升远地点', hint:'对准青线点火 · 抬高橙点',
+  {name:'② 抬升远地点', hint:'在蓝点顺着青线加速，把橙点推到黄圈',
     steps:['先看姿态盘：青色刻度表示当前速度方向。','让机头与青色方向重合；最好在蓝色近地点附近开始推进。','持续观察橙色远地点，进入金色环形带后立即停火。'],
     science:'在轨道低点顺着速度加速，增加的能量主要会抬高轨道另一侧，这就是霍曼转移的第一次点火。',
     success:'成功标志：橙色远地点进入金色同步高度带；此时轨道仍是椭圆，不要急着释放卫星。'},
-  {name:'③ 形成同步轨道', hint:'倍速滑到橙点 · 点火抬高蓝点',
+  {name:'③ 形成同步轨道', hint:'滑到橙点再加速，把蓝点也推到黄圈',
     steps:['松手滑行，可按住空格 8 倍速前往橙色远地点。','到达橙圈附近，让机头再次对准青色速度方向并推进。','观察蓝色近地点：它进入金色带后停火，保持轨道 3 秒。'],
     science:'第二次点火发生在远地点，它会抬高轨道另一侧的近地点。近、远地点都在同步带内且角速度匹配地球自转，才是真正的同步轨道。逆行圆轨道绝不会相对地面定点。',
     success:'成功标志：近、远地点都在金色带内，偏心率很小，同步残差接近 0。'},
-  {name:'④ 释放同步卫星', hint:'点击发光的“释放卫星”',
+  {name:'④ 释放同步卫星', hint:'轨道稳定后，点击发光的“释放卫星”',
     steps:['确认底部提示显示“同步轨道稳定”。','普通通关：在任意经度按 E 部署。','完美挑战：等待飞船进入绿色扇形，再按 E 部署到指定经度。'],
     science:'“同步高度”只说明距离大致正确；顺行、圆轨道且周期等于地球自转周期，才是地球静止轨道。绿色区域代表任务要求的目标经度。',
     success:'成功标志：按 E 后显示同步残差与真实释放位置；绿色区域内释放会获得目标经度评价。'}
 ];
 const stageInfoL2 = [
-  {name:'① 反推降低近地点', hint:'掉头背对青线 · 点火降轨',
+  {name:'① 反推降低近地点', hint:'机头转到青线反方向，点火让黄线碰到地球',
     steps:['看姿态盘的青色速度刻度，把机头转到它的正对面。','按住推进做一次反向点火，同时观察蓝色近地点。','蓝色近地点高度降到 250 u 以下、黄色轨迹进入地球边缘后停火。'],
     science:'在高轨道反向点火会降低速度，使轨道另一侧的近地点下降。返回地球不是朝地球直冲，而是先把椭圆轨道压进大气层。',
     success:'成功标志：黄色预测线与地球外圈相交，任务进入再入减速阶段。'},
-  {name:'② 再入与减速', hint:'高度 <520 · 点击“打开降落伞”',
+  {name:'② 再入与减速', hint:'继续减速；下降到 520 以下时打开降落伞',
     steps:['继续让机头背对青色速度方向，短促推进以降低速度。','不要长时间大推力；同时观察高度和相对地面速度。','高度进入 520 u 以下且正在下降时，点击闪烁的“打开降落伞”按钮。'],
     science:'再入时轨道能量要被消耗掉。真实飞船主要依靠大气阻力，本关用反推和手动开伞把这段过程压缩成可玩的两步。',
     success:'成功标志：高度低于 400 u、速度低于 120 u/s，随后进入最终着陆。'},
-  {name:'③ 垂直软着陆', hint:'机头朝上 · 降落伞持续减速',
+  {name:'③ 垂直软着陆', hint:'机头朝上，接近地面时轻点推进',
     steps:['降落伞打开后先等待速度下降到约 25 u/s。','让机头朝远离地心的方向，也就是当地“正上方”。','接近细地表环时轻点推进缓冲；落入绿色弧段可完美通关。'],
     science:'安全着陆看的是相对地面的速度，而不是绝对速度。地球在自转，所以程序会扣除当地地表线速度后再判断冲击。',
     success:'成功标志：相对地面速度 ≤17 u/s；绿色着陆区只影响完美评价，不影响基础通关。'}
 ];
 const stageInfoL3 = [
-  {name:'① 发射进入近地轨道', hint:'手动模式：垂直起飞 · 逐渐向右压平',
+  {name:'① 发射进入近地轨道', hint:'先向上飞，再向右转，把黄线飞成一整圈',
     steps:['默认手动转向不会自动锁定机头；先朝当地上方推进离地。','高度约 40～60 u 后逐渐向右转，让黄色预测线闭合。','把轨道抬到空间站所在的青色轨道附近。'],
     science:'交会对接的第一步不是直接瞄准空间站，而是先进入同方向的近地轨道。直接朝目标飞通常会因为引力和目标持续运动而错过。',
     success:'成功标志：形成顺行闭合轨道，远地点接近空间站轨道。'},
-  {name:'② 追赶空间站', hint:'看绿色目标线 · 用轨道高低改变追赶速度',
+  {name:'② 追赶空间站', hint:'先进入空间站附近的轨道，从后面追上它',
     steps:['观察空间站和绿色连线，不要直接长时间朝它推进。','在较低轨道会绕得更快，可从后方追赶；需要减小相位差时短促点火。','距离降到 350 u 内后进入近距离操作。'],
     science:'较低轨道速度更快、周期更短，这是轨道交会最反直觉也最关键的规律。追赶前方目标有时要先减速进入更低轨道。',
     success:'成功标志：右侧遥测显示“空间站距离 <350 u”。'},
-  {name:'③ 匹配相对速度', hint:'对准相对速度反方向 · 短促点火刹车',
+  {name:'③ 匹配相对速度', hint:'朝相对运动的反方向点火，把速度差降下来',
     steps:['接近后重点看“相对速度”，不要只看绝对速度。','机头朝相对运动的反方向，用短促点火把速度差降下来。','保持距离小于 120 u、相对速度小于 22 u/s。'],
     science:'两艘飞船即使都在轨道上，速度方向和大小仍可能不同。对接前必须先把相对速度消掉，否则接触瞬间仍相当于高速碰撞。',
     success:'成功标志：距离 <120 u 且相对速度 <22 u/s。'},
-  {name:'④ 最终对接', hint:'距离 <30 · 相对 <8 · 点击“执行对接”',
+  {name:'④ 最终对接', hint:'距离小于 30、速度差小于 8，再点击“执行对接”',
     steps:['用非常短的点火逐步靠近空间站中央的绿色对接口。','让相对速度保持在 8 u/s 以下；越慢越容易获得高分。','条件稳定后，点击闪烁的“执行对接”按钮完成捕获。'],
     science:'真实对接最后几米通常以厘米每秒计，并由姿态控制和对接机构共同完成。本关进行了缩比，但仍强调“先消速度，再靠近”。',
     success:'成功标志：绿色对接环闭合，火箭与空间站一起沿轨道飞行。'}
 ];
 const stageInfoL4 = [
-  {name:'① 发射进入停泊轨道', hint:'手动模式：垂直起飞 · 逐渐向右压平',
+  {name:'① 发射进入停泊轨道', hint:'先向上飞，再向右转，把黄线飞成一整圈',
     steps:['默认手动转向不会自动锁定机头；先保持当地垂直推进离地。','高度约 40～60 u 后逐渐向右压平，建立顺行闭合轨道。','让近地点离开地表，并保留足够燃料。'],
     science:'去月球也要先入轨。停泊轨道把发射和地月转移拆开：火箭先获得稳定的横向速度，再选择合适时机把远地点抬到月球轨道。真实任务会根据月球未来位置计算“发射窗口”。',
     success:'成功标志：黄色预测线闭合，顺行且近地点安全。'},
-  {name:'② 地月转移点火', hint:'看灰月位置 · 顺向点火 · 橙点抬到月球轨道',
+  {name:'② 地月转移点火', hint:'顺着青线加速，把橙点推到月球那一圈',
     steps:['在近地点附近沿青色速度方向点火。','观察橙色远地点，把它抬到月球灰色轨道附近。','月球仍在公转，要瞄准它将要到达的位置，而不是当前所在点。'],
     science:'地月转移本质上是一个很长的椭圆轨道。飞行途中月球继续运动，因此飞船必须提前量瞄准。月球的引力进入主导后，轨迹还会再次弯曲。',
     success:'成功标志：远地点到达月球公转半径，任务进入月球接近阶段。'},
-  {name:'③ 月球捕获减速', hint:'靠近灰月 · 反向点火 · 消掉月球相对速度',
+  {name:'③ 月球捕获减速', hint:'靠近月球后反向点火，把相对速度降下来',
     steps:['接近月球时观察黄色预测线如何被月球引力逐渐弯曲；地球和月球引力始终同时存在。','机头朝月球相对速度的反方向短促点火，直到轨迹真正绕月闭合。','不能只匹配速度或停在月球旁边；必须形成月心束缚轨道。'],
     science:'火箭接近月球时仍带着很大的地心速度，但着陆真正关心的是相对月球的速度。制动不足会掠过或撞击，制动过多则会在高处耗尽燃料。',
     success:'成功标志：预测轨迹绕月闭合，近月点高于月面，并显示“已被月球捕获”。'},
-  {name:'④ 月背动力着陆', hint:'绿色月背 · 无伞 · 自选姿态反推软着陆',
+  {name:'④ 月背动力着陆', hint:'飞到绿色月背，机头朝外，轻点推进安全落地',
     steps:['绿色弧段始终位于背向地球的一面；月球公转时它会一起转动。','本阶段没有降落伞，也不会把火箭自动扶正；请用转向和短促推进控制下降。','相对月面速度降到 15 u/s 以下，在月背触地即可通关。'],
     science:'月球总用同一面对着地球，这叫潮汐锁定，并不代表月球没有自转：它每公转一圈也恰好自转一圈。月球几乎没有大气，降落伞不起作用，着陆器必须全程依靠发动机减速。',
     success:'成功标志：在背向地球的半球以安全相对速度着陆；绿色中央区域获得更高评分。'}
 ];
+const stageInfoL5 = [
+  {name:'① 发射进入地月转移', hint:'跟着影子起飞，让橙点碰到月球那一圈',
+    steps:['你和影子都只有 29% 一级燃料，推进力、转向速度和子弹时间也完全相同。','点火后按住推进，并跟着影子的机头转向；右转或左转按钮会提示你往哪边追。','橙色远地点碰到月球那一圈后，一级自动分离，并留下 2% 修正燃料。'],
+    science:'直接逃逸需要把地心比机械能一次推到正数，燃料需求最高。弹弓路线只把火箭送上仍会返回地球的长椭圆轨道，再从运动的月球交换能量，因此能用更少的推进剂完成逃逸。',
+    success:'成功标志：橙色远地点到达月球轨道，但黄色路线还没有直接逃出地球。'},
+  {name:'② 检查预计近月点', hint:'看黄线标记：太近会撞，太远则借力太弱',
+    steps:['一级分离后以滑行为主，黄线会直接标出预计撞击点或预计近月高度。','红色“预计撞击”表示会撞月球；近月高度太大则几乎借不到力。','若预计高度不合适，只用 2% 修正燃料做非常短的点火。'],
+    science:'飞船必须瞄准月球未来的位置。经过月球运动后方时，引力会把飞船朝月球前进方向拉动，从地心参考系看就获得了额外能量。',
+    success:'成功标志：黄色路线进入月球附近，最好从月球运动方向的后面经过。'},
+  {name:'③ 借月球甩出去', hint:'别撞月球，看它的引力把黄线甩向外面',
+    steps:['进入近月区后尽量停火，观察地球和月球的叠加引力共同弯折轨迹。','低近月点不会自动失败：只要没有真正撞上月面，任务就会继续。','离开月球后，“逃逸余速”由 0 变为正数，说明轨道已经不再返回地球。'],
+    science:'靠得更近通常能获得更大的偏转，但过近会撞击月面；离得太远则几乎得不到能量。真正的任务设计会用近月点高度和 B 平面参数精确控制飞越。',
+    success:'成功标志：没有撞上月球，飞出后右上角的“逃逸余速”大于 0。'},
+  {name:'④ 飞出绿色大圈', hint:'飞出绿色大圈，右上角显示不会掉回来就成功',
+    steps:['路线已经朝外时，可以按倍速滑向绿色大圈。','右上角“逃逸余速”大于 0，表示不会再掉回地球。','向外飞出绿色大圈就通关；怎么飞、从月球哪边经过都不限制。'],
+    science:'瞬时速度不能单独判断逃逸，因为飞船仍会被地球减速。程序用比机械能 ε=v²/2−μ/r 判断：ε>0 才是双曲逃逸轨道，v∞=√(2ε) 是排除当前位置引力势能后的明确成绩。',
+    success:'成功标志：向外飞出绿色大圈，而且轨道不会再掉回地球。路线不限。'}
+];
 let mission;
 
-let rocket, station, trail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
+let rocket, station, trail, ghostShip, ghostTrail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
 let paused = false, retryTimer = null;
+let rewindClickAt = 0, rewindHistoryIndex = -1;
 let briefingWasPaused = false, lastBriefedLevel = 0;
 let levelSelectOpen = false, gameStarted = false;
 let showPred = true; // T 开关：未来轨迹辅助线
@@ -384,6 +413,11 @@ function moonMetrics(ship=rocket){
   const outwardAngle=Math.atan2(ship.y-MOON.y,ship.x-MOON.x);
   return {dx,dy,distance,rvx,rvy,relSpeed,outwardAngle,farDelta:normalizeAngle(outwardAngle-moonAngle)};
 }
+function earthSpecificEnergy(ship=rocket){
+  const dx=ship.x-EARTH.x,dy=ship.y-EARTH.y,r=Math.hypot(dx,dy);
+  const vx=ship.vx-(EARTH.vx||0),vy=ship.vy-(EARTH.vy||0);
+  return .5*(vx*vx+vy*vy)-EARTH.mu/Math.max(1,r);
+}
 function attitudeVelocity(ship=rocket){
   if(level===4&&mission&&mission.stage>=2) return {vx:ship.vx-MOON.vx,vy:ship.vy-MOON.vy};
   // 地球发射锁定结束后，随速模式直接跟踪正常地心速度；发射初段由垂直锁定负责。
@@ -427,7 +461,7 @@ function applyDockingAssist(dt){
   rocket.vx+=(targetVx-rocket.vx)*blend; rocket.vy+=(targetVy-rocket.vy)*blend;
 }
 // 当前关卡的教学步骤
-function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:stageInfoL4; }
+function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:level===4?stageInfoL4:stageInfoL5; }
 
 const SAVE_KEY='spacegame-progress-v1';
 function loadProgress(){
@@ -448,7 +482,7 @@ function saveLevelResult(levelId,score){
 }
 function updateLevelCards(){
   const progress=loadProgress();
-  for(let i=1;i<=4;i++){
+  for(let i=1;i<=5;i++){
     const result=progress[i]||{score:0,stars:0};
     const scoreEl=document.querySelector(`[data-level-score="${i}"]`), starsEl=document.querySelector(`[data-level-stars="${i}"]`);
     if(scoreEl) scoreEl.textContent=result.score||'—';
@@ -470,26 +504,42 @@ function closeLevelSelect(){
   syncUI();
 }
 function startLevel(levelId){
-  level=Math.max(1,Math.min(4,Number(levelId)||1));
+  level=Math.max(1,Math.min(5,Number(levelId)||1));
   gameStarted=true; levelSelectOpen=false; paused=false; lastBriefedLevel=0;
   document.getElementById('levelSelect').classList.remove('is-visible');
   resetGame();
 }
 function nextLevel(){
-  if(level<4) startLevel(level+1);
+  if(level<5) startLevel(level+1);
   else openLevelSelect();
 }
 function restartCurrent(full=false){
-  if(full || mission.done || !mission.checkpoint) resetGame();
-  else retryFromStage('主动重新尝试');
+  if(full || mission.done) resetGame();
+  else rewindStage();
+}
+function rewindStage(){
+  if(!mission||mission.done){ resetGame(); return; }
+  const history=mission.checkpointHistory||[];
+  if(!history.length){ resetGame(); return; }
+  const now=performance.now(),chained=now-rewindClickAt<1200&&rewindHistoryIndex>0;
+  rewindHistoryIndex=chained?rewindHistoryIndex-1:history.length-1;
+  const cp=history[rewindHistoryIndex];
+  mission.checkpointHistory=history.slice(0,rewindHistoryIndex+1);
+  mission.checkpoint=cp;
+  retryFromStage(chained?'继续回退子任务':'重试当前子任务');
+  mission.toast=chained
+    ? `↶ 已回到「${stageInfo()[mission.stage].name}」｜继续点击可再往前`
+    : `↶ 当前子任务已重置｜1.2 秒内再点可回到上一任务`;
+  mission.toastT=3.5; rewindClickAt=now;
 }
 
 function resetGame(){
   if(retryTimer!==null){ clearTimeout(retryTimer); retryTimer=null; }
+  rewindClickAt=0; rewindHistoryIndex=-1;
   paused = false;
   clearFlightInputs(); velOffset=0;
   earthAngle = 0;
-  moonAngle = MOON_ANG0; updateMoon(0);
+  moonAngle = level===5 ? 2.07 : MOON_ANG0; updateMoon(0);
   station = level===3 ? {angle:.55,x:0,y:0,vx:0,vy:0,a:0,docked:false} : null;
   if(station) updateStation(0);
   if(level===2){
@@ -509,7 +559,7 @@ function resetGame(){
     };
     launched = true; // 已在轨，直接计时
   }else{
-    // 第一、三、四关：发射台起步
+    // 第一、三、四、五关：发射台起步
     const pad = padAngle();
     const px = EARTH.x + Math.cos(pad)*(EARTH.r+1), py = EARTH.y + Math.sin(pad)*(EARTH.r+1);
     const launchVx=-Math.sin(pad)*EARTH_OMEGA*(EARTH.r+1), launchVy=Math.cos(pad)*EARTH_OMEGA*(EARTH.r+1);
@@ -517,7 +567,7 @@ function resetGame(){
       x:px, y:py,
       vx:launchVx, vy:launchVy,
       a:pad,
-      fuel:100, landed:true, alive:true, body:EARTH,
+      fuel:level===5?SLING_LAUNCH_FUEL:100, landed:true, alive:true, body:EARTH,
       life:LIFE_MAX, crewDead:false, deadReason:'',
       maxG:0, lastG:0, overT:0, thrusting:false,
       av:0, launchGrace:0, chute:false, chuteAngle:null, chuteFlowX:0, chuteFlowY:0,
@@ -529,7 +579,19 @@ function resetGame(){
   trail = []; particles=[]; exhaustAccumulator=0; trailSampleT=0; state = 'fly'; flightT = 0; shake = 0;
   bulletT = 0; predictionCache = null;
   actionCue = null;
-  mission = {stage:0, holdT:0, finalHoldT:0, hintsHidden:false, assistMode:true, done:false, satReleased:false, satellite:null, deployReady:false, dockReady:false, toast:'', toastT:0, checkpoint:null, dynHint:'', dockDistance:Infinity, dockRelSpeed:Infinity};
+  mission = {stage:0, holdT:0, finalHoldT:0, hintsHidden:false, assistMode:true, done:false, satReleased:false, satellite:null, deployReady:false, dockReady:false, toast:'', toastT:0, checkpoint:null, checkpointHistory:[], dynHint:'', dockDistance:Infinity, dockRelSpeed:Infinity,
+    slingInitialEnergy:0,slingEntryEnergy:0,slingClosestDistance:Infinity,slingClosestTrailing:Infinity,
+    slingWasInside:false,slingFlybyValid:false,slingGain:0,slingVInf:0,slingFailed:false};
+  if(level===5){
+    mission.slingInitialEnergy=earthSpecificEnergy(rocket);
+    mission.slingEntryEnergy=mission.slingInitialEnergy;
+  }
+  ghostTrail=[];
+  ghostShip=level===5?{
+    x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,a:rocket.a,
+    mode:'physics',fuel:SLING_LAUNCH_FUEL,active:true,started:false,burnedOut:false,thrusting:false,complete:false,time:0,trailT:0,energy:earthSpecificEnergy(rocket)
+  }:createRecordedGuide(level);
+  saveCheckpoint();
   camInit = true;
   hideMsg();
   // 更新标题
@@ -545,7 +607,7 @@ function showMsg(emoji,title,text){
   document.getElementById('mText').innerHTML = text;
   const next = document.getElementById('mNext');
   next.style.display = mission && mission.done ? 'inline-block' : 'none';
-  next.textContent = level<4 ? '下一关 (L)' : '返回目录 (L)';
+  next.textContent = level<5 ? '下一关 (L)' : '返回目录 (L)';
   document.getElementById('msg').style.display = 'flex';
 }
 function openBriefing(){
@@ -558,7 +620,7 @@ function openBriefing(){
   for(const step of info.steps){ const li=document.createElement('li'); li.textContent=step; list.appendChild(li); }
   document.getElementById('briefScience').textContent=info.science;
   document.getElementById('briefSuccess').textContent='✅ '+info.success;
-  document.getElementById('briefGuideToggle').textContent=mission.hintsHidden?'显示游戏提示':'隐藏游戏提示';
+  document.getElementById('briefGuideToggle').textContent=mission.hintsHidden?'开启新手指引':'关闭新手指引';
   briefingWasPaused=paused; paused=true;
   document.getElementById('briefing').classList.add('is-visible');
   syncUI();
@@ -593,12 +655,21 @@ function cycleAttitude(){
 function cycleDial(){ dialMode=(dialMode+1)%3; mission.toast='表盘模式：'+['世界固定','速度向上','机头向上'][dialMode]; mission.toastT=1.5; syncUI(); }
 function toggleGuide(){
   mission.hintsHidden=!mission.hintsHidden;
-  mission.toast=mission.hintsHidden?'已隐藏任务文字（飞行辅助不变）':'任务指引已显示'; mission.toastT=2;
-  document.getElementById('briefGuideToggle').textContent=mission.hintsHidden?'显示游戏提示':'隐藏游戏提示';
+  mission.toast=mission.hintsHidden?'已隐藏任务提示与示范影子':'任务提示与示范影子已显示'; mission.toastT=2;
+  document.getElementById('briefGuideToggle').textContent=mission.hintsHidden?'开启新手指引':'关闭新手指引';
   if(mission.hintsHidden && document.getElementById('briefing').classList.contains('is-visible')) closeBriefing();
   syncUI();
 }
-function toggleAssist(){ mission.assistMode=!mission.assistMode; mission.toast=mission.assistMode?'飞行辅助已开启 · 无限燃料与发射限速':'挑战模式已开启 · 有限燃料与生命维持'; mission.toastT=2.4; syncUI(); }
+function guideGhostVisible(){
+  return !!(mission&&mission.assistMode&&!mission.hintsHidden&&!mission.done);
+}
+function toggleAssist(){
+  mission.assistMode=!mission.assistMode;
+  mission.toast=mission.assistMode
+    ? (level===5?'飞行辅助已开启 · 玩家与影子同为 29% + 修正级 2%':'飞行辅助已开启 · 无限燃料与发射限速')
+    : '挑战模式已开启 · 有限燃料与生命维持';
+  mission.toastT=2.4; syncUI();
+}
 function togglePause(){ paused=!paused; clearFlightInputs(); syncUI(); }
 function missionActionState(){
   if(!mission||mission.done||state!=='fly'||rocket.landed) return {visible:false};
@@ -649,7 +720,7 @@ function syncUI(){
   if(menuRadar) menuRadar.textContent='小地图：'+RADAR_MODES[radarMode];
   if(menuAttitude) menuAttitude.textContent='姿态：'+ATT_MODES[attMode];
   if(menuDial) menuDial.textContent='表盘：'+['世界固定','速度向上','机头向上'][dialMode];
-  if(menuGuide&&mission){ menuGuide.textContent='短提示：'+(mission.hintsHidden?'关闭':'开启'); menuGuide.classList.toggle('is-on',!mission.hintsHidden); }
+  if(menuGuide&&mission){ menuGuide.textContent='新手指引：'+(mission.hintsHidden?'关闭':'开启'); menuGuide.classList.toggle('is-on',!mission.hintsHidden); }
   if(menuAssist&&mission){ menuAssist.textContent='飞行辅助：'+(mission.assistMode?'开启':'挑战'); menuAssist.classList.toggle('is-on',mission.assistMode); }
   const perfStatus=document.getElementById('perfStatus');
   if(perfStatus) perfStatus.textContent=(lowPowerMode?'性能：手机轻量画质':'性能：桌面画质')+' · 实测约 '+measuredFps+' 帧';
@@ -719,6 +790,12 @@ function updateActionCue(){
       const turn=cueTurnTo(target,mission.stage===3?.16:.25);
       cues=turn?[turn]:['thrust'];
     }
+  }else if(level===5){
+    if(mission.stage===0){
+      if(rocket.landed) cues=['right','thrust'];
+      else if(ghostShip&&ghostShip.started){ const turn=cueTurnTo(ghostShip.a,.07); cues=turn?[turn,'thrust']:['thrust']; }
+      else cues=['thrust'];
+    }else cues=['speed'];
   }
   setActionCue(cues);
 }
@@ -753,6 +830,15 @@ function scoreLevel1(challenge){ return Math.min(1000,520+(challenge?180:0)+Math
 function scoreLevel2(inZone,vRel){ return Math.min(1000,540+(inZone?170:0)+Math.max(0,220-flightT*1.5)+Math.max(0,70-vRel*4)); }
 function scoreLevel3(relSpeed){ return Math.min(1000,560+Math.max(0,260-flightT*1.5)+Math.max(0,180-relSpeed*18)); }
 function scoreLevel4(perfect,vRel){ return Math.min(1000,540+(perfect?180:0)+Math.max(0,220-flightT*.8)+Math.max(0,90-vRel*5)); }
+function scoreLevel5Parts(vInf){
+  const speed=Math.min(560,Math.round(Math.max(0,vInf)*8));
+  const fuel=Math.min(100,Math.round(Math.max(0,rocket.fuel)*50));
+  const usedMoon=Number.isFinite(mission.slingClosestDistance)&&mission.slingClosestDistance<1400;
+  const altitude=usedMoon?Math.max(0,mission.slingClosestDistance-MOON.r):Infinity;
+  const flyby=usedMoon?Math.max(0,Math.round(120-Math.abs(altitude-260)*.2)):0;
+  return {base:220,speed,fuel,flyby,total:Math.min(1000,220+speed+fuel+flyby)};
+}
+function scoreLevel5(vInf){ return scoreLevel5Parts(vInf).total; }
 
 function finishDocking(){
   if(level!==3||!station||mission.done) return;
@@ -810,7 +896,8 @@ document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('cl
   else if(action==='briefing') openBriefing();
   else if(action==='assist') toggleAssist();
   else if(action==='level') openLevelSelect();
-  else if(action==='restart') restartCurrent(false);
+  else if(action==='rewind') rewindStage();
+  else if(action==='restart') resetGame();
   else if(action==='pause') togglePause();
   else if(action==='mission') tryMissionAction();
 }));
@@ -824,7 +911,7 @@ document.querySelectorAll('[data-menu-action]').forEach(btn=>btn.addEventListene
   else if(action==='guide') toggleGuide();
   else if(action==='briefing') openBriefing();
   else if(action==='assist') toggleAssist();
-  else if(action==='restart'){ paused=false; restartCurrent(false); }
+  else if(action==='restart'){ paused=false; resetGame(); }
   else if(action==='level'){ openLevelSelect(); }
   syncUI();
 }));
@@ -963,14 +1050,27 @@ function boom(x,y){
 
 // 保存阶段检查点（达成小目标时）
 function saveCheckpoint(){
-  mission.checkpoint = {
+  const snapshot = {
     x:rocket.x, y:rocket.y, vx:rocket.vx, vy:rocket.vy, a:rocket.a,
     fuel:rocket.fuel, flightT:flightT, earthAngle:earthAngle, moonAngle:moonAngle, stage:mission.stage, velOffset:velOffset,
+    landed:!!rocket.landed,bodyName:rocket.body&&rocket.body.name,launched:!!launched,clearedPad:!!rocket._clearedPad,landLocalAngle:rocket.landLocalAngle,
     stationAngle:station?station.angle:null, launchBaseVx:rocket.launchBaseVx, launchBaseVy:rocket.launchBaseVy,
     launchFrameActive:!!rocket._launchFrameActive, launchAssistActive:!!rocket._launchAssistActive,
     launchCompleted:!!rocket._launchCompleted, chute:!!rocket.chute, chuteAngle:rocket.chuteAngle,
-    chuteFlowX:rocket.chuteFlowX||0, chuteFlowY:rocket.chuteFlowY||0
+    chuteFlowX:rocket.chuteFlowX||0, chuteFlowY:rocket.chuteFlowY||0,
+    slingshot:level===5?{
+      slingInitialEnergy:mission.slingInitialEnergy,slingEntryEnergy:mission.slingEntryEnergy,
+      slingClosestDistance:mission.slingClosestDistance,slingClosestTrailing:mission.slingClosestTrailing,
+      slingWasInside:mission.slingWasInside,slingFlybyValid:mission.slingFlybyValid,
+      slingGain:mission.slingGain,slingVInf:mission.slingVInf,slingFailed:false
+    }:null,
+    ghost:ghostShip?{...ghostShip}:null
   };
+  mission.checkpoint=snapshot;
+  if(!Array.isArray(mission.checkpointHistory)) mission.checkpointHistory=[];
+  const last=mission.checkpointHistory[mission.checkpointHistory.length-1];
+  if(last&&last.stage===snapshot.stage) mission.checkpointHistory[mission.checkpointHistory.length-1]=snapshot;
+  else mission.checkpointHistory.push(snapshot);
 }
 // 失败回退：优先回到检查点（当前阶段起点），否则回发射场
 function retryFromStage(reason){
@@ -983,7 +1083,15 @@ function retryFromStage(reason){
     rocket.launchBaseVx=cp.launchBaseVx; rocket.launchBaseVy=cp.launchBaseVy; rocket._launchFrameActive=!!cp.launchFrameActive;
     rocket._launchAssistActive=!!cp.launchAssistActive; rocket._launchCompleted=!!cp.launchCompleted;
     if(station&&Number.isFinite(cp.stationAngle)){ station.angle=cp.stationAngle; updateStation(0); }
-    rocket.landed=false; rocket.body=null; launched=true; rocket._clearedPad=true;
+    if(cp.slingshot) Object.assign(mission,cp.slingshot);
+    ghostShip=cp.ghost?{...cp.ghost}:null; ghostTrail=[];
+    rocket.landed=!!cp.landed;
+    rocket.body=cp.bodyName===EARTH.name?EARTH:cp.bodyName===MOON.name?MOON:cp.bodyName===MARS.name?MARS:null;
+    launched=!!cp.launched; rocket._clearedPad=!!cp.clearedPad; rocket.landLocalAngle=cp.landLocalAngle;
+  }else if(level===5){
+    resetGame();
+    mission.toast='💥 '+reason+' —— 回到弹弓修正起点'; mission.toastT=4;
+    return;
   }else if(level===2){
     // 第二关无检查点 → 回同步轨道起点
     const ang = 0, orbV = EARTH_OMEGA * R_GEO;
@@ -1015,6 +1123,7 @@ function retryFromStage(reason){
   trail = []; particles=[]; exhaustAccumulator=0; trailSampleT=0; state = 'fly'; bulletT = 0; predictionCache = null;
   camInit = true;
   mission.holdT = 0; mission.finalHoldT=0; mission.deployReady=false; mission.dockReady=false; mission.done=false; mission.satReleased=false; mission.satellite=null;
+  mission.slingFailed=false;
   mission.toast = '💥 ' + reason + ' —— 回到「' + stageInfo()[mission.stage].name + '」';
   mission.toastT = 4;
   hideMsg();
@@ -1073,6 +1182,7 @@ function updateMission(dt){
   if(level===2){ updateMissionL2(dt); return; }
   if(level===3){ updateMissionL3(dt); return; }
   if(level===4){ updateMissionL4(dt); return; }
+  if(level===5){ updateMissionL5(dt); return; }
   if(rocket.landed) return;
   const direct=directSyncStatus(rocket,1);
   if(mission.stage<3){
@@ -1239,12 +1349,99 @@ function updateMissionL4(dt){
     if(mission.holdT>=need) advanceStage();
   }else mission.holdT=0;
 }
+function finishSlingshot(){
+  if(level!==5||mission.done) return;
+  const energy=earthSpecificEnergy(),vInf=Math.sqrt(Math.max(0,2*energy));
+  mission.done=true; mission.slingVInf=vInf; state='complete';
+  const parts=scoreLevel5Parts(vInf),result=saveLevelResult(5,parts.total);
+  const usedMoon=Number.isFinite(mission.slingClosestDistance)&&mission.slingClosestDistance<1400;
+  const closestAlt=usedMoon?Math.max(0,mission.slingClosestDistance-MOON.r):null;
+  syncUI();
+  showMsg('🪃','成功飞出地球！',
+    resultLine(result)+`已向外穿过地球逃逸门 · v∞ ${vInf.toFixed(1)} u/s<br>`+
+    `基础 ${parts.base} · 速度 ${parts.speed} · 燃料 ${parts.fuel} · 飞越 ${parts.flyby}<br>`+
+    (usedMoon?`最近月面高度 ${closestAlt.toFixed(0)} u · `:'')+
+    (usedMoon&&Math.abs(mission.slingGain)>1?`引力增能 ${mission.slingGain.toFixed(0)} u²/s² · `:'')+`剩余燃料 ${rocket.fuel.toFixed(1)}%<br>`+
+    `<span style="color:#888">v∞ 是飞到无限远后仍保有的理论余速；越高代表弹弓效果越强。</span>`);
+}
+// 第五关：地面有限燃料发射 → 月球运动后方飞越 → 正能量穿越地球逃逸门
+function updateMissionL5(dt){
+  if(rocket.landed) return;
+  const m=moonMetrics(),energy=earthSpecificEnergy();
+  const moonSpeed=Math.max(1,Math.hypot(MOON.vx,MOON.vy));
+  const sx=rocket.x-MOON.x,sy=rocket.y-MOON.y;
+  const trailing=(sx*MOON.vx+sy*MOON.vy)/moonSpeed;
+  const rvx=rocket.vx-MOON.vx,rvy=rocket.vy-MOON.vy;
+  const receding=(sx*rvx+sy*rvy)/Math.max(1,m.distance)>0;
+  const ex=rocket.x-EARTH.x,ey=rocket.y-EARTH.y,earthR=Math.hypot(ex,ey);
+  const radial=(rocket.vx*ex+rocket.vy*ey)/Math.max(1,earthR);
+
+  if(m.distance<mission.slingClosestDistance){
+    mission.slingClosestDistance=m.distance;
+    mission.slingClosestTrailing=trailing;
+  }
+  if(m.distance<1400) mission.slingWasInside=true;
+
+  // 通关只验收最终结果，不验收玩家是否照着示范路线飞。
+  // 向外越过绿圈且地心能量为正，说明轨道不会掉回来，立即成功。
+  if(earthR>=SLING_EXIT_R&&radial>0&&energy>0){
+    mission.slingVInf=Math.sqrt(2*energy);
+    finishSlingshot();
+    return;
+  }
+
+  if(mission.stage===0){
+    const ap=orbitApsis(EARTH,rocket),alt=ap.r-EARTH.r;
+    const transferReady=ap.bound&&orbitalAngularRate()>0&&ap.rp>EARTH.r&&ap.ra>MOON_ORBIT_R-700&&ap.ra<MOON_ORBIT_R+1100;
+    mission.dynHint=`一级燃料 ${rocket.fuel.toFixed(1)}%｜高度 ${Math.max(0,alt).toFixed(0)}｜橙点 ${Number.isFinite(ap.ra)?Math.max(0,ap.ra-EARTH.r).toFixed(0):'逃逸'}`;
+    if(transferReady){ mission.holdT+=dt; if(mission.holdT>=.25) advanceStage(); }
+    else mission.holdT=0;
+    return;
+  }
+
+  if(mission.stage===1){
+    mission.dynHint=`修正燃料 ${rocket.fuel.toFixed(1)}%｜距月 ${m.distance.toFixed(0)}｜看黄线“预计近月”标记`;
+    if(m.distance<SLING_APPROACH_R){ advanceStage(); return; }
+    return;
+  }
+
+  if(mission.slingWasInside&&m.distance>SLING_DEPART_R&&receding&&!mission.slingFlybyValid&&!mission.slingFailed){
+    const gain=energy-mission.slingEntryEnergy;
+    const escaped=energy>0;
+    if(escaped){
+      mission.slingFlybyValid=true; mission.slingGain=gain; mission.slingVInf=Math.sqrt(2*energy);
+      if(mission.stage<3) unlockFinalStage(3,'✅ 已经甩出去了！继续飞出绿色大圈');
+    }else{
+      mission.slingFailed=true;
+      mission.toast='速度还不够，这条路线会掉回地球｜可用阶段回退重试'; mission.toastT=4;
+    }
+  }
+
+  if(mission.stage===2){
+    const closestAlt=Number.isFinite(mission.slingClosestDistance)?mission.slingClosestDistance-MOON.r:m.distance-MOON.r;
+    mission.dynHint=m.distance<1200
+      ? `停火飞越｜最近高度 ${closestAlt.toFixed(0)}｜${trailing<0?'正在获得顺向借力':'继续观察黄线弯曲'}`
+      : `距月 ${m.distance.toFixed(0)}｜等待引力弯折｜不撞月就继续`;
+    return;
+  }
+
+  const vInf=energy>0?Math.sqrt(2*energy):0;
+  mission.slingVInf=vInf;
+  mission.dynHint=`地心距离 ${earthR.toFixed(0)} / ${SLING_EXIT_R}｜v∞ ${vInf.toFixed(1)} u/s`;
+  if(earthR>=SLING_EXIT_R&&radial>0&&energy>0) finishSlingshot();
+}
 function advanceStage(){
   mission.stage++;
   mission.holdT = 0;
   if(level===1 && mission.stage===1 && attMode===0) velOffset=0;
   if(level===2 && mission.stage===2 && attMode===0){
     velOffset=0; rocket.a=Math.atan2(rocket.y-EARTH.y,rocket.x-EARTH.x); rocket.av=0;
+  }
+  if(level===5&&mission.stage===1){
+    // 一级剩余推进剂随级间分离丢弃，避免玩家把发射燃料带到高空直接硬烧逃逸。
+    rocket.fuel=SLING_CORRECTION_FUEL;
+    mission.slingInitialEnergy=earthSpecificEnergy(rocket); mission.slingEntryEnergy=mission.slingInitialEnergy;
+    mission.slingClosestDistance=Infinity; mission.slingClosestTrailing=Infinity; mission.slingWasInside=false;
   }
   saveCheckpoint();
   mission.toast = '✅ ' + stageInfo()[mission.stage-1].name + ' 完成！';
@@ -1258,6 +1455,8 @@ function advanceStage(){
   if(level===4 && mission.stage===1){ mission.toast='✅ 停泊轨道稳定！准备地月转移点火'; mission.toastT=3.5; }
   if(level===4 && mission.stage===2){ mission.toast='✅ 已进入地月转移！瞄准移动中的月球'; mission.toastT=3.5; }
   if(level===4 && mission.stage===3){ mission.toast='✅ 月球捕获！绿色半球无伞动力着陆'; mission.toastT=4; }
+  if(level===5 && mission.stage===1){ mission.toast='✅ 地月转移成立！一级分离 · 修正燃料 2%'; mission.toastT=4; }
+  if(level===5 && mission.stage===2){ mission.toast='✅ 已进入近月区！停火观察引力弯曲'; mission.toastT=3.5; }
   syncUI();
 }
 function unlockFinalStage(targetStage,message){
@@ -1268,13 +1467,121 @@ function unlockFinalStage(targetStage,message){
   }
   saveCheckpoint(); mission.toast=message; mission.toastT=4; syncUI();
 }
+const GUIDE_DEMOS={
+  1:{duration:38,budget:32,burnRate:2.65},
+  2:{duration:38,budget:14,burnRate:1.75},
+  3:{duration:46,budget:35,burnRate:2.0},
+  4:{duration:74,budget:44,burnRate:1.6}
+};
+function smooth01(v){ v=Math.max(0,Math.min(1,v)); return v*v*(3-2*v); }
+function createRecordedGuide(levelId){
+  const cfg=GUIDE_DEMOS[levelId];
+  if(!cfg) return null;
+  const startAngle=Math.atan2(rocket.y-EARTH.y,rocket.x-EARTH.x);
+  return {mode:'recorded',level:levelId,x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,a:rocket.a,
+    fuel:cfg.budget,fuelMax:cfg.budget,burnRate:cfg.burnRate,duration:cfg.duration,time:0,trailT:0,
+    startAngle,started:false,active:true,complete:false,thrusting:false,chute:false,label:'等待点火'};
+}
+function guideDemoPosition(g,t){
+  const a0=g.startAngle;
+  if(g.level===1){
+    if(t<8){ const u=smooth01(t/8),a=a0+1.2*u,r=EARTH.r+1+249*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:true,label:'起飞并向右压平'}; }
+    if(t<26){ const u=smooth01((t-8)/18),a=a0+1.2+Math.PI*u,r=850+(R_GEO-850)*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:t<11,label:'滑向远地点'}; }
+    const a=a0+1.2+Math.PI+(t-26)*.08; return {x:EARTH.x+Math.cos(a)*R_GEO,y:EARTH.y+Math.sin(a)*R_GEO,thrust:t<30,label:t<30?'远地点加速':'同步轨道完成'};
+  }
+  if(g.level===2){
+    if(t<5){ const a=a0+EARTH_OMEGA*t; return {x:EARTH.x+Math.cos(a)*R_GEO,y:EARTH.y+Math.sin(a)*R_GEO,thrust:true,label:'反向点火降轨'}; }
+    if(t<34){ const u=smooth01((t-5)/29),a=a0+.23+Math.PI*1.12*u,r=R_GEO-(R_GEO-EARTH.r-1)*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:t>31,chute:t>25,label:t>25?'开伞并轻点反推':'滑向地球'}; }
+    const a=a0+.23+Math.PI*1.12; return {x:EARTH.x+Math.cos(a)*(EARTH.r+1),y:EARTH.y+Math.sin(a)*(EARTH.r+1),thrust:false,chute:true,label:'安全着陆'};
+  }
+  if(g.level===3){
+    if(t<8){ const u=smooth01(t/8),a=a0+1.25*u,r=EARTH.r+1+299*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:true,label:'发射入轨'}; }
+    if(t<29){ const u=smooth01((t-8)/21),a=a0+1.25+2.5*u,r=900+(STATION_R-900)*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:t<12,label:'从低轨追赶'}; }
+    const u=smooth01((t-29)/17),sv=Math.max(1,Math.hypot(station?.vx||0,station?.vy||0)),tx=-(station?.vx||0)/sv,ty=-(station?.vy||0)/sv,offset=260*(1-u);
+    return {x:(station?.x||0)+tx*offset,y:(station?.y||0)+ty*offset,thrust:t<43,label:u>.94?'低速对接':'匹配速度并靠近'};
+  }
+  if(g.level===4){
+    if(t<8){ const u=smooth01(t/8),a=a0+1.2*u,r=EARTH.r+1+299*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:true,label:'发射入轨'}; }
+    if(t<56){
+      const u=smooth01((t-8)/48),p0x=EARTH.x+Math.cos(a0+1.2)*900,p0y=EARTH.y+Math.sin(a0+1.2)*900;
+      const mv=Math.max(1,Math.hypot(MOON.vx,MOON.vy)),tx=MOON.x-MOON.vx/mv*950,ty=MOON.y-MOON.vy/mv*950;
+      const cx=(p0x+tx)*.5-Math.sin(a0+1.2)*2100,cy=(p0y+ty)*.5+Math.cos(a0+1.2)*2100,om=1-u;
+      return {x:om*om*p0x+2*om*u*cx+u*u*tx,y:om*om*p0y+2*om*u*cy+u*u*ty,thrust:t<13,label:t<13?'抬高远地点':'滑向月球'};
+    }
+    const u=smooth01((t-56)/18),a=moonAngle-1.15*(1-u),r=900-(900-MOON.r-1)*u;
+    return {x:MOON.x+Math.cos(a)*r,y:MOON.y+Math.sin(a)*r,thrust:t>60,chute:false,label:u>.96?'月背安全着陆':'反推减速下降'};
+  }
+  return {x:g.x,y:g.y,thrust:false,label:'示范完成'};
+}
+function updateRecordedGuide(dt){
+  if(!ghostShip||ghostShip.mode!=='recorded'||!ghostShip.active) return;
+  if(!ghostShip.started){
+    if(!(keys['ArrowUp']||keys['KeyW'])) return;
+    ghostShip.started=true;
+  }
+  const previous={x:ghostShip.x,y:ghostShip.y};
+  ghostShip.time=Math.min(ghostShip.duration,ghostShip.time+dt);
+  const sample=guideDemoPosition(ghostShip,ghostShip.time),next=guideDemoPosition(ghostShip,Math.min(ghostShip.duration,ghostShip.time+.05));
+  ghostShip.x=sample.x;ghostShip.y=sample.y;ghostShip.vx=(sample.x-previous.x)/Math.max(dt,.001);ghostShip.vy=(sample.y-previous.y)/Math.max(dt,.001);
+  ghostShip.a=Math.atan2(next.y-sample.y,next.x-sample.x);ghostShip.thrusting=!!sample.thrust;ghostShip.chute=!!sample.chute;ghostShip.label=sample.label;
+  if(ghostShip.thrusting)ghostShip.fuel=Math.max(0,ghostShip.fuel-ghostShip.burnRate*dt);
+  ghostShip.trailT+=dt;
+  if(ghostTrail.length===0||ghostShip.trailT>=(lowPowerMode?.18:.1)){ghostTrail.push({x:ghostShip.x,y:ghostShip.y});ghostShip.trailT=0;if(ghostTrail.length>(lowPowerMode?260:700))ghostTrail.shift();}
+  if(ghostShip.time>=ghostShip.duration){ghostShip.complete=true;ghostShip.thrusting=false;}
+}
+function updateSlingshotGhost(dt,dtReal=dt){
+  if(level!==5||!ghostShip||!ghostShip.active) return;
+  // 等玩家第一次按下推进再同步起跑；新手可以先认清按钮，固定的月球窗口不会偷偷溜走。
+  if(!ghostShip.started){
+    if(!(keys['ArrowUp']||keys['KeyW'])) return;
+    ghostShip.started=true;
+  }
+  ghostShip.time=(ghostShip.time||0)+dt;
+  ghostShip.thrusting=ghostShip.fuel>0;
+  if(ghostShip.thrusting){
+    const localUp=Math.atan2(ghostShip.y-EARTH.y,ghostShip.x-EARTH.x);
+    const desired=localUp+SLING_GHOST_PITCH;
+    const delta=normalizeAngle(desired-ghostShip.a);
+    const rotScale=bulletT>0 ? .58 : 1;
+    const maxTurn=ROT*Math.min(dtReal,.02)*rotScale;
+    const turn=Math.max(-maxTurn,Math.min(maxTurn,delta));
+    ghostShip.a+=turn;
+    ghostShip.turning=Math.abs(delta)>.025;
+    const burnDt=Math.min(dt,ghostShip.fuel/9);
+    ghostShip.vx+=Math.cos(ghostShip.a)*THRUST*burnDt;
+    ghostShip.vy+=Math.sin(ghostShip.a)*THRUST*burnDt;
+    ghostShip.fuel=Math.max(0,ghostShip.fuel-9*burnDt);
+    if(ghostShip.fuel===0) ghostShip.burnedOut=true;
+  }else{ ghostShip.turning=false; ghostShip.a=Math.atan2(ghostShip.vy,ghostShip.vx); }
+  // 完美示范影子使用与玩家完全相同的地球、月球、火星叠加引力。
+  let ax=0,ay=0;
+  for(const b of BODIES){
+    const dx=b.x-ghostShip.x,dy=b.y-ghostShip.y,d2=dx*dx+dy*dy,d=Math.sqrt(d2),g=b.mu/d2;
+    ax+=dx/d*g; ay+=dy/d*g;
+  }
+  ghostShip.vx+=ax*dt; ghostShip.vy+=ay*dt;
+  ghostShip.x+=ghostShip.vx*dt; ghostShip.y+=ghostShip.vy*dt;
+  ghostShip.energy=earthSpecificEnergy(ghostShip);
+  ghostShip.trailT+=dt;
+  if(ghostTrail.length===0||ghostShip.trailT>=(lowPowerMode?.16:.08)){
+    ghostTrail.push({x:ghostShip.x,y:ghostShip.y}); ghostShip.trailT=0;
+    if(ghostTrail.length>(lowPowerMode?300:900)) ghostTrail.shift();
+  }
+  const earthR=Math.hypot(ghostShip.x-EARTH.x,ghostShip.y-EARTH.y);
+  if(earthR>=SLING_EXIT_R&&ghostShip.energy>0) ghostShip.complete=true;
+  for(const b of BODIES){ if(Math.hypot(ghostShip.x-b.x,ghostShip.y-b.y)<b.r){ ghostShip.active=false; break; } }
+  if(earthR>14500) ghostShip.active=false;
+}
 
 function update(dt, dtReal){
   if(dtReal===undefined) dtReal = dt; // 实时时间（旋转用），默认=平移dt
-  // 地球自转（同步卫星的前提）；着陆时发射架随之转动
-  earthAngle += EARTH_OMEGA*dt;
-  updateMoon(dt);
+  // 第五关的月球窗口在首次点火前冻结，避免玩家阅读界面时错过唯一发射时机。
+  const waitingForSlingLaunch=level===5&&rocket.landed&&!launched;
+  if(!waitingForSlingLaunch) earthAngle += EARTH_OMEGA*dt;
+  updateMoon(waitingForSlingLaunch?0:dt);
   updateStation(dt);
+  updateRecordedGuide(dt);
+  updateSlingshotGhost(dt,dtReal);
   if(rocket.landed && rocket.body===EARTH && !rocket._clearedPad){
     const pad = padAngle();
     rocket.x = EARTH.x + Math.cos(pad)*(EARTH.r+1);
@@ -1371,7 +1678,7 @@ function update(dt, dtReal){
 
   const fx = Math.cos(rocket.a), fy = Math.sin(rocket.a);
   // 推进（辅助模式 = 无限燃料；第一关低空带防逃逸节流）
-  const infiniteFuel = mission.assistMode && !mission.done;
+  const infiniteFuel = mission.assistMode && !mission.done && level!==5;
   rocket.thrusting = (keys['ArrowUp']||keys['KeyW']) && (infiniteFuel || rocket.fuel>0);
   rocket.thrustPower = 0;
   if(rocket.thrusting){
@@ -1584,11 +1891,29 @@ function update(dt, dtReal){
 }
 
 // ---------- 绘制 ----------
-// 任务区域渲染：第一关=同步带；第二关=着陆区；第三关=空间站；第四关=月背
+function drawSlingshotZones(){
+  // 明确的最终目标：只有有效飞越后，向外穿过这道门且地心能量为正才通关。
+  ctx.strokeStyle=mission.slingFlybyValid?'rgba(95,208,104,.9)':'rgba(95,208,104,.4)';
+  ctx.lineWidth=4/cam.zoom; ctx.setLineDash([18/cam.zoom,14/cam.zoom]);
+  ctx.beginPath(); ctx.arc(EARTH.x,EARTH.y,SLING_EXIT_R,0,TAU); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='rgba(95,208,104,.9)'; ctx.font=`800 ${15/cam.zoom}px "Microsoft YaHei",sans-serif`; ctx.textAlign='center';
+  ctx.fillText('地球逃逸门',EARTH.x,EARTH.y-SLING_EXIT_R-16/cam.zoom);
+
+  const mv=Math.max(1,Math.hypot(MOON.vx,MOON.vy)),ux=MOON.vx/mv,uy=MOON.vy/mv,arrow=520;
+  ctx.strokeStyle='rgba(207,216,220,.85)'; ctx.lineWidth=4/cam.zoom;
+  ctx.beginPath(); ctx.moveTo(MOON.x,MOON.y); ctx.lineTo(MOON.x+ux*arrow,MOON.y+uy*arrow); ctx.stroke();
+  const tipX=MOON.x+ux*arrow,tipY=MOON.y+uy*arrow;
+  ctx.fillStyle='rgba(207,216,220,.9)'; ctx.beginPath();
+  ctx.moveTo(tipX,tipY); ctx.lineTo(tipX-ux*55-uy*28,tipY-uy*55+ux*28); ctx.lineTo(tipX-ux*55+uy*28,tipY-uy*55-ux*28); ctx.closePath(); ctx.fill();
+  ctx.fillText('月球运动',MOON.x+ux*(arrow+100),MOON.y+uy*(arrow+100));
+  ctx.textAlign='left';
+}
+// 任务区域渲染：第一关=同步带；第二关=着陆区；第三关=空间站；第四关=月背；第五关=弹弓走廊
 function drawMissionZones(){
   if(level===2){ drawLandingZone(); return; }
   if(level===3){ drawStationOrbitZone(); return; }
   if(level===4){ drawLunarFarSideZone(); return; }
+  if(level===5){ drawSlingshotZones(); return; }
   const slot = padAngle();
   // 同步轨道环形带（金色）
   ctx.strokeStyle='rgba(255,209,102,.35)'; ctx.lineWidth=GEO_BAND*2;
@@ -1796,6 +2121,42 @@ function drawBody(b){
   }
 }
 
+function drawGuideRocket(ship,label){
+  if(!ship||!worldCircleVisible({x:ship.x,y:ship.y,r:42},90)) return;
+  ctx.save(); ctx.translate(ship.x,ship.y);
+  if(ship.chute){
+    ctx.save();ctx.rotate(ship.a+Math.PI/2);ctx.globalAlpha=.25;ctx.strokeStyle='#b9f2ff';ctx.fillStyle='#80e6ff';ctx.lineWidth=1.5/cam.zoom;
+    ctx.beginPath();ctx.moveTo(-4,-16);ctx.lineTo(-18,-45);ctx.moveTo(4,-16);ctx.lineTo(18,-45);ctx.stroke();
+    ctx.beginPath();ctx.arc(0,-45,21,Math.PI,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+  }
+  ctx.rotate(ship.a+Math.PI/2);
+  ctx.globalAlpha=.28;
+  if(ship.thrust||ship.thrusting){
+    ctx.fillStyle='#7de3ff'; ctx.beginPath(); ctx.moveTo(-5,13); ctx.quadraticCurveTo(0,39,5,13); ctx.closePath(); ctx.fill();
+  }
+  ctx.fillStyle='#dff8ff'; ctx.strokeStyle='#4cc9f0'; ctx.lineWidth=2.8/cam.zoom;
+  ctx.beginPath(); ctx.moveTo(0,-23); ctx.quadraticCurveTo(9,-9,8,14); ctx.lineTo(-8,14); ctx.quadraticCurveTo(-9,-9,0,-23); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+  ctx.save(); ctx.globalAlpha=.72; ctx.fillStyle='#b9f2ff';
+  ctx.font=`800 ${12/cam.zoom}px "Microsoft YaHei",sans-serif`; ctx.textAlign='center';
+  ctx.fillText(label,ship.x,ship.y-34/cam.zoom); ctx.restore();
+}
+function drawGuideGhost(){
+  if(!guideGhostVisible()||!ghostShip||!ghostTrail) return;
+  ctx.save(); ctx.globalAlpha=.24;
+  if(ghostTrail.length>1){
+    ctx.strokeStyle='#80e6ff'; ctx.lineWidth=2.2/cam.zoom; ctx.setLineDash([8/cam.zoom,10/cam.zoom]);
+    ctx.beginPath(); ctx.moveTo(ghostTrail[0].x,ghostTrail[0].y);
+    for(let i=1;i<ghostTrail.length;i++) ctx.lineTo(ghostTrail[i].x,ghostTrail[i].y);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.restore();
+  const ghostLabel=level===5
+    ? (ghostShip.complete?'示范完成：已逃逸':ghostShip.thrusting?(ghostShip.turning?'示范：推进 + 右转':'示范：只按推进'):'示范：滑行')
+    : (ghostShip.complete?'理想示范完成':`示范：${ghostShip.label||'等待点火'}`);
+  drawGuideRocket(ghostShip,ghostLabel+` · 燃料 ${ghostShip.fuel.toFixed(1)}%`);
+}
+
 function drawRocket(){
   if(!rocket.alive) return;
   ctx.save();
@@ -1862,14 +2223,15 @@ function predictPath(ship=rocket){
   let px=ship.x, py=ship.y, pvx=ship.vx, pvy=ship.vy;
   const dx0=px-EARTH.x, dy0=py-EARTH.y, r0=Math.hypot(dx0,dy0), v20=pvx*pvx+pvy*pvy;
   const energy=v20/2-EARTH.mu/r0;
-  let horizon=level===4?110:72;
+  const lunarMission=level===4||level===5;
+  let horizon=lunarMission?110:72;
   if(energy<0){
     const a=-EARTH.mu/(2*energy), period=TAU*Math.sqrt(a*a*a/EARTH.mu);
-    horizon=Math.min(level===4?280:180,Math.max(level===4?70:40,period*1.1));
+    horizon=Math.min(lunarMission?280:180,Math.max(lunarMission?70:40,period*1.1));
   }
   const coarse=lowPowerMode||W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches);
   const steps=coarse?150:520, dt=horizon/steps, pts=[];
-  let vrPrev=null, markers=[];
+  let vrPrev=null, markers=[],impact=null,moonApproach=null,closestMoon=Infinity;
   for(let i=0;i<steps;i++){
     let ax=0, ay=0;
     for(const b of BODIES){
@@ -1890,10 +2252,18 @@ function predictPath(ship=rocket){
     for(const b of BODIES){
       let bx=b.x, by=b.y;
       if(b===MOON){ const pa=moonAngle+MOON_OMEGA*i*dt; bx=EARTH.x+Math.cos(pa)*MOON_ORBIT_R; by=EARTH.y+Math.sin(pa)*MOON_ORBIT_R; }
-      if(Math.hypot(px-bx,py-by)<b.r) return {pts,markers,horizon,steps};
+      const bodyDistance=Math.hypot(px-bx,py-by);
+      if(b===MOON&&bodyDistance<closestMoon){
+        closestMoon=bodyDistance;
+        moonApproach={x:px,y:py,bodyX:bx,bodyY:by,distance:bodyDistance,altitude:bodyDistance-b.r};
+      }
+      if(bodyDistance<b.r){
+        impact={x:px,y:py,body:b.name};
+        return {pts,markers,horizon,steps,impact,moonApproach};
+      }
     }
   }
-  return {pts, markers, horizon,steps};
+  return {pts,markers,horizon,steps,impact,moonApproach};
 }
 function getPredictedPath(){
   const now=performance.now();
@@ -1947,12 +2317,16 @@ function drawRadar(){
   if(radarMode===0){
     const ap=orbitApsis();
     const outer=ap.bound&&Number.isFinite(ap.ra)?Math.max(R_GEO+GEO_BAND,Math.min(ap.ra,12000)):R_GEO*1.6;
-    const range=Math.max(level===4?MOON_ORBIT_R*1.18:R_GEO*1.25,outer*1.12), scale=RS*0.39/range;
+    const range=Math.max((level===4||level===5)?MOON_ORBIT_R*1.18:R_GEO*1.25,level===5?SLING_EXIT_R*1.08:0,outer*1.12), scale=RS*0.39/range;
     const mapX=wx=>mx+(wx-EARTH.x)*scale, mapY=wy=>my+(wy-EARTH.y)*scale;
     const er=Math.max(4,EARTH.r*scale), geoR=R_GEO*scale;
     ctx.fillStyle=EARTH.col; ctx.beginPath(); ctx.arc(mx,my,er,0,TAU); ctx.fill();
-    ctx.strokeStyle=level===4?'rgba(207,216,220,.45)':'rgba(255,209,102,.65)'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.arc(mx,my,level===4?MOON_ORBIT_R*scale:geoR,0,TAU); ctx.stroke();
+    ctx.strokeStyle=(level===4||level===5)?'rgba(207,216,220,.45)':'rgba(255,209,102,.65)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(mx,my,(level===4||level===5)?MOON_ORBIT_R*scale:geoR,0,TAU); ctx.stroke();
+    if(level===5){
+      ctx.strokeStyle='rgba(95,208,104,.75)'; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.arc(mx,my,SLING_EXIT_R*scale,0,TAU); ctx.stroke(); ctx.setLineDash([]);
+    }
     ctx.strokeStyle='#5fd068'; ctx.lineWidth=3;
     if(level===1||level===2){
       const targetAng=level===1?padAngle():landAngle(), targetR=(level===1?R_GEO:EARTH.r)*scale;
@@ -1964,7 +2338,8 @@ function drawRadar(){
       const mqx=mapX(MOON.x), mqy=mapY(MOON.y), mr=Math.max(3,MOON.r*scale);
       ctx.fillStyle=MOON.col; ctx.beginPath(); ctx.arc(mqx,mqy,mr,0,TAU); ctx.fill();
       ctx.strokeStyle='#5fd068'; ctx.lineWidth=2.5;
-      ctx.beginPath(); ctx.arc(mqx,mqy,mr,moonAngle-MOON_TARGET_HALF,moonAngle+MOON_TARGET_HALF); ctx.stroke();
+      if(level===4){ ctx.beginPath(); ctx.arc(mqx,mqy,mr,moonAngle-MOON_TARGET_HALF,moonAngle+MOON_TARGET_HALF); ctx.stroke(); }
+      else{ ctx.strokeStyle='rgba(207,216,220,.55)'; ctx.beginPath(); ctx.arc(mqx,mqy,mr+3,0,TAU); ctx.stroke(); }
     }
 
     if(state==='fly'&&!rocket.landed){
@@ -1984,17 +2359,34 @@ function drawRadar(){
         ctx.fillStyle=col; ctx.beginPath(); ctx.arc(qx,qy,portrait?3:3.5,0,TAU); ctx.fill();
         ctx.fillText(marker.apo?'远':'近',qx,qy-5);
       }
+      if(pred.impact){
+        const qx=mapX(pred.impact.x),qy=mapY(pred.impact.y),s=portrait?3:4;
+        ctx.strokeStyle='#ef476f';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(qx-s,qy-s);ctx.lineTo(qx+s,qy+s);ctx.moveTo(qx+s,qy-s);ctx.lineTo(qx-s,qy+s);ctx.stroke();
+      }else if(level===5&&pred.moonApproach&&pred.moonApproach.altitude<1800){
+        const qx=mapX(pred.moonApproach.x),qy=mapY(pred.moonApproach.y);
+        ctx.fillStyle=pred.moonApproach.altitude<80?'#ef476f':'#ffd166';ctx.beginPath();ctx.arc(qx,qy,portrait?3:4,0,TAU);ctx.fill();
+      }
     }
     const rqx=mapX(rocket.x), rqy=mapY(rocket.y);
     ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(rqx,rqy,portrait?3.5:4,0,TAU); ctx.fill();
     ctx.strokeStyle='#ef476f'; ctx.lineWidth=2;
     ctx.beginPath(); ctx.moveTo(rqx,rqy); ctx.lineTo(rqx+Math.cos(rocket.a)*9,rqy+Math.sin(rocket.a)*9); ctx.stroke();
+    if(ghostShip&&guideGhostVisible()){
+      ctx.strokeStyle='rgba(219,231,255,.3)'; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+      if(ghostTrail.length>1){
+        ctx.beginPath();
+        for(let i=0;i<ghostTrail.length;i+=3){ const p=ghostTrail[i],qx=mapX(p.x),qy=mapY(p.y); i?ctx.lineTo(qx,qy):ctx.moveTo(qx,qy); }
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(219,231,255,.45)'; ctx.beginPath(); ctx.arc(mapX(ghostShip.x),mapY(ghostShip.y),3,0,TAU); ctx.fill();
+    }
     if(level===3&&station){
       const sqx=mapX(station.x), sqy=mapY(station.y);
       ctx.strokeStyle='rgba(95,208,104,.65)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(rqx,rqy); ctx.lineTo(sqx,sqy); ctx.stroke();
       ctx.fillStyle='#5fd068'; ctx.beginPath(); ctx.arc(sqx,sqy,4,0,TAU); ctx.fill();
     }
-    if(level===4){
+    if(level===4||level===5){
       const mqx=mapX(MOON.x), mqy=mapY(MOON.y);
       ctx.strokeStyle='rgba(207,216,220,.55)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(rqx,rqy); ctx.lineTo(mqx,mqy); ctx.stroke();
     }
@@ -2021,7 +2413,7 @@ function drawRadar(){
   const radarTitle=RS<=80?(radarMode===0?'轨道 · 点按':'全局 · 点按'):(radarMode===0?'轨道雷达 · 点击切换':'全局导航 · 点击切换');
   ctx.fillText(radarTitle,cx+5,cy+11);
   ctx.fillStyle='rgba(255,255,255,.65)'; ctx.font=`700 ${portrait?7:8}px sans-serif`;
-  const radarLegend=RS<=80?(radarMode===0?'白船 · 目标':'青框 = 视野'):(radarMode===0?(level===3?'白船 · 绿站 · 青轨道':level===4?'白船 · 灰月 · 绿月背':'蓝近 · 橙远 · 绿目标'):'青框 = 当前视野');
+  const radarLegend=RS<=80?(radarMode===0?'白船 · 目标':'青框 = 视野'):(radarMode===0?(level===3?'白船 · 绿站 · 青轨道':level===4?'白船 · 灰月 · 绿月背':level===5?'白船 · 黄预测 · 绿逃逸门':'蓝近 · 橙远 · 绿目标'):'青框 = 当前视野');
   ctx.fillText(radarLegend,cx+5,cy+RS-5);
   ctx.textAlign='left';
 }
@@ -2100,12 +2492,31 @@ function draw(){
       ctx.fillText('点火', mk.x, mk.y + 26/cam.zoom);
       ctx.font='800 '+fs+'px "Baloo 2",sans-serif';
     }
+    if(pred.impact){
+      const p=pred.impact,s=13/cam.zoom;
+      ctx.strokeStyle='#ef476f'; ctx.fillStyle='#ef476f'; ctx.lineWidth=3/cam.zoom;
+      ctx.beginPath(); ctx.arc(p.x,p.y,s,0,TAU); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(p.x-s*.65,p.y-s*.65); ctx.lineTo(p.x+s*.65,p.y+s*.65);
+      ctx.moveTo(p.x+s*.65,p.y-s*.65); ctx.lineTo(p.x-s*.65,p.y+s*.65); ctx.stroke();
+      ctx.font=`900 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;
+      ctx.fillText(`预计撞击${p.body}`,p.x,p.y-21/cam.zoom);
+      ctx.font=`800 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;
+      ctx.fillStyle='rgba(255,138,164,.96)';
+      ctx.fillText('导航电脑 · 预计碰撞概率 99.9999%',p.x,p.y-6/cam.zoom);
+    }else if(level===5&&pred.moonApproach&&pred.moonApproach.altitude<1800){
+      const p=pred.moonApproach,col=p.altitude<80?'#ef476f':p.altitude<350?'#ffd166':'#4cc9f0';
+      ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=2.5/cam.zoom; ctx.setLineDash([4/cam.zoom,5/cam.zoom]);
+      ctx.beginPath(); ctx.arc(p.x,p.y,12/cam.zoom,0,TAU); ctx.stroke(); ctx.setLineDash([]);
+      ctx.font=`900 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;
+      ctx.fillText(`预计近月 ${Math.max(0,p.altitude).toFixed(0)} u`,p.x,p.y-20/cam.zoom);
+    }
     ctx.textAlign='left';
   }
 
   drawMissionZones();
   for(const b of BODIES){ if(worldCircleVisible(b,120)){ drawGroundRing(b); drawBody(b); } }
   drawStation();
+  drawGuideGhost();
 
   // 粒子
   for(const p of particles){
@@ -2127,7 +2538,7 @@ function draw(){
   ctx.fillStyle = rocket.fuel>30 ? '#ffd166' : '#ef476f';
   roundRect(19, H-37, statInner*rocket.fuel/100, 16, 8); ctx.fill();
   ctx.fillStyle='#fff'; ctx.font='800 13px "Baloo 2",sans-serif';
-  const infFuel = mission.assistMode && !mission.done;
+  const infFuel = mission.assistMode && !mission.done && level!==5;
   ctx.fillText(infFuel ? '⛽ 燃料 ∞（教学关）' : '⛽ 燃料 ' + rocket.fuel.toFixed(0) + '%', 26, H-24);
   // 姿态模式指示
   const showSurvival=level===2 || !mission.assistMode;
@@ -2162,14 +2573,14 @@ function draw(){
   }
   // 速度显示：绝对速度 + 关键相对速度（靠近哪个显示哪个）
   const earthAlt = Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y) - EARTH.r;
-  const lunarM=level===4?moonMetrics():null, nearMoon=!!(lunarM&&lunarM.distance<2600);
+  const lunarM=(level===4||level===5)?moonMetrics():null, nearMoon=!!(lunarM&&lunarM.distance<2600);
   const alt = nearMoon?lunarM.distance-MOON.r:earthAlt;
   // 相对地球表面（扣自转）
   const dxE=rocket.x-EARTH.x, dyE=rocket.y-EARTH.y, dE=Math.hypot(dxE,dyE);
   const saE=Math.atan2(dyE,dxE);
   const relEvx=rocket.vx-(-Math.sin(saE)*EARTH_OMEGA*dE), relEvy=rocket.vy-(Math.cos(saE)*EARTH_OMEGA*dE);
   const vRelEarth=Math.hypot(relEvx,relEvy);
-  const landscapeHUD=H<=520, teleCompact=W<760||landscapeHUD, teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?70:teleCompact?278:14, teleW=teleCompact?174:206, teleH=(level===1?86:(level===3||level===4)?106:66);
+  const landscapeHUD=H<=520, teleCompact=W<760||landscapeHUD, teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?70:teleCompact?278:14, teleW=teleCompact?174:206, teleH=(level===1?86:(level===3||level===4||level===5)?106:66);
   ctx.fillStyle='rgba(8,14,38,.68)'; roundRect(teleX,teleY,teleW,teleH,14); ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1; roundRect(teleX,teleY,teleW,teleH,14); ctx.stroke();
   ctx.textAlign='right';
@@ -2200,6 +2611,11 @@ function draw(){
     ctx.fillStyle='#cfd8dc'; ctx.fillText(`月g ${lunarG.toFixed(2)} · 地g ${earthG.toFixed(2)}`,W-20,teleY+76);
     ctx.fillStyle=Math.abs(lunarM.farDelta)<Math.PI/2?'#5fd068':'#ffd166';
     ctx.fillText(Math.abs(lunarM.farDelta)<Math.PI/2?'位于月背半球':'位于地球可见侧',W-20,teleY+96);
+  }
+  if(level===5&&lunarM){
+    const energy=earthSpecificEnergy(),vInf=energy>0?Math.sqrt(2*energy):0;
+    ctx.fillStyle='#cfd8dc'; ctx.fillText(`距月 ${lunarM.distance.toFixed(0)} u`,W-20,teleY+76);
+    ctx.fillStyle=energy>0?'#5fd068':'#ffd166'; ctx.fillText(`逃逸余速 v∞ ${vInf.toFixed(1)} u/s`,W-20,teleY+96);
   }
   ctx.fillStyle='#fff';
   ctx.textAlign='left';
@@ -2262,10 +2678,11 @@ function draw(){
   if(rocket._tooFar && mission.assistMode && !mission.done){
     ctx.fillStyle=farGradient; ctx.fillRect(0,0,W,H);
     ctx.fillStyle='#ffb142'; ctx.font='800 19px "Baloo 2",sans-serif'; ctx.textAlign='center';
-    ctx.fillText('⚠️ 已飞离目标空域', W/2, H*0.4);
+    const slingEnergy=level===5?earthSpecificEnergy():0;
+    ctx.fillText(level===5?(slingEnergy>0?'继续向外飞出绿色大圈':'⚠️ 这条路线还会掉回地球'):'⚠️ 已飞离目标空域', W/2, H*0.4);
     ctx.fillStyle='rgba(255,255,255,.9)'; ctx.font='600 15px "Baloo 2",sans-serif';
-    ctx.fillText('任务在近地 / 同步轨道，可从暂停菜单重试当前阶段', W/2, H*0.4+30);
-    ctx.fillText('（燃料无限，可随时重来）', W/2, H*0.4+54);
+    ctx.fillText(level===5?(slingEnergy>0?'右上角逃逸余速已大于 0，不会再掉回来':'飞得远不等于逃走：右上角逃逸余速还必须大于 0'):'任务在近地 / 同步轨道，可从暂停菜单重试当前阶段', W/2, H*0.4+30);
+    ctx.fillText(level===5?(slingEnergy>0?'保持向外飞行即可通关':'借月球再加速，或点击“阶段回退”重试'):'（燃料无限，可随时重来）', W/2, H*0.4+54);
     ctx.textAlign='left';
   }
   // 状态提示：8倍速 / 辅助线 / 船员死亡
