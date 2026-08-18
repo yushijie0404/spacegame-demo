@@ -33,6 +33,7 @@
   .icon-btn:active,.icon-btn.is-pressed{transform:translateY(2px) scale(.96)}
   .icon-btn.is-active{color:#10203c;background:var(--cyan);border-color:#bff3ff;box-shadow:0 0 18px rgba(76,201,240,.3)}
   @keyframes actionPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,209,102,.2),0 0 16px rgba(255,209,102,.2)}50%{box-shadow:0 0 0 8px rgba(255,209,102,0),0 0 28px rgba(255,209,102,.95)}}
+  @keyframes actionPulseLite{0%,100%{opacity:1}50%{opacity:.78}}
   .icon-btn.needs-attention{z-index:2;color:#17213c;background:#ffd166;border-color:#fff3bd;animation:actionPulse 1s ease-in-out infinite}
   .icon-btn.needs-attention::before{content:'下一步';position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 6px;color:#18213d;background:#fff;border:1px solid #ffd166;border-radius:999px;font-size:8px;font-weight:900;line-height:12px;white-space:nowrap}
   .icon-btn .ico{font-size:19px;font-weight:800;line-height:20px}
@@ -43,6 +44,11 @@
   .flight-controls .thrust{width:68px;height:76px;color:#1d2233;background:linear-gradient(#ffe48f,#ffb142);border:2px solid #fff0b5;border-radius:22px}
   .flight-controls .thrust .ico{font-size:25px}
   .flight-controls .turn .ico{font-size:25px;color:var(--cyan)}
+  html.low-power .hud,html.low-power .tool-rail{background:rgba(8,14,38,.92);backdrop-filter:none;-webkit-backdrop-filter:none}
+  html.low-power .flight-controls{filter:none}
+  html.low-power .flight-controls .icon-btn{background:rgba(11,20,51,.94);backdrop-filter:none;-webkit-backdrop-filter:none;will-change:transform}
+  html.low-power .icon-btn{transition:none}
+  html.low-power .icon-btn.needs-attention{animation:actionPulseLite 1s ease-in-out infinite;box-shadow:none}
   .mission-action{display:none;position:fixed;z-index:7;left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translateX(-50%);width:92px;height:64px;color:#17213c;background:linear-gradient(#9ff5b0,#5fd068);border:2px solid #d9ffe0;border-radius:20px}
   .mission-action.is-visible{display:flex}
   #pauseMenu{position:fixed;inset:0;z-index:8;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(5,9,27,.72);backdrop-filter:blur(7px)}
@@ -160,6 +166,7 @@ const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1, lowPowerMode=false, bgGradient=null, bulletGradient=null, farGradient=null;
 function resize(){
   lowPowerMode=innerWidth<900&&(innerWidth<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches));
+  document.documentElement.classList.toggle('low-power',lowPowerMode);
   DPR=Math.min(devicePixelRatio||1,lowPowerMode?1.35:2);
   W = innerWidth; H = innerHeight; cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
   bgGradient=ctx.createLinearGradient(0,0,0,H); bgGradient.addColorStop(0,'#0b1026'); bgGradient.addColorStop(1,'#1b2350');
@@ -2265,7 +2272,7 @@ function fitText(text,x,y,maxWidth,minSize=10){
   ctx.fillText(shown+'…',x,y);
 }
 
-let last = performance.now();
+let last = performance.now(), lastRender=0;
 function loop(now){
   const dt = Math.min(0.05, (now-last)/1000); last = now;
   // 子弹时间：平移物理慢速(slow)，旋转保持实时但灵敏度降低（方案1）
@@ -2277,7 +2284,8 @@ function loop(now){
       update(dt*slow, dt/steps); // 8倍速只加速物理，转向仍保持真实时间灵敏度
     }
   }
-  draw();
+  // ProMotion iPhone 可能以 120Hz 触发 rAF；物理仍按真实 dt 更新，低功耗设备只把绘制限制在约 60fps。
+  if(!lowPowerMode || now-lastRender>=15.5){ draw(); lastRender=now; }
   requestAnimationFrame(loop);
 }
 window.__SPACEGAME_SELF_CHECKS__=runPhysicsSelfChecks();
