@@ -49,6 +49,7 @@
   html.low-power .flight-controls .icon-btn{background:rgba(11,20,51,.94);backdrop-filter:none;-webkit-backdrop-filter:none;will-change:transform}
   html.low-power .icon-btn{transition:none}
   html.low-power .icon-btn.needs-attention{animation:actionPulseLite 1s ease-in-out infinite;box-shadow:none}
+  html.ios-device .icon-btn.needs-attention{animation:none}
   .mission-action{display:none;position:fixed;z-index:7;left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translateX(-50%);width:92px;height:64px;color:#17213c;background:linear-gradient(#9ff5b0,#5fd068);border:2px solid #d9ffe0;border-radius:20px}
   .mission-action.is-visible{display:flex}
   #pauseMenu{position:fixed;inset:0;z-index:8;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(5,9,27,.72);backdrop-filter:blur(7px)}
@@ -118,6 +119,7 @@
 <button type="button" id="missionAction" class="icon-btn mission-action" data-action="mission" data-cue="mission" aria-label="执行任务动作"><span class="ico">🛰</span><span class="lbl">释放卫星</span></button>
 <div id="pauseMenu" role="dialog" aria-modal="true" aria-labelledby="pauseTitle"><div class="pause-card">
   <h2 id="pauseTitle">飞行已暂停</h2><p>常用设置都收在这里，飞行画面只保留必要操作。</p>
+  <p id="perfStatus" aria-live="polite"></p>
   <button class="pause-resume" data-menu-action="resume">▶ 继续飞行</button>
   <div class="pause-grid">
     <button id="menuPrediction" data-menu-action="prediction">轨迹预测</button>
@@ -163,11 +165,14 @@
 <script>
 "use strict";
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const IOS_DEVICE=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+document.documentElement.classList.toggle('ios-device',IOS_DEVICE);
 let W = 0, H = 0, DPR = 1, lowPowerMode=false, bgGradient=null, bulletGradient=null, farGradient=null;
 function resize(){
   lowPowerMode=innerWidth<900&&(innerWidth<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches));
   document.documentElement.classList.toggle('low-power',lowPowerMode);
-  DPR=Math.min(devicePixelRatio||1,lowPowerMode?1.35:2);
+  // iPhone 的 Retina 像素量很高；HTML 按钮仍保持系统级清晰度，只把全屏 Canvas 降到 1:1。
+  DPR=Math.min(devicePixelRatio||1,IOS_DEVICE?1:lowPowerMode?1.25:2);
   W = innerWidth; H = innerHeight; cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
   bgGradient=ctx.createLinearGradient(0,0,0,H); bgGradient.addColorStop(0,'#0b1026'); bgGradient.addColorStop(1,'#1b2350');
   bulletGradient=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75); bulletGradient.addColorStop(0,'rgba(0,0,0,0)'); bulletGradient.addColorStop(1,'rgba(20,30,80,.55)');
@@ -642,6 +647,8 @@ function syncUI(){
   if(menuDial) menuDial.textContent='表盘：'+['世界固定','速度向上','机头向上'][dialMode];
   if(menuGuide&&mission){ menuGuide.textContent='短提示：'+(mission.hintsHidden?'关闭':'开启'); menuGuide.classList.toggle('is-on',!mission.hintsHidden); }
   if(menuAssist&&mission){ menuAssist.textContent='飞行辅助：'+(mission.assistMode?'开启':'挑战'); menuAssist.classList.toggle('is-on',mission.assistMode); }
+  const perfStatus=document.getElementById('perfStatus');
+  if(perfStatus) perfStatus.textContent=IOS_DEVICE?'性能：iPhone 轻量画质 · '+(renderInterval>=30?'稳定 30 帧':'目标 60 帧（卡顿时自动稳定为 30 帧）'):(lowPowerMode?'性能：手机轻量画质':'性能：桌面画质');
 }
 
 function cueTurnTo(target,tolerance=0.24){
@@ -757,7 +764,7 @@ function finishDocking(){
 
 // 星星背景
 stars = [];
-for(let i=0;i<(lowPowerMode?120:260);i++){
+for(let i=0;i<(IOS_DEVICE?70:lowPowerMode?110:260);i++){
   stars.push({ x:(Math.random()-0.5)*9000, y:(Math.random()-0.5)*7000,
     r:Math.random()*1.8+0.5, tw:Math.random()*TAU, c:['#ffffff','#ffe9a8','#a8d8ff'][i%3] });
 }
@@ -1429,7 +1436,7 @@ function update(dt, dtReal){
   if(rocket.launchGrace>0) rocket.launchGrace -= dt;
   rocket.x += rocket.vx*dt; rocket.y += rocket.vy*dt;
   trailSampleT+=dt;
-  const trailInterval=lowPowerMode?.055:.032;
+  const trailInterval=IOS_DEVICE?.075:lowPowerMode?.055:.032;
   if(trail.length===0||trailSampleT>=trailInterval){ trail.push({x:rocket.x,y:rocket.y}); trailSampleT=0; }
 
   // 子弹时间只服务于“边推边转”的精细机动；单独长按推进（尤其起飞）绝不能让游戏看似卡住。
@@ -1438,7 +1445,7 @@ function update(dt, dtReal){
     if(rocket.thrusting&&turning&&!launchLocked) bulletT=.28;
   }
   if(bulletT>0) bulletT=Math.max(0,bulletT-dtReal);
-  if(trail.length>(lowPowerMode?280:600)) trail.shift();
+  if(trail.length>(IOS_DEVICE?180:lowPowerMode?280:600)) trail.shift();
 
   // 碰撞检测（起飞宽限期内跳过，避免点火瞬间误判）
   for(const b of BODIES){
@@ -1666,7 +1673,44 @@ function drawGroundRing(b){
   ctx.lineWidth = RING_OUT + RING_IN;
   ctx.beginPath(); ctx.arc(b.x, b.y, b.r + (RING_OUT-RING_IN)/2, 0, TAU); ctx.stroke();
 }
+// iOS 画质档：保留卡通大陆、冰盖和环形山，但把多层大面积渐变改为少量纯色路径。
+// 对满屏大小的地球而言，这比每帧重复光栅化多组渐变和贝塞尔云层省下大量填充率。
+function drawBodyIOS(b){
+  if(b===EARTH){
+    ctx.strokeStyle='rgba(106,220,255,.34)'; ctx.lineWidth=Math.max(5/cam.zoom,b.r*.04);
+    ctx.beginPath(); ctx.arc(b.x,b.y,b.r*1.015,0,TAU); ctx.stroke();
+  }
+  ctx.fillStyle=b===EARTH?'#238bdd':b===MARS?'#df6538':'#b9bec2';
+  ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,TAU); ctx.fill();
+  ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b===EARTH?earthAngle:b===MOON?moonAngle:0);
+  ctx.beginPath(); ctx.arc(0,0,b.r*.985,0,TAU); ctx.clip();
+  if(b===EARTH){
+    ctx.fillStyle='#63d471';
+    ctx.beginPath(); ctx.ellipse(.2*b.r,-.34*b.r,.38*b.r,.21*b.r,.25,0,TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-.48*b.r,.12*b.r,.29*b.r,.19*b.r,-.45,0,TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(.18*b.r,.52*b.r,.22*b.r,.14*b.r,.7,0,TAU); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.84)';
+    ctx.beginPath(); ctx.ellipse(0,-.94*b.r,.57*b.r,.13*b.r,0,0,TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0,.95*b.r,.46*b.r,.1*b.r,0,0,TAU); ctx.fill();
+  }else if(b===MOON){
+    const craters=[[-.38,.2,.14],[.3,-.4,.16],[.32,.28,.1],[-.08,.58,.105],[.54,.02,.075]];
+    ctx.fillStyle='rgba(62,69,78,.34)';
+    for(const [x,y,s] of craters){ ctx.beginPath(); ctx.arc(x*b.r,y*b.r,s*b.r,0,TAU); ctx.fill(); }
+  }else{
+    ctx.fillStyle='rgba(93,35,23,.22)';
+    for(const [x,y,s] of [[.3,-.4,.18],[-.4,.3,.14],[0,.58,.1]]){ ctx.beginPath(); ctx.arc(x*b.r,y*b.r,s*b.r,0,TAU); ctx.fill(); }
+  }
+  ctx.restore();
+  ctx.fillStyle='rgba(4,11,31,.18)'; ctx.beginPath(); ctx.moveTo(b.x,b.y-b.r); ctx.arc(b.x,b.y,b.r,-Math.PI/2,Math.PI/2); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(7,15,35,.4)'; ctx.lineWidth=Math.max(2/cam.zoom,b.r*.012);
+  ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,TAU); ctx.stroke();
+  if(b===EARTH){
+    const pad=padAngle(); ctx.fillStyle='#ffd166'; ctx.strokeStyle='#fff3bd'; ctx.lineWidth=2/cam.zoom;
+    ctx.beginPath(); ctx.arc(b.x+Math.cos(pad)*b.r,b.y+Math.sin(pad)*b.r,Math.max(4/cam.zoom,b.r*.018),0,TAU); ctx.fill(); ctx.stroke();
+  }
+}
 function drawBody(b){
+  if(IOS_DEVICE){ drawBodyIOS(b); return; }
   if(b===EARTH){
     ctx.save();
     ctx.shadowColor='rgba(76,201,240,.75)'; ctx.shadowBlur=lowPowerMode?0:Math.max(8,b.r*.07*cam.zoom);
@@ -1810,7 +1854,7 @@ function predictPath(ship=rocket){
     horizon=Math.min(level===4?280:180,Math.max(level===4?70:40,period*1.1));
   }
   const coarse=lowPowerMode||W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches);
-  const steps=coarse?240:520, dt=horizon/steps, pts=[];
+  const steps=IOS_DEVICE?150:coarse?220:520, dt=horizon/steps, pts=[];
   let vrPrev=null, markers=[];
   for(let i=0;i<steps;i++){
     let ax=0, ay=0;
@@ -1842,8 +1886,9 @@ function getPredictedPath(){
   if(predictionCache){
     const moved=Math.hypot(rocket.x-predictionCache.x,rocket.y-predictionCache.y);
     const dv=Math.hypot(rocket.vx-predictionCache.vx,rocket.vy-predictionCache.vy);
-    const cacheMs=lowPowerMode?280:120;
-    if(now-predictionCache.t<cacheMs && moved<30 && dv<15 && Math.abs(moonAngle-predictionCache.moonAngle)<.004) return predictionCache.result;
+    const age=now-predictionCache.t, cacheMs=IOS_DEVICE?520:lowPowerMode?340:120;
+    // 手机端必须至少复用到缓存期限；否则起飞时重力与推力带来的 dv 会让预测几乎每几帧重算。
+    if((lowPowerMode&&age<cacheMs)||(!lowPowerMode&&age<cacheMs&&moved<30&&dv<15&&Math.abs(moonAngle-predictionCache.moonAngle)<.004)) return predictionCache.result;
   }
   const result=predictPath();
   predictionCache={t:now,x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,moonAngle,result};
@@ -1991,9 +2036,11 @@ function draw(){
   for(const s of stars){
     const px = s.x - cam.x*0.35, py = s.y - cam.y*0.35;
     const wx = ((px % W)+W)%W, wy = ((py % H)+H)%H;
-    ctx.globalAlpha = 0.5 + 0.5*Math.sin(t*2 + s.tw);
+    // iOS 不逐星计算闪烁正弦，也不为微小星点建立圆弧路径。
+    ctx.globalAlpha = IOS_DEVICE?.72:0.5 + 0.5*Math.sin(t*2 + s.tw);
     ctx.fillStyle = s.c;
-    ctx.beginPath(); ctx.arc(wx, wy, s.r, 0, TAU); ctx.fill();
+    if(IOS_DEVICE) ctx.fillRect(wx,wy,Math.max(1,s.r),Math.max(1,s.r));
+    else{ ctx.beginPath(); ctx.arc(wx, wy, s.r, 0, TAU); ctx.fill(); }
   }
   ctx.globalAlpha = 1;
 
@@ -2272,9 +2319,16 @@ function fitText(text,x,y,maxWidth,minSize=10){
   ctx.fillText(shown+'…',x,y);
 }
 
-let last = performance.now(), lastRender=0;
+let last = performance.now(), lastRender=0, renderInterval=15.5, frameIntervalEMA=16.7, frameSamples=0;
 function loop(now){
-  const dt = Math.min(0.05, (now-last)/1000); last = now;
+  const rawFrameMs=now-last, dt = Math.min(0.05, rawFrameMs/1000); last = now;
+  if(IOS_DEVICE&&rawFrameMs>0&&rawFrameMs<100&&renderInterval<30){
+    frameIntervalEMA=frameIntervalEMA*.94+rawFrameMs*.06;
+    if(++frameSamples>45&&frameIntervalEMA>22){
+      // 如果 60fps 已经持续守不住，固定为稳定 30fps；物理和触摸采样仍在每个 rAF 更新。
+      renderInterval=31; document.documentElement.dataset.canvasFps='30';
+    }
+  }
   // 子弹时间：平移物理慢速(slow)，旋转保持实时但灵敏度降低（方案1）
   const slow = bulletT>0 ? 0.18 : 1;
   const steps = keys['Space'] ? 8 : 1;
@@ -2285,7 +2339,7 @@ function loop(now){
     }
   }
   // ProMotion iPhone 可能以 120Hz 触发 rAF；物理仍按真实 dt 更新，低功耗设备只把绘制限制在约 60fps。
-  if(!lowPowerMode || now-lastRender>=15.5){ draw(); lastRender=now; }
+  if(!lowPowerMode || now-lastRender>=renderInterval){ draw(); lastRender=now; }
   requestAnimationFrame(loop);
 }
 window.__SPACEGAME_SELF_CHECKS__=runPhysicsSelfChecks();
