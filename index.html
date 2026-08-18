@@ -55,8 +55,8 @@
   .mission-action.is-visible{display:flex}
   #pauseMenu{position:fixed;inset:0;z-index:8;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(5,9,27,.72);backdrop-filter:blur(7px)}
   #pauseMenu.is-visible{display:flex}
-  .pause-card{width:min(620px,100%);max-height:calc(100vh - 36px);overflow:auto;padding:22px;color:#eef4ff;background:#111b42;border:2px solid rgba(255,255,255,.2);border-radius:24px;box-shadow:0 18px 60px rgba(0,0,0,.45)}
-  .pause-card h2{margin:0 0 4px;font-size:24px}.pause-card p{margin:0 0 16px;color:#aebde0;font-size:13px}.pause-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pause-grid button,.pause-resume{min-height:48px;padding:9px 10px;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:13px;font-weight:800;cursor:pointer}.pause-grid button.is-on{color:#14203b;background:#4cc9f0}.pause-resume{width:100%;margin-bottom:11px;color:#17213c;background:#ffd166;border-color:#fff1b2;font-size:16px}
+  .pause-card{position:relative;width:min(620px,100%);max-height:calc(100vh - 36px);overflow:auto;padding:22px;color:#eef4ff;background:#111b42;border:2px solid rgba(255,255,255,.2);border-radius:24px;box-shadow:0 18px 60px rgba(0,0,0,.45)}
+  .pause-card h2{margin:0 42px 4px 0;font-size:24px}.pause-card p{margin:0 0 16px;color:#aebde0;font-size:13px}.pause-close{position:absolute;top:12px;right:12px;width:40px;height:40px;padding:0;color:#eef4ff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;font-size:24px;font-weight:800;line-height:1;cursor:pointer}.pause-close:hover{background:rgba(255,255,255,.2)}.pause-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}.pause-actions button{min-height:52px;padding:10px;border:1px solid rgba(255,255,255,.28);border-radius:14px;font-size:16px;font-weight:900;cursor:pointer}.pause-resume{color:#17213c;background:#ffd166;border-color:#fff1b2}.pause-restart{color:#281704;background:#ff9f43;border-color:#ffd0a3}.pause-home{grid-column:1/-1;color:#10203c;background:#4cc9f0;border-color:#bff3ff}.pause-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pause-grid button{min-height:48px;padding:9px 10px;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:13px;font-weight:800;cursor:pointer}.pause-grid button.is-on{color:#14203b;background:#4cc9f0}.pause-grid #menuAssist{grid-column:1/-1}
   .key-help{margin-top:15px;padding:13px 14px;background:rgba(5,10,30,.38);border:1px solid rgba(255,255,255,.12);border-radius:15px}.key-help h3{margin:0 0 9px;font-size:14px}.key-help-grid{display:flex;flex-wrap:wrap;gap:7px}.key-help .pill{font-size:11px;background:rgba(255,255,255,.09)}.touch-help{display:none;margin-top:8px;color:#aebde0;font-size:12px;line-height:1.45}
   #briefing{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9;padding:18px;background:rgba(5,9,27,.66);backdrop-filter:blur(5px)}
   #briefing.is-visible{display:flex}
@@ -83,7 +83,7 @@
     .tool-rail{top:calc(82px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));grid-template-columns:repeat(3,50px);gap:7px;padding:8px;border-radius:20px}.icon-btn{width:50px;height:50px;border-radius:15px}.icon-btn .ico{font-size:22px}.tool-rail .lbl{display:block}
     .flight-controls{left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));justify-content:space-between;gap:0}.turn-controls{gap:12px}.flight-controls .icon-btn{width:64px;height:64px}.flight-controls .thrust{width:84px;height:92px}.flight-controls .thrust .ico{font-size:34px}.flight-controls .turn .ico{font-size:30px}.flight-controls .lbl{font-size:10px}
     .mission-action{left:auto;right:max(14px,env(safe-area-inset-right));top:calc(158px + env(safe-area-inset-top));bottom:auto;transform:none;width:104px;height:58px}
-    .pause-card{padding:19px 15px;border-radius:20px}.pause-grid{gap:8px}.pause-grid button{font-size:13px}.key-help-grid{display:none}.touch-help{display:block}
+    .pause-card{padding:19px 15px;border-radius:20px}.pause-close{top:9px;right:9px}.pause-actions{gap:8px}.pause-actions button{min-height:50px;font-size:15px}.pause-grid{gap:8px}.pause-grid button{font-size:13px}.key-help-grid{display:none}.touch-help{display:block}
     #msg .card{max-width:calc(100vw - 28px);padding:22px 14px}#msg h1{font-size:24px}#msg p{font-size:14px}#msg button{font-size:14px;padding:9px 14px}
     #briefing{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}#briefing .brief-card{padding:18px 15px;border-radius:18px}.brief-title{font-size:21px}.brief-grid{grid-template-columns:1fr}.brief-actions{position:sticky;bottom:-18px;margin:16px -15px -18px;padding:12px 15px;background:#f8fbff}.brief-actions button{min-height:48px}
     #levelSelect{align-items:flex-start;padding:max(16px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}.level-head{margin-bottom:14px}.level-head p{font-size:13px}.level-grid{gap:11px;padding-bottom:16px}.level-card{flex-basis:min(84vw,310px);min-height:255px;padding:14px 15px}.level-icon{margin:5px 0;font-size:31px}.level-card h2{font-size:18px}.level-card p{font-size:12px}.level-meta{padding-top:10px}.level-play{min-height:48px;margin-top:10px}
@@ -119,9 +119,14 @@
 </div>
 <button type="button" id="missionAction" class="icon-btn mission-action" data-action="mission" data-cue="mission" aria-label="执行任务动作"><span class="ico">🛰</span><span class="lbl">释放卫星</span></button>
 <div id="pauseMenu" role="dialog" aria-modal="true" aria-labelledby="pauseTitle"><div class="pause-card">
+  <button class="pause-close" data-menu-action="resume" aria-label="关闭暂停菜单并继续飞行" title="继续飞行">×</button>
   <h2 id="pauseTitle">飞行已暂停</h2><p>常用设置都收在这里，飞行画面只保留必要操作。</p>
   <p id="perfStatus" aria-live="polite"></p>
-  <button class="pause-resume" data-menu-action="resume">▶ 继续飞行</button>
+  <div class="pause-actions">
+    <button class="pause-resume" data-menu-action="resume">▶ 继续飞行</button>
+    <button class="pause-restart" data-menu-action="restart">↻ 重新开始</button>
+    <button class="pause-home" data-menu-action="level">⌂ 回主菜单</button>
+  </div>
   <div class="pause-grid">
     <button id="menuPrediction" data-menu-action="prediction">轨迹预测</button>
     <button id="menuRadar" data-menu-action="radar">小地图模式</button>
@@ -130,8 +135,6 @@
     <button id="menuGuide" data-menu-action="guide">任务提示</button>
     <button data-menu-action="briefing">📖 本阶段科普</button>
     <button id="menuAssist" data-menu-action="assist">飞行辅助</button>
-    <button data-menu-action="restart">↻ 本阶段重来</button>
-    <button data-menu-action="level">▦ 任务目录</button>
   </div>
   <section class="key-help" aria-label="操作说明">
     <h3>⌨️ 电脑按键</h3>
@@ -210,7 +213,7 @@ const LAUNCH_LOCK_ALT = 90;            // 地球发射初段保持当地垂直�
 const ROT_ACC = 3.0;                   // 转动惯量：角加速度
 // 姿态控制模式（C 切换）：0=随速偏转 1=手动转向 2=纯惯性
 const ATT_MODES = ['随速偏转','手动转向','纯惯性'];
-let attMode = 0, velOffset = 0;
+let attMode = 1, velOffset = 0;
 let dialMode = 0;
 let earthAngle = 0;
 let moonAngle = MOON_ANG0;
@@ -246,8 +249,8 @@ const LEVELS = {
 };
 let level = 1;
 const stageInfoL1 = [
-  {name:'① 进入环绕轨道', hint:'随速模式：推进到 90 u 自动解锁 · 再右转',
-    steps:['随速偏转模式下按住推进；90 u 前自动保持当地垂直。手动转向和纯惯性模式不锁定。','看到“控制已交给你”后，同时按住 D / 右转和 W / 推进，让机头逐渐朝右侧压平。','看到黄色预测线首尾相接、完整围住地球后，松开所有按键并稳定保持 3 秒。'],
+  {name:'① 进入环绕轨道', hint:'手动模式：向上推进 · 逐渐右转压平',
+    steps:['默认是手动转向：先保持机头朝当地上方，短按推进离开发射台。','高度约 40～60 u 后，同时按住 D / 右转和 W / 推进，让机头逐渐朝右侧压平。','看到黄色预测线首尾相接、完整围住地球后，松开所有按键并稳定保持 3 秒。'],
     science:'只向上飞会变成抛物线甚至逃逸；进入轨道需要足够的横向速度，让飞船一边下落、一边不断“错过”地面。这里选择右转，是顺着地球自转的顺行方向。',
     success:'成功标志：黄色线闭合、没有穿过地球，并且近地点和远地点都在地表之外。'},
   {name:'② 抬升远地点', hint:'对准青线点火 · 抬高橙点',
@@ -278,8 +281,8 @@ const stageInfoL2 = [
     success:'成功标志：相对地面速度 ≤17 u/s；绿色着陆区只影响完美评价，不影响基础通关。'}
 ];
 const stageInfoL3 = [
-  {name:'① 发射进入近地轨道', hint:'随速模式：推进到 90 u 自动解锁',
-    steps:['随速模式按住推进，90 u 前自动保持垂直；另外两种姿态模式可立即自由控制。','出现“控制已交给你”后逐渐向右转，让黄色预测线闭合。','把轨道抬到空间站所在的青色轨道附近。'],
+  {name:'① 发射进入近地轨道', hint:'手动模式：垂直起飞 · 逐渐向右压平',
+    steps:['默认手动转向不会自动锁定机头；先朝当地上方推进离地。','高度约 40～60 u 后逐渐向右转，让黄色预测线闭合。','把轨道抬到空间站所在的青色轨道附近。'],
     science:'交会对接的第一步不是直接瞄准空间站，而是先进入同方向的近地轨道。直接朝目标飞通常会因为引力和目标持续运动而错过。',
     success:'成功标志：形成顺行闭合轨道，远地点接近空间站轨道。'},
   {name:'② 追赶空间站', hint:'看绿色目标线 · 用轨道高低改变追赶速度',
@@ -296,8 +299,8 @@ const stageInfoL3 = [
     success:'成功标志：绿色对接环闭合，火箭与空间站一起沿轨道飞行。'}
 ];
 const stageInfoL4 = [
-  {name:'① 发射进入停泊轨道', hint:'随速模式：推进到 90 u 自动解锁',
-    steps:['随速模式从地球发射时，90 u 前自动保持当地垂直；手动和惯性模式完全自由。','出现“控制已交给你”后逐渐向右压平，建立顺行闭合轨道。','让近地点离开地表，并保留足够燃料。'],
+  {name:'① 发射进入停泊轨道', hint:'手动模式：垂直起飞 · 逐渐向右压平',
+    steps:['默认手动转向不会自动锁定机头；先保持当地垂直推进离地。','高度约 40～60 u 后逐渐向右压平，建立顺行闭合轨道。','让近地点离开地表，并保留足够燃料。'],
     science:'去月球也要先入轨。停泊轨道把发射和地月转移拆开：火箭先获得稳定的横向速度，再选择合适时机把远地点抬到月球轨道。真实任务会根据月球未来位置计算“发射窗口”。',
     success:'成功标志：黄色预测线闭合，顺行且近地点安全。'},
   {name:'② 地月转移点火', hint:'看灰月位置 · 顺向点火 · 橙点抬到月球轨道',
@@ -825,6 +828,9 @@ document.querySelectorAll('[data-menu-action]').forEach(btn=>btn.addEventListene
   else if(action==='level'){ openLevelSelect(); }
   syncUI();
 }));
+document.getElementById('pauseMenu').addEventListener('click',e=>{
+  if(e.target===e.currentTarget&&paused) togglePause();
+});
 document.querySelectorAll('[data-level-card]').forEach(card=>{
   const launch=()=>startLevel(card.dataset.levelCard);
   card.addEventListener('keydown',e=>{ if(e.target===card&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); launch(); } });
@@ -962,7 +968,8 @@ function saveCheckpoint(){
     fuel:rocket.fuel, flightT:flightT, earthAngle:earthAngle, moonAngle:moonAngle, stage:mission.stage, velOffset:velOffset,
     stationAngle:station?station.angle:null, launchBaseVx:rocket.launchBaseVx, launchBaseVy:rocket.launchBaseVy,
     launchFrameActive:!!rocket._launchFrameActive, launchAssistActive:!!rocket._launchAssistActive,
-    launchCompleted:!!rocket._launchCompleted
+    launchCompleted:!!rocket._launchCompleted, chute:!!rocket.chute, chuteAngle:rocket.chuteAngle,
+    chuteFlowX:rocket.chuteFlowX||0, chuteFlowY:rocket.chuteFlowY||0
   };
 }
 // 失败回退：优先回到检查点（当前阶段起点），否则回发射场
@@ -1001,8 +1008,10 @@ function retryFromStage(reason){
   }
   rocket.alive = true; rocket.crewDead = false; rocket.deadReason='';
   rocket.life = LIFE_MAX; rocket.maxG = 0; rocket.lastG = 0; rocket.overT = 0; rocket.av = 0;
-  rocket._tooFar = false; rocket.launchGrace = 0; rocket.chute = false;
-  rocket.chuteAngle = null; rocket.chuteFlowX = 0; rocket.chuteFlowY = 0;
+  rocket._tooFar = false; rocket.launchGrace = 0; rocket.chute = !!(cp&&cp.chute);
+  rocket.chuteAngle = cp&&Number.isFinite(cp.chuteAngle)?cp.chuteAngle:null;
+  rocket.chuteFlowX = cp&&Number.isFinite(cp.chuteFlowX)?cp.chuteFlowX:0;
+  rocket.chuteFlowY = cp&&Number.isFinite(cp.chuteFlowY)?cp.chuteFlowY:0;
   trail = []; particles=[]; exhaustAccumulator=0; trailSampleT=0; state = 'fly'; bulletT = 0; predictionCache = null;
   camInit = true;
   mission.holdT = 0; mission.finalHoldT=0; mission.deployReady=false; mission.dockReady=false; mission.done=false; mission.satReleased=false; mission.satellite=null;
