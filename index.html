@@ -225,7 +225,7 @@ const CHALLENGE_CONFIG={
   6:{fuel:100,parTime:480,life:0,mass:1},
   7:{fuel:100,fuelStar:18,parTime:220,life:0,mass:1},
   8:{fuel:100,fuelStar:20,parTime:330,life:0,mass:1},
-  9:{fuel:45,fuelStar:20,parTime:150,life:0,mass:1}
+  9:{fuel:30,fuelStar:2,parTime:150,life:0,mass:1}
 };
 const STAR_RULES={
   1:['完成同步轨道部署：★','在绿色目标经度内释放：+★','挑战燃料剩余至少 15%：+★'],
@@ -236,7 +236,7 @@ const STAR_RULES={
   6:['抵达 L1：★','抵达 L4 或 L5：★★','抵达 L2 或 L3：★★★'],
   7:['让小行星同时避开地球和月球：★','飞船没有在撞击中损毁：+★','挑战燃料剩余至少 18%：+★'],
   8:['抵达另一颗太阳旁的空间站：★','全程避开两颗恒星的高温区：+★','挑战燃料剩余至少 20%：+★'],
-  9:['穿过救援门并逃离黑洞：★','在半径 360 u 内完成深渊点火：+★','挑战燃料剩余至少 20%：+★']
+  9:['穿过救援门并逃离黑洞：★','在半径 270 u 内完成深渊点火：+★','挑战燃料剩余至少 2%：+★']
 };
 
 // ---------- 关卡框架 ----------
@@ -295,8 +295,8 @@ const BINARY_A_R=BINARY_SEPARATION*BINARY_MU_B/(BINARY_MU_A+BINARY_MU_B);
 const BINARY_B_R=BINARY_SEPARATION*BINARY_MU_A/(BINARY_MU_A+BINARY_MU_B);
 const BINARY_PLANET_R=720,BINARY_PLANET_OMEGA=Math.sqrt((BINARY_MU_A+3.0e5)/Math.pow(BINARY_PLANET_R,3));
 const BINARY_STATION_R=690,BINARY_STATION_OMEGA=Math.sqrt(BINARY_MU_B/Math.pow(BINARY_STATION_R,3));
-const BH_MU=2.2e6,BH_HORIZON=180,BH_PHOTON_RING=250,BH_BURN_R=390,BH_ESCAPE_R=2200;
-const BH_START_R=1100,BH_START_V=29.3,BH_BEACON_R=2550,BH_BEACON_OMEGA=.035;
+const BH_MU=2.2e6,BH_HORIZON=180,BH_PHOTON_RING=250,BH_BURN_IN=205,BH_BURN_R=275,BH_ESCAPE_R=2200;
+const BH_START_R=1100,BH_START_V=26.54,BH_FUEL_RATE=174,BH_BEACON_R=2550,BH_BEACON_OMEGA=.035;
 // 姿态控制模式（C 切换）：0=随速偏转 1=手动转向 2=纯惯性
 const ATT_MODES = ['随速偏转','手动转向','纯惯性'];
 let attMode = 1, velOffset = 0;
@@ -481,11 +481,11 @@ const stageInfoL8 = [
 ];
 const stageInfoL9 = [
   {name:'① 向深渊下潜',hint:'轻点推进启动世界，然后关机滑向黑洞',
-    steps:['第一次轻点推进会解除待机，让远方信标与吸积盘开始转动。','随后关机沿紫色下潜轨道滑行，不要在远处浪费燃料。','观察右上角：越靠近黑洞，远方看到的位移和速度会连续变慢。'],
+    steps:['第一次轻点推进只会解除待机，不消耗燃料；松开后世界才开始运动。','随后关机沿黄色轨迹滑向白色光子环内侧，不要在远处浪费燃料。','观察右上角：越靠近黑洞，远方看到的位移和速度会连续变慢。'],
     science:'靠近黑洞时，远方观察者会发现飞船上的钟越来越慢。本关用 √(1−rₛ/r) 表示飞船钟的引力红移，并用更强的视界坐标速率表现远方所见的运动冻结；两者都做了游戏化平滑，不是完整的广义相对论数值模拟。',
-    success:'成功标志：进入半径 480 u 内的紫色“深渊点火区”。'},
+    success:'成功标志：进入半径 365 u 内，开始准备近点点火。'},
   {name:'② 最近点顺向点火',hint:'机头对准青色速度方向，推进到逃逸能量变绿',
-    steps:['靠近紫色光环后，让机头和姿态表的青色速度刻度重合。','在半径约 260～390 u 内顺着速度短促点火。','右上角“逃逸能量”变为正数后立即停火，保留修正燃料。'],
+    steps:['让机头和姿态表的青色速度刻度重合，继续关机滑向紫色细环。','半径降到约 220～270 u 时顺着速度按住推进。','右上角“逃逸能量”变绿后立即停火；挑战燃料只够这一次近点点火。'],
     science:'同样的速度增量，在速度最高的轨道近点施加，增加的轨道能量最多，这叫奥伯特效应。黑洞没有给发动机额外推力，而是先用引力把飞船加速，再让发动机更有效地改变总能量。',
     success:'成功标志：黑洞相对轨道能量大于 0，黄色预测线转为向外开放。'},
   {name:'③ 逃回远方世界',hint:'保持向外飞行，穿过绿色救援门即可完成',
@@ -970,7 +970,7 @@ function resetGame(){
     asteroidContact:false,asteroidAnchored:false,asteroidMountAngle:0,hingeAngle:0,
     asteroidChanged:false,asteroidImpact:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null,
     binaryHeatViolated:false,binaryCaptured:false,binaryGateCrossed:false,binaryTargetEnergy:Infinity,
-    blackHoleMinR:Infinity,blackHoleDeepBurn:false,blackHoleEscaping:false,blackHoleFrozen:false};
+    blackHoleMinR:Infinity,blackHoleDeepBurn:false,blackHoleEscaping:false,blackHoleFrozen:false,blackHoleAwaitRelease:false};
   if(level===5){
     mission.slingInitialEnergy=earthSpecificEnergy(rocket);
     mission.slingEntryEnergy=mission.slingInitialEnergy;
@@ -983,7 +983,7 @@ function resetGame(){
   if(level===6) mission.dynHint='五个目标任选｜按推进后整个世界同步开始';
   if(level===7) mission.dynHint='红线会撞地球｜按推进后世界同步开始';
   if(level===8) mission.dynHint='两颗太阳都在运动｜按推进后双星世界同步开始';
-  if(level===9) mission.dynHint='轻点推进解除待机｜随后关机滑向紫色深渊';
+  if(level===9) mission.dynHint='轻点推进只解除待机｜松手后关机滑向光子环内侧';
   saveCheckpoint();
   camInit = true;
   hideMsg();
@@ -1245,7 +1245,11 @@ function updateActionCue(){
   }else if(level===9){
     if(!mission.worldStarted)cues=['thrust'];
     else if(mission.stage===0)cues=['speed'];
-    else if(mission.stage===1){const turn=cueTurnTo(vAng,.16);cues=turn?[turn]:['thrust'];}
+    else if(mission.stage===1){
+      const bm=blackHoleMetrics();
+      if(bm.r>270)cues=['speed'];
+      else{const turn=cueTurnTo(vAng,.16);cues=turn?[turn]:['thrust'];}
+    }
     else cues=['speed'];
   }
   setActionCue(cues);
@@ -1589,7 +1593,7 @@ function saveCheckpoint(){
     binaryState:binary?{angle:binary.angle,planetAngle:binary.planetAngle,gateCrossed:binary.gateCrossed}:null,
     binaryMission:level===8?{binaryHeatViolated:mission.binaryHeatViolated,binaryCaptured:mission.binaryCaptured,binaryGateCrossed:mission.binaryGateCrossed}:null,
     blackHoleState:blackHole?{properTime:blackHole.properTime,farTime:blackHole.farTime,factor:blackHole.factor,coordinateFactor:blackHole.coordinateFactor,minRadius:blackHole.minRadius,beaconAngle:blackHole.beaconAngle,frozen:false}:null,
-    blackHoleMission:level===9?{blackHoleMinR:mission.blackHoleMinR,blackHoleDeepBurn:mission.blackHoleDeepBurn,blackHoleEscaping:mission.blackHoleEscaping,blackHoleFrozen:false}:null,
+    blackHoleMission:level===9?{blackHoleMinR:mission.blackHoleMinR,blackHoleDeepBurn:mission.blackHoleDeepBurn,blackHoleEscaping:mission.blackHoleEscaping,blackHoleFrozen:false,blackHoleAwaitRelease:!!mission.blackHoleAwaitRelease}:null,
     launchFrameActive:!!rocket._launchFrameActive, launchAssistActive:!!rocket._launchAssistActive,
     launchCompleted:!!rocket._launchCompleted, chute:!!rocket.chute, chuteAngle:rocket.chuteAngle,
     chuteFlowX:rocket.chuteFlowX||0, chuteFlowY:rocket.chuteFlowY||0,
@@ -1790,9 +1794,9 @@ function freezeAtHorizon(){
 function finishBlackHoleEscape(m=blackHoleMetrics()){
   if(level!==9||mission.done)return;
   mission.done=true;state='complete';
-  const remaining=challengeRemainingFuel(),deep=mission.blackHoleDeepBurn&&mission.blackHoleMinR<=360&&mission.blackHoleMinR>BH_HORIZON+12;
+  const remaining=challengeRemainingFuel(),deep=mission.blackHoleDeepBurn&&mission.blackHoleMinR<=270&&mission.blackHoleMinR>BH_HORIZON+12;
   const starResult=evaluateStars([
-    {ok:deep,label:'在半径 360 u 内完成深渊点火'},
+    {ok:deep,label:'在半径 270 u 内完成深渊点火'},
     {ok:remaining>=CHALLENGE_CONFIG[9].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[9].fuelStar}%`}
   ]);
   const result=saveLevelResult(9,performanceScore(),starResult.stars),vInf=Math.sqrt(Math.max(0,2*m.energy));
@@ -1808,10 +1812,11 @@ function updateMissionL9(dt){
   const directEscape=m.r>=BH_ESCAPE_R&&m.radial>0&&m.energy>0;
   if(directEscape){finishBlackHoleEscape(m);return;}
   if(mission.stage===0){
-    mission.dynHint=`距视界 ${m.alt.toFixed(0)}｜飞船时间倍率 ×${m.factor.toFixed(2)}｜关机下潜`;
+    mission.dynHint=`距视界 ${m.alt.toFixed(0)}｜运动倍率 ×${m.coordinateFactor.toFixed(2)}｜燃料只够近点一烧`;
     if(m.r<BH_BURN_R+90){advanceStage();return;}
   }else if(mission.stage===1){
-    mission.dynHint=`半径 ${m.r.toFixed(0)}｜逃逸能量 ${m.energy.toFixed(0)}｜顺向点火至正数`;
+    const burnCue=m.r<=270?'现在顺向点火':'继续关机下潜';
+    mission.dynHint=`半径 ${m.r.toFixed(0)}｜逃逸能量 ${m.energy.toFixed(0)}｜${burnCue}`;
     if(m.energy>0){mission.blackHoleEscaping=true;advanceStage();return;}
   }else mission.dynHint=`向外 ${m.radial.toFixed(1)} u/s｜距救援门 ${Math.max(0,BH_ESCAPE_R-m.r).toFixed(0)}`;
 }
@@ -2400,6 +2405,12 @@ function update(dt, dtReal){
     if(!(keys['ArrowUp']||keys['KeyW'])) return;
     mission.worldStarted=true;
     if(ghostShip) ghostShip.started=true;
+    // 黑洞挑战的燃料只够一次近点点火：首次轻点只解除待机，不能偷吃一帧推进剂。
+    if(level===9){mission.blackHoleAwaitRelease=true;return;}
+  }
+  if(level===9&&mission.blackHoleAwaitRelease){
+    if(keys['ArrowUp']||keys['KeyW'])return;
+    mission.blackHoleAwaitRelease=false;
   }
   if(level===9&&blackHole){
     const clockDt=dt,m=blackHoleMetrics(),proper=Math.max(.025,m.properFactor),coordinate=Math.max(.004,m.coordinateFactor);
@@ -2520,7 +2531,7 @@ function update(dt, dtReal){
   rocket.thrusting = (keys['ArrowUp']||keys['KeyW']) && (infiniteFuel || rocket.fuel>0);
   rocket.thrustPower = 0;
   if(rocket.thrusting){
-    if(level===9){const bm=blackHoleMetrics();if(bm.r<=360&&bm.r>BH_HORIZON+12)mission.blackHoleDeepBurn=true;}
+    if(level===9){const bm=blackHoleMetrics();if(bm.r<=270&&bm.r>BH_HORIZON+12)mission.blackHoleDeepBurn=true;}
     if(rocket.landed){ rocket.landed=false; rocket.body=null; launched=true; rocket.launchGrace=1.2; } // 起飞离地宽限
     let thrustPower=1;
     if(mission.assistMode && (level===1||level===3||level===4) && mission.stage===0){
@@ -2534,11 +2545,12 @@ function update(dt, dtReal){
     rocket.thrustPower=thrustPower;
     // 推进属于玩家输入，单帧最多结算 20ms；掉帧时丢弃多余控制冲量，不在恢复后“补喷”。
     const thrustDt=Math.min(dt,.02);
-    const poweredDt=infiniteFuel?thrustDt:Math.min(thrustDt,rocket.fuel/Math.max(.001,9*thrustPower));
+    const fuelRate=level===9?BH_FUEL_RATE:9;
+    const poweredDt=infiniteFuel?thrustDt:Math.min(thrustDt,rocket.fuel/Math.max(.001,fuelRate*thrustPower));
     const thrustAccel=THRUST/Math.max(1,rocket.mass||1);
     rocket.vx += fx*thrustAccel*thrustPower*poweredDt; rocket.vy += fy*thrustAccel*thrustPower*poweredDt;
     if(!infiniteFuel){
-      const fuelSpent=9*thrustPower*poweredDt;
+      const fuelSpent=fuelRate*thrustPower*poweredDt;
       rocket.fuel=Math.max(0,rocket.fuel-fuelSpent); mission.fuelUsed+=fuelSpent;
     }
     // 固定“每秒”生成量，避免 8 倍速子步或低帧率时一帧生成几十个粒子。
@@ -2893,7 +2905,7 @@ function drawBlackHoleZones(){
   ctx.strokeStyle=m.energy>0?'rgba(95,208,104,.92)':'rgba(95,208,104,.36)';ctx.lineWidth=5/cam.zoom;ctx.setLineDash([17/cam.zoom,12/cam.zoom]);
   ctx.beginPath();ctx.arc(0,0,BH_ESCAPE_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
   ctx.fillStyle='rgba(95,208,104,.9)';ctx.font=`900 ${15/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('远方救援门',0,-BH_ESCAPE_R-18/cam.zoom);
-  ctx.strokeStyle='rgba(174,104,255,.22)';ctx.lineWidth=BH_BURN_R-(BH_PHOTON_RING+12);ctx.beginPath();ctx.arc(0,0,(BH_BURN_R+BH_PHOTON_RING+12)/2,0,TAU);ctx.stroke();
+  ctx.strokeStyle='rgba(174,104,255,.22)';ctx.lineWidth=BH_BURN_R-BH_BURN_IN;ctx.beginPath();ctx.arc(0,0,(BH_BURN_R+BH_BURN_IN)/2,0,TAU);ctx.stroke();
   ctx.strokeStyle='rgba(210,157,255,.78)';ctx.lineWidth=2.5/cam.zoom;ctx.beginPath();ctx.arc(0,0,BH_BURN_R,0,TAU);ctx.stroke();
   if(W>=760){ctx.fillStyle='#d9a6ff';ctx.font=`800 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText('深渊点火区',0,-BH_BURN_R-14/cam.zoom);}
 
