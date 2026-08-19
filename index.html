@@ -4431,14 +4431,15 @@ function draw(){
       ctx.textAlign='right'; ctx.fillText('暂停菜单可隐藏指引', bx+bw-14, by+bh-10); ctx.textAlign='left';
     }
   }
-  // 提示 toast：手机放在工具面板下方左侧，避免切换模式时文字被按钮遮住。
+  // 提示 toast：手机放在任务指引上方；小地图在右时靠左，展开遥测后小地图换左、提示随之靠右。
   if(mission && mission.toastT>0){
     ctx.globalAlpha = Math.min(1, mission.toastT);
     if(W<760&&H>650){
-      ctx.fillStyle='rgba(8,14,38,.82)'; roundRect(10,270,180,32,12); ctx.fill();
-      ctx.strokeStyle='rgba(76,201,240,.55)'; ctx.lineWidth=1; roundRect(10,270,180,32,12); ctx.stroke();
+      const toastW=Math.min(186,W-20),toastX=telemetryExpanded?W-toastW-10:10,toastY=Math.max(310,H-244);
+      ctx.fillStyle='rgba(8,14,38,.82)'; roundRect(toastX,toastY,toastW,32,12); ctx.fill();
+      ctx.strokeStyle='rgba(76,201,240,.55)'; ctx.lineWidth=1; roundRect(toastX,toastY,toastW,32,12); ctx.stroke();
       ctx.fillStyle='#fff'; ctx.font='800 14px "Baloo 2",sans-serif'; ctx.textAlign='left';
-      fitText(mission.toast,20,291,160,10);
+      fitText(mission.toast,toastX+10,toastY+21,toastW-20,10);
     }else{
       ctx.fillStyle='#fff'; ctx.font='800 18px "Baloo 2",sans-serif'; ctx.textAlign='center';
       ctx.fillText(mission.toast, W/2, H<520?145:110);
