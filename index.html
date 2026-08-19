@@ -15,7 +15,7 @@
 <style>
   :root{--ink:#f8fbff;--muted:#a9b7d8;--panel:rgba(8,14,38,.76);--line:rgba(255,255,255,.16);--cyan:#4cc9f0;--gold:#ffd166;--green:#5fd068;--red:#ef476f}
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;overflow:hidden;background:#0b1026;font-family:'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif;-webkit-user-select:none;user-select:none}
+  html,body{margin:0;height:100%;overflow:hidden;background:#0b1026;font-family:'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   button{font:inherit}
   #cv{display:block;width:100vw;height:100vh;touch-action:none;cursor:grab}
   #cv.is-panning{cursor:grabbing}
@@ -190,10 +190,11 @@ function resize(){
   // 横屏旗舰手机常超过 900 CSS px；不能只按宽度判断，否则会误开桌面级 DPR、星空和轨道预测。
   lowPowerMode=IOS_DEVICE||coarsePointer||innerWidth<760;
   document.documentElement.classList.toggle('low-power',lowPowerMode);
-  // iPhone 的 Retina 像素量很高；HTML 按钮仍保持系统级清晰度，只把全屏 Canvas 降到 1:1。
-  // 全屏 Canvas 的高 DPR 会把每帧填充量平方放大；桌面 1.25× 已足够锐利，手机保持 1×。
-  DPR=Math.min(devicePixelRatio||1,lowPowerMode?1:1.25);
-  W = innerWidth; H = innerHeight; cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+  // 手机 1× Canvas 在 Retina 屏上文字明显发虚；提升到 1.25×，同时用总像素预算保护大屏手机和平板性能。
+  // 典型 390×844 手机约 51 万像素，仍远低于直接使用 2×/3× DPR 的开销。
+  const mobilePixelScale=Math.max(1,Math.min(1.25,Math.sqrt(850000/Math.max(1,innerWidth*innerHeight))));
+  DPR=Math.min(devicePixelRatio||1,lowPowerMode?mobilePixelScale:1.25);
+  W = innerWidth; H = innerHeight; cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
   bgGradient=ctx.createLinearGradient(0,0,0,H); bgGradient.addColorStop(0,'#0b1026'); bgGradient.addColorStop(1,'#1b2350');
   bulletGradient=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75); bulletGradient.addColorStop(0,'rgba(0,0,0,0)'); bulletGradient.addColorStop(1,'rgba(20,30,80,.55)');
   farGradient=ctx.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.7); farGradient.addColorStop(0,'rgba(0,0,0,0)'); farGradient.addColorStop(1,'rgba(0,0,0,.72)');
@@ -3001,6 +3002,15 @@ function drawBinaryScreenCue(){
   ctx.fillStyle=mission.stage===1?'#4cf0dd':'#5fd068';ctx.font='900 13px "Microsoft YaHei",sans-serif';ctx.textAlign='center';
   const dist=Math.hypot(target.x-rocket.x,target.y-rocket.y);ctx.fillText(`${label} · ${dist.toFixed(0)} u`,rx,ry+25);ctx.textAlign='left';
 }
+function drawThreeBodyScreenCue(){
+  if(level!==10||!threeBody||mission.done||mission.stage>=2)return;
+  const target=threeBodyGate(mission.stage),sx=(target.x-cam.x)*cam.zoom+W/2,sy=(target.y-cam.y)*cam.zoom+H/2,margin=68;
+  if(sx>margin&&sx<W-margin&&sy>92&&sy<H-185)return;
+  const cx=W/2,cy=H/2,ang=Math.atan2(sy-cy,sx-cx),rx=Math.max(42,Math.min(W-42,cx+Math.cos(ang)*(W/2-56))),ry=Math.max(98,Math.min(H-188,cy+Math.sin(ang)*(H/2-116)));
+  const color=mission.stage===0?'#4cf0dd':'#ffd166';
+  ctx.save();ctx.translate(rx,ry);ctx.rotate(ang);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(-9,-9);ctx.lineTo(-5,0);ctx.lineTo(-9,9);ctx.closePath();ctx.fill();ctx.restore();
+  ctx.fillStyle=color;ctx.font='900 13px "Microsoft YaHei",sans-serif';ctx.textAlign='center';ctx.fillText(`时间锚 ${mission.stage?'II':'I'} · ${Math.hypot(target.x-rocket.x,target.y-rocket.y).toFixed(0)} u`,rx,ry+25);ctx.textAlign='left';
+}
 // 任务区域渲染：第一关=同步带；第二关=着陆区；第三关=空间站；第四关=月背；第五关=弹弓；第六关=五个平衡点
 function drawAsteroidDefenseZones(){
   if(!asteroid)return;
@@ -3914,8 +3924,8 @@ function draw(){
   updateActionCue();
   // 摄像机
   if(camInit){
-    if(level===10){const target=threeBodyGate(0);cam.zoom=W<760?.16:.3;cam.x=(rocket.x+target.x)/2;cam.y=(rocket.y+target.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0);}
-    else if(level===9){cam.zoom=W<760?.22:.48;cam.x=(rocket.x+EARTH.x)/2;cam.y=(rocket.y+EARTH.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0);}
+    if(level===10){cam.zoom=W<760?.16:.3;cam.x=rocket.x;cam.y=rocket.y+((W<760&&H>650)?(H/2-235)/cam.zoom:0);}
+    else if(level===9){cam.zoom=W<760?.17:.48;cam.x=rocket.x;cam.y=rocket.y+((W<760&&H>650)?(H/2-235)/cam.zoom:0);}
     else{cam.zoom=1.1;cam.x=rocket.x;cam.y=rocket.y;}
     cameraPointers.clear(); pinchState=null;
     cam.dragging=false; cam.pointerId=null; cv.classList.remove('is-panning');
@@ -3924,9 +3934,9 @@ function draw(){
   const sx = shake? (Math.random()-0.5)*shake : 0, sy = shake? (Math.random()-0.5)*shake : 0;
   if(cameraMode===0 && !cam.dragging){
     const focus=level===7&&!rocket.alive&&asteroid?asteroid:rocket;
-    const threeTarget=level===10?(mission.stage<2?threeBodyGate(mission.stage):threeBodyBarycenter()):null;
-    const focusX=level===10?(focus.x+threeTarget.x)/2:level===9?(focus.x+EARTH.x)/2:focus.x;
-    const focusY=level===10?(focus.y+threeTarget.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0):level===9?(focus.y+EARTH.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0):focus.y;
+    // 跟随模式必须以飞船本身为锚点。第九、十关原先取“飞船与目标的中点”，会把飞船推到屏幕边缘甚至画外。
+    const focusX=focus.x;
+    const focusY=focus.y+(((level===9||level===10)&&W<760&&H>650)?(H/2-235)/cam.zoom:0);
     cam.x += (focusX - cam.x)*0.12; cam.y += (focusY - cam.y)*0.12;
   }
   const cameraNow=performance.now();
@@ -4041,6 +4051,7 @@ function draw(){
   ctx.restore();
   drawLagrangeScreenCue();
   drawBinaryScreenCue();
+  drawThreeBodyScreenCue();
 
   if(level===9&&blackHole){
     const bhx=(EARTH.x-cam.x)*cam.zoom+W/2,bhy=(EARTH.y-cam.y)*cam.zoom+H/2,z=Math.max(0,blackHole.redshift);
