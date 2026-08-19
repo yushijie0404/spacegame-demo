@@ -169,6 +169,7 @@
     <article class="level-card" data-level-card="7" tabindex="0"><div class="level-number">MISSION 07</div><div class="level-icon">☄️</div><h2>小行星拦截</h2><p>追上会撞向地球的小行星；软着陆持续推离，或直接撞击改变轨道。</p><div class="level-meta"><div class="level-stars" data-level-stars="7">☆☆☆</div><div class="level-score"><strong data-level-score="7">—</strong>最高分</div></div><button class="level-play" data-start-level="7">开始任务</button></article>
     <article class="level-card" data-level-card="8" tabindex="0"><div class="level-number">MISSION 08</div><div class="level-icon">☀️</div><h2>双星摆渡</h2><p>从一颗太阳的行星起飞，穿过移动引力通道，到另一颗太阳旁与空间站对接。</p><div class="level-meta"><div class="level-stars" data-level-stars="8">☆☆☆</div><div class="level-score"><strong data-level-score="8">—</strong>最高分</div></div><button class="level-play" data-start-level="8">开始任务</button></article>
     <article class="level-card" data-level-card="9" tabindex="0"><div class="level-number">MISSION 09</div><div class="level-icon">🕳️</div><h2>黑洞深渊点火</h2><p>向时间变慢的深渊下潜，在最近点顺向点火，再逃回远方世界。</p><div class="level-meta"><div class="level-stars" data-level-stars="9">☆☆☆</div><div class="level-score"><strong data-level-score="9">—</strong>最高分</div></div><button class="level-play" data-start-level="9">开始任务</button></article>
+    <article class="level-card" data-level-card="10" tabindex="0"><div class="level-number">FINAL MISSION</div><div class="level-icon">🌀</div><h2>三体 · 混沌穿越</h2><p>每次重开都是新的三恒星局面；读取时间线影子，穿过两个移动时间锚后逃离。</p><div class="level-meta"><div class="level-stars" data-level-stars="10">☆☆☆</div><div class="level-score"><strong data-level-score="10">—</strong>最高分</div></div><button class="level-play" data-start-level="10">开始最终任务</button></article>
   </div>
   <div class="level-footer"><button id="continueLevel" onclick="closeLevelSelect()">继续当前任务</button></div>
 </div></div>
@@ -225,7 +226,8 @@ const CHALLENGE_CONFIG={
   6:{fuel:100,parTime:480,life:0,mass:1},
   7:{fuel:100,fuelStar:18,parTime:220,life:0,mass:1},
   8:{fuel:100,fuelStar:20,parTime:330,life:0,mass:1},
-  9:{fuel:30,fuelStar:2,parTime:150,life:0,mass:1}
+  9:{fuel:30,fuelStar:2,parTime:150,life:0,mass:1},
+  10:{fuel:85,fuelStar:20,parTime:190,life:0,mass:1}
 };
 const STAR_RULES={
   1:['完成同步轨道部署：★','在绿色目标经度内释放：+★','挑战燃料剩余至少 15%：+★'],
@@ -236,7 +238,8 @@ const STAR_RULES={
   6:['抵达 L1：★','抵达 L4 或 L5：★★','抵达 L2 或 L3：★★★'],
   7:['让小行星同时避开地球和月球：★','飞船没有在撞击中损毁：+★','挑战燃料剩余至少 18%：+★'],
   8:['抵达另一颗太阳旁的空间站：★','全程避开两颗恒星的高温区：+★','挑战燃料剩余至少 20%：+★'],
-  9:['穿过救援门并逃离黑洞：★','在半径 270 u 内完成深渊点火：+★','挑战燃料剩余至少 2%：+★']
+  9:['穿过救援门并逃离黑洞：★','在半径 270 u 内完成深渊点火：+★','挑战燃料剩余至少 2%：+★'],
+  10:['穿过两个时间锚并逃离混沌区：★','全程不进入红色潮汐危险圈：+★','挑战燃料剩余至少 20%：+★']
 };
 
 // ---------- 关卡框架 ----------
@@ -297,6 +300,8 @@ const BINARY_PLANET_R=720,BINARY_PLANET_OMEGA=Math.sqrt((BINARY_MU_A+3.0e5)/Math
 const BINARY_STATION_R=690,BINARY_STATION_OMEGA=Math.sqrt(BINARY_MU_B/Math.pow(BINARY_STATION_R,3));
 const BH_MU=2.2e6,BH_HORIZON=180,BH_PHOTON_RING=250,BH_BURN_IN=205,BH_BURN_R=275,BH_ESCAPE_R=2200;
 const BH_START_R=1100,BH_START_V=26.54,BH_FUEL_RATE=174,BH_BEACON_R=2550,BH_BEACON_OMEGA=.035;
+const THREE_MU=2.4e6,THREE_SCALE=1300,THREE_STAR_R=135,THREE_ENTRY_R=3500,THREE_ESCAPE_R=3900;
+const THREE_CHAOS_R=2450,THREE_GATE_R=235,THREE_GATE_OFFSET=390,THREE_DANGER_PAD=175;
 // 姿态控制模式（C 切换）：0=随速偏转 1=手动转向 2=纯惯性
 const ATT_MODES = ['随速偏转','手动转向','纯惯性'];
 let attMode = 1, velOffset = 0;
@@ -336,7 +341,8 @@ const LEVELS = {
   6: { title:'⚖️ 第六关 · 地月引力平衡点', sub:'任选一个引力平衡点，把卫星送过去停稳' },
   7: { title:'☄️ 第七关 · 小行星拦截', sub:'追上危险小行星，改变它的轨道，保护地球和月球' },
   8: { title:'☀️ 第八关 · 双星摆渡', sub:'穿过两颗太阳之间的引力通道，在另一边与空间站对接' },
-  9: { title:'🕳️ 第九关 · 黑洞深渊点火', sub:'让时间慢下来，在深渊最近点加速逃回远方' }
+  9: { title:'🕳️ 第九关 · 黑洞深渊点火', sub:'让时间慢下来，在深渊最近点加速逃回远方' },
+  10:{ title:'🌀 最终关 · 三体混沌穿越', sub:'没有标准路线：读取分叉时间线，穿过移动时间锚后逃离' }
 };
 let level = 1;
 const stageInfoL1 = [
@@ -493,9 +499,24 @@ const stageInfoL9 = [
     science:'“飞船停在视界上”是远方观察者的坐标图景：信号被无限红移、到达间隔无限拉长。对随飞船下落的宇航员而言，自身固有时间正常流逝，并会在有限时间内越过视界；本关故意采用远方任务控制中心的观察视角。',
     success:'成功标志：向外穿过 2200 u 绿色救援门，并保持逃逸能量为正。'}
 ];
+const stageInfoL10 = [
+  {name:'① 抵达第一时间锚',hint:'比较三条时间线影子，选择不会撞星的一支',
+    steps:['第一次推进后，三颗恒星和飞船才会同时开始运动。','青、白、粉三条半透明影子分别表示左修正、继续滑行和右修正的短期未来。','飞向发亮的“时间锚 I”；它夹在两颗运动恒星的引力之间，会不断改变位置。'],
+    science:'三体系统没有一条能长期重复的简单轨道。极小的初始差别会随时间放大，所以本关每次重开都会扰动三颗恒星的初始状态；时间线影子只是从“此刻”向前积分的短期天气预报，不是标准答案。',
+    success:'成功标志：进入蓝色时间锚 I 的圆环。'},
+  {name:'② 抵达第二时间锚',hint:'旧预测会很快失效，边飞边重新比较时间线',
+    steps:['第一锚通过后，目标会切换到金色时间锚 II。','不要死追一条很久以前看起来安全的影子；恒星位置变化后要重新判断。','红色半透明圈是潮汐危险区，基础通关允许擦边，挑战三星要求全程避开。'],
+    science:'混沌不等于完全随机。运动仍严格服从引力方程，但长期结果对初始条件极端敏感。导航电脑不断重算多条相邻未来，就是用“短期可预测、长期会分叉”的方式帮助驾驶。',
+    success:'成功标志：进入金色时间锚 II 的圆环。'},
+  {name:'③ 逃离混沌区',hint:'选择向外发散的时间线，穿过绿色外圈并保持向外飞',
+    steps:['通过两个时间锚后，不再追逐内部目标，寻找向系统外侧展开的影子。','顺着安全分支短促修正，避免再次被某颗恒星捕获。','半径超过绿色逃逸圈、仍保持向外速度并稳定片刻，即可完成最终任务。'],
+    science:'三颗恒星的总能量和动量仍然守恒，但飞船可以在多次近距离掠过中与运动恒星交换能量。一次看似很小的修正，可能决定飞船最终被捕获、撞向恒星，还是从系统中逃逸。',
+    success:'成功标志：通过两个时间锚后，向外穿过 3900 u 绿色逃逸圈。'}
+];
 let mission;
 
-let rocket, station, asteroid, asteroidTrail, binary, blackHole, trail, ghostShip, ghostTrail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
+let rocket, station, asteroid, asteroidTrail, binary, blackHole, threeBody, timelineCache, trail, ghostShip, ghostTrail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
+let threeBodyResetCounter=0;
 let challengeMode=false;
 let paused = false, retryTimer = null;
 let rewindClickAt = 0, rewindHistoryIndex = -1;
@@ -505,6 +526,7 @@ let showPred = true; // T 开关：未来轨迹辅助线
 let cameraMode = 0;
 let cameraDebugAt = 0;
 const CAMERA_MODES = ['跟随飞船','地球静止'];
+function cameraModeName(){ return cameraMode===0?'跟随飞船':level===10?'系统质心静止':'地球静止'; }
 let radarMode = 0;
 const RADAR_MODES = ['轨道','全局'];
 let radarHitBox = null, attitudeHitBox = null;
@@ -551,6 +573,7 @@ function padAngle(){ return PAD_ANG0 + earthAngle; }
 function landAngle(){ return LAND_ANG0 + earthAngle; }
 // 月球质心绕地球公转；月面纹理也使用同一个角度旋转，因此始终以同一面朝向地球。
 function updateMoon(dt){
+  if(typeof level!=='undefined'&&level===10){updateThreeBodyWorld(dt);return;}
   if(typeof level!=='undefined'&&level===8){updateBinaryWorld(dt);return;}
   if(typeof level!=='undefined'&&level===9)return;
   moonAngle+=MOON_OMEGA*dt;
@@ -589,6 +612,72 @@ function blackHoleMetrics(ship=rocket){
   const speed=Math.sqrt(v2);
   return {dx,dy,r,alt:r-BH_HORIZON,speed,energy,radial,factor:properFactor,properFactor,coordinateFactor,
     apparentSpeed:speed*coordinateFactor,worldRate:Math.min(80,1/coordinateFactor),tidal};
+}
+function seededRandom(seed){
+  let a=seed>>>0;
+  return ()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};
+}
+function nextThreeBodySeed(){
+  threeBodyResetCounter=(threeBodyResetCounter+1)>>>0;
+  const now=Date.now()>>>0,perf=Math.floor((typeof performance!=='undefined'?performance.now():0)*1000)>>>0;
+  return (now^perf^Math.imul(threeBodyResetCounter,0x9E3779B1))>>>0||1;
+}
+function threeBodyBarycenter(bodies=BODIES){
+  let x=0,y=0,vx=0,vy=0,w=0;
+  for(const b of bodies){const m=b.mu||THREE_MU;x+=b.x*m;y+=b.y*m;vx+=(b.vx||0)*m;vy+=(b.vy||0)*m;w+=m;}
+  return {x:x/w,y:y/w,vx:vx/w,vy:vy/w};
+}
+function configureThreeBodyWorld(seed=nextThreeBodySeed()){
+  const rnd=seededRandom(seed),rot=rnd()*TAU,cr=Math.cos(rot),sr=Math.sin(rot),vScale=Math.sqrt(THREE_MU/THREE_SCALE);
+  const baseP=[[-.97000436,.24308753],[.97000436,-.24308753],[0,0]];
+  const baseV=[[.466203685,.43236573],[.466203685,.43236573],[-.93240737,-.86473146]];
+  const states=[];
+  for(let i=0;i<3;i++){
+    const px=(baseP[i][0]+(rnd()-.5)*.045)*THREE_SCALE,py=(baseP[i][1]+(rnd()-.5)*.045)*THREE_SCALE;
+    const vx=(baseV[i][0]+(rnd()-.5)*.035)*vScale,vy=(baseV[i][1]+(rnd()-.5)*.035)*vScale;
+    states.push({x:px*cr-py*sr,y:px*sr+py*cr,vx:vx*cr-vy*sr,vy:vx*sr+vy*cr});
+  }
+  const mean={x:states.reduce((s,p)=>s+p.x,0)/3,y:states.reduce((s,p)=>s+p.y,0)/3,vx:states.reduce((s,p)=>s+p.vx,0)/3,vy:states.reduce((s,p)=>s+p.vy,0)/3};
+  const colors=['#fff0a8','#bfe8ff','#ffd0d9'],names=['赫利俄斯 A','塞勒涅 B','厄瑞玻斯 C'];
+  for(let i=0;i<3;i++)Object.assign(BODIES[i],{x:states[i].x-mean.x,y:states[i].y-mean.y,vx:states[i].vx-mean.vx,vy:states[i].vy-mean.vy,r:THREE_STAR_R,mu:THREE_MU,col:colors[i],landMax:0,name:names[i],isStar:true,isBlackHole:false});
+  const order=[0,1,2];
+  for(let i=2;i>0;i--){const j=Math.floor(rnd()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
+  const pairs=[[order[0],order[1]],[order[1],order[2]]],sides=[];
+  for(const pair of pairs){
+    const third=[0,1,2].find(i=>i!==pair[0]&&i!==pair[1]),a=BODIES[pair[0]],b=BODIES[pair[1]],dx=b.x-a.x,dy=b.y-a.y,d=Math.max(1,Math.hypot(dx,dy)),nx=-dy/d,ny=dx/d,mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    const plus=Math.hypot(mx+nx*THREE_GATE_OFFSET-BODIES[third].x,my+ny*THREE_GATE_OFFSET-BODIES[third].y),minus=Math.hypot(mx-nx*THREE_GATE_OFFSET-BODIES[third].x,my-ny*THREE_GATE_OFFSET-BODIES[third].y);
+    sides.push(Math.abs(plus-minus)<120?(rnd()<.5?1:-1):(plus>minus?1:-1));
+  }
+  threeBody={seed,time:0,pairs,sides,starTrails:[[],[],[]],trailT:0,maxSplit:0};
+  timelineCache=null;
+}
+function threeBodyGate(index,bodies=BODIES){
+  if(!threeBody)return {x:0,y:0,vx:0,vy:0,index};
+  const pair=threeBody.pairs[Math.max(0,Math.min(1,index))],a=bodies[pair[0]],b=bodies[pair[1]],side=threeBody.sides[Math.max(0,Math.min(1,index))];
+  const dx=b.x-a.x,dy=b.y-a.y,d=Math.max(1,Math.hypot(dx,dy)),nx=-dy/d*side,ny=dx/d*side;
+  return {x:(a.x+b.x)/2+nx*THREE_GATE_OFFSET,y:(a.y+b.y)/2+ny*THREE_GATE_OFFSET,vx:((a.vx||0)+(b.vx||0))/2,vy:((a.vy||0)+(b.vy||0))/2,index,pair};
+}
+function threeBodyMetrics(ship=rocket){
+  const center=threeBodyBarycenter(),dx=ship.x-center.x,dy=ship.y-center.y,r=Math.max(1,Math.hypot(dx,dy));
+  let nearest=null,nearestDistance=Infinity,tidal=0;
+  for(const b of BODIES){const d=Math.max(1,Math.hypot(ship.x-b.x,ship.y-b.y));if(d<nearestDistance){nearestDistance=d;nearest=b;}tidal+=b.mu/(d*d*d);}
+  const radial=((ship.vx-center.vx)*dx+(ship.vy-center.vy)*dy)/r;
+  return {center,dx,dy,r,radial,nearest,nearestDistance,clearance:nearestDistance-(nearest?.r||0),chaos:Math.min(9.99,tidal*75)};
+}
+function updateThreeBodyWorld(dt){
+  if(!threeBody||dt<=0)return;
+  const acc=BODIES.map(()=>({x:0,y:0}));
+  for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){
+    const dx=BODIES[j].x-BODIES[i].x,dy=BODIES[j].y-BODIES[i].y,d2=dx*dx+dy*dy+900,d=Math.sqrt(d2),inv3=1/(d2*d);
+    acc[i].x+=dx*BODIES[j].mu*inv3;acc[i].y+=dy*BODIES[j].mu*inv3;
+    acc[j].x-=dx*BODIES[i].mu*inv3;acc[j].y-=dy*BODIES[i].mu*inv3;
+  }
+  for(let i=0;i<3;i++){const b=BODIES[i];b.vx+=acc[i].x*dt;b.vy+=acc[i].y*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;}
+  threeBody.time+=dt;threeBody.trailT+=dt;
+  if(threeBody.trailT>=(lowPowerMode?.18:.1)){
+    for(let i=0;i<3;i++){const tr=threeBody.starTrails[i];tr.push({x:BODIES[i].x,y:BODIES[i].y});if(tr.length>(lowPowerMode?80:190))tr.shift();}
+    threeBody.trailT=0;
+  }
 }
 function updateBinaryWorld(dt){
   if(!binary)return;
@@ -793,7 +882,7 @@ function applyLagrangeAssist(dt){
   rocket.vx+=(m.point.vx-rocket.vx)*blend; rocket.vy+=(m.point.vy-rocket.vy)*blend;
 }
 // 当前关卡的教学步骤
-function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:level===4?stageInfoL4:level===5?stageInfoL5:level===6?stageInfoL6:level===7?stageInfoL7:level===8?stageInfoL8:stageInfoL9; }
+function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:level===4?stageInfoL4:level===5?stageInfoL5:level===6?stageInfoL6:level===7?stageInfoL7:level===8?stageInfoL8:level===9?stageInfoL9:stageInfoL10; }
 
 const SAVE_KEY='spacegame-progress-v2';
 function loadProgress(){
@@ -815,7 +904,7 @@ function saveLevelResult(levelId,score,earnedStars=1){
 }
 function updateLevelCards(){
   const progress=loadProgress();
-  for(let i=1;i<=9;i++){
+  for(let i=1;i<=10;i++){
     const result=progress[i]||{score:0,stars:0};
     const scoreEl=document.querySelector(`[data-level-score="${i}"]`), starsEl=document.querySelector(`[data-level-stars="${i}"]`);
     if(scoreEl) scoreEl.textContent=result.score||'—';
@@ -848,9 +937,10 @@ function updateModePanel(){
   const summary=document.getElementById('modeSummary');
   if(summary){
     const heavyNote=challengeMode&&level===3?' 本关装载更多物资，火箭质量提升到 1.2 倍，推力不变，加速与转向都会变慢。':'';
-    summary.textContent=challengeMode
+    const chaosNote=level===10?' 整关重新开始会生成新的三体世界；阶段回退保留本局种子。三条时间线只是短期预测，不是标准答案。':'';
+    summary.textContent=(challengeMode
       ? `挑战模式：有限燃料${challengeLifeEnabled()?'，并启用生命维持倒计时':''}。时间和燃料共同计算得分；星星只按下列目标计算。切换模式会从本关开头重来。${heavyNote}`
-      : '教学模式：无限燃料与飞行辅助，完成任务固定获得 1 星。想拿另外两颗星，请切换到挑战模式。';
+      : '教学模式：无限燃料与飞行辅助，完成任务固定获得 1 星。想拿另外两颗星，请切换到挑战模式。')+chaosNote;
   }
   const list=document.getElementById('starRules');
   if(list){ list.replaceChildren(); for(const rule of STAR_RULES[level]){const li=document.createElement('li');li.textContent=rule;list.appendChild(li);} if(level===2||level===3){const li=document.createElement('li');li.className='penalty';li.textContent='挑战模式生命维持耗尽：本次总星级 −1（最低仍保留完成星）';list.appendChild(li);} }
@@ -872,14 +962,14 @@ function closeLevelSelect(){
   syncUI();
 }
 function startLevel(levelId){
-  level=Math.max(1,Math.min(9,Number(levelId)||1));
+  level=Math.max(1,Math.min(10,Number(levelId)||1));
   challengeMode=false;
   gameStarted=true; levelSelectOpen=false; paused=false; lastBriefedLevel=0;
   document.getElementById('levelSelect').classList.remove('is-visible');
   resetGame();
 }
 function nextLevel(){
-  if(level<9) startLevel(level+1);
+  if(level<10) startLevel(level+1);
   else openLevelSelect();
 }
 function restartCurrent(full=false){
@@ -907,9 +997,10 @@ function resetGame(){
   rewindClickAt=0; rewindHistoryIndex=-1;
   paused = false;
   clearFlightInputs(); velOffset=0;
-  restoreBaseWorld();binary=null;blackHole=null;
+  restoreBaseWorld();binary=null;blackHole=null;threeBody=null;timelineCache=null;
   earthAngle = 0;
-  if(level===9)configureBlackHoleWorld();
+  if(level===10)configureThreeBodyWorld();
+  else if(level===9)configureBlackHoleWorld();
   else if(level===8)configureBinaryWorld();
   else{moonAngle = level===5 ? 2.07 : level===7 ? -2.7 : MOON_ANG0; updateMoon(0);}
   station = level===3 ? {angle:.55,x:0,y:0,vx:0,vy:0,a:0,docked:false}
@@ -919,7 +1010,15 @@ function resetGame(){
   const challengeCfg=CHALLENGE_CONFIG[level],lifeLimit=challengeMode&&challengeCfg.life?challengeCfg.life:LIFE_MAX;
   const initialFuel=level===5?SLING_LAUNCH_FUEL:challengeCfg.fuel;
   const rocketMass=challengeMode?challengeCfg.mass:1;
-  if(level===9){
+  if(level===10){
+    const center=threeBodyBarycenter(),gate=threeBodyGate(0),gx=gate.x-center.x,gy=gate.y-center.y,gd=Math.max(1,Math.hypot(gx,gy)),ux=gx/gd,uy=gy/gd;
+    const rr=seededRandom(threeBody.seed^0xA53C9E21)(),side=(rr-.5)*18;
+    rocket={x:center.x+ux*THREE_ENTRY_R,y:center.y+uy*THREE_ENTRY_R,vx:center.vx-ux*54-uy*side,vy:center.vy-uy*54+ux*side,a:Math.atan2(-uy,-ux),
+      fuel:initialFuel,landed:false,alive:true,body:null,life:lifeLimit,crewDead:false,deadReason:'',mass:rocketMass,
+      maxG:0,lastG:0,overT:0,thrusting:false,av:0,launchGrace:0,chute:false,chuteAngle:null,chuteFlowX:0,chuteFlowY:0,
+      _clearedPad:true,_launchAssistActive:false,_launchCompleted:true,_launchFrameActive:false,launchBaseVx:null,launchBaseVy:null,thrustPower:0};
+    launched=true;
+  }else if(level===9){
     rocket={x:BH_START_R,y:0,vx:0,vy:BH_START_V,a:Math.PI/2,
       fuel:initialFuel,landed:false,alive:true,body:null,life:lifeLimit,crewDead:false,deadReason:'',mass:rocketMass,
       maxG:0,lastG:0,overT:0,thrusting:false,av:0,launchGrace:0,chute:false,chuteAngle:null,chuteFlowX:0,chuteFlowY:0,
@@ -970,7 +1069,8 @@ function resetGame(){
     asteroidContact:false,asteroidAnchored:false,asteroidMountAngle:0,hingeAngle:0,
     asteroidChanged:false,asteroidImpact:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null,
     binaryHeatViolated:false,binaryCaptured:false,binaryGateCrossed:false,binaryTargetEnergy:Infinity,
-    blackHoleMinR:Infinity,blackHoleDeepBurn:false,blackHoleEscaping:false,blackHoleFrozen:false,blackHoleAwaitRelease:false};
+    blackHoleMinR:Infinity,blackHoleDeepBurn:false,blackHoleEscaping:false,blackHoleFrozen:false,blackHoleAwaitRelease:false,
+    threeGateIndex:0,threeDangerViolated:false,threeMinClearance:Infinity,threeEscapeT:0,threeSeed:threeBody?.seed||0};
   if(level===5){
     mission.slingInitialEnergy=earthSpecificEnergy(rocket);
     mission.slingEntryEnergy=mission.slingInitialEnergy;
@@ -984,6 +1084,7 @@ function resetGame(){
   if(level===7) mission.dynHint='红线会撞地球｜按推进后世界同步开始';
   if(level===8) mission.dynHint='两颗太阳都在运动｜按推进后双星世界同步开始';
   if(level===9) mission.dynHint='轻点推进只解除待机｜松手后关机滑向光子环内侧';
+  if(level===10) mission.dynHint=`本局种子 ${threeBody.seed.toString(16).toUpperCase().padStart(8,'0')}｜推进后时间线开始分叉`;
   saveCheckpoint();
   camInit = true;
   hideMsg();
@@ -1000,7 +1101,7 @@ function showMsg(emoji,title,text){
   document.getElementById('mText').innerHTML = text;
   const next = document.getElementById('mNext');
   next.style.display = mission && mission.done ? 'inline-block' : 'none';
-  next.textContent = level<9 ? '下一关 (L)' : '返回目录 (L)';
+  next.textContent = level<10 ? '下一关 (L)' : '返回目录 (L)';
   document.getElementById('msg').style.display = 'flex';
 }
 function openBriefing(){
@@ -1032,7 +1133,7 @@ function toggleCameraMode(){
   cam.dragging=false; cam.pointerId=null; cv.classList.remove('is-panning');
   mission.toast=cameraMode===0
     ? '视角：跟随飞船｜拖动查看，松手返回'
-    : '视角：地球静止｜拖动后停留';
+    : `视角：${level===10?'系统质心静止':'地球静止'}｜拖动后停留`;
   mission.toastT=2.6;
   syncUI();
 }
@@ -1107,8 +1208,8 @@ function syncUI(){
     const isStatic=cameraMode===1;
     camera.classList.toggle('is-active',isStatic);
     camera.setAttribute('aria-pressed',String(isStatic));
-    camera.setAttribute('aria-label','切换视角模式，当前'+CAMERA_MODES[cameraMode]);
-    camera.title='视角：'+CAMERA_MODES[cameraMode]+' (K)';
+    camera.setAttribute('aria-label','切换视角模式，当前'+cameraModeName());
+    camera.title='视角：'+cameraModeName()+' (K)';
     camera.querySelector('.lbl').textContent=isStatic?'静止':'跟随';
     camera.querySelector('.ico').textContent=isStatic?'⊕':'⌖';
   }
@@ -1251,6 +1352,9 @@ function updateActionCue(){
       else{const turn=cueTurnTo(vAng,.16);cues=turn?[turn]:['thrust'];}
     }
     else cues=['speed'];
+  }else if(level===10){
+    // 混沌关没有唯一标准舵量：只提示启动与观察时间线，不替玩家指定左右转向。
+    cues=!mission.worldStarted?['thrust']:['speed'];
   }
   setActionCue(cues);
 }
@@ -1594,6 +1698,8 @@ function saveCheckpoint(){
     binaryMission:level===8?{binaryHeatViolated:mission.binaryHeatViolated,binaryCaptured:mission.binaryCaptured,binaryGateCrossed:mission.binaryGateCrossed}:null,
     blackHoleState:blackHole?{properTime:blackHole.properTime,farTime:blackHole.farTime,factor:blackHole.factor,coordinateFactor:blackHole.coordinateFactor,minRadius:blackHole.minRadius,beaconAngle:blackHole.beaconAngle,frozen:false}:null,
     blackHoleMission:level===9?{blackHoleMinR:mission.blackHoleMinR,blackHoleDeepBurn:mission.blackHoleDeepBurn,blackHoleEscaping:mission.blackHoleEscaping,blackHoleFrozen:false,blackHoleAwaitRelease:!!mission.blackHoleAwaitRelease}:null,
+    threeBodyState:threeBody?{seed:threeBody.seed,time:threeBody.time,pairs:threeBody.pairs.map(p=>p.slice()),sides:threeBody.sides.slice(),bodies:BODIES.map(b=>({x:b.x,y:b.y,vx:b.vx,vy:b.vy}))}:null,
+    threeBodyMission:level===10?{threeGateIndex:mission.threeGateIndex,threeDangerViolated:mission.threeDangerViolated,threeMinClearance:mission.threeMinClearance,threeEscapeT:mission.threeEscapeT,threeSeed:mission.threeSeed}:null,
     launchFrameActive:!!rocket._launchFrameActive, launchAssistActive:!!rocket._launchAssistActive,
     launchCompleted:!!rocket._launchCompleted, chute:!!rocket.chute, chuteAngle:rocket.chuteAngle,
     chuteFlowX:rocket.chuteFlowX||0, chuteFlowY:rocket.chuteFlowY||0,
@@ -1628,6 +1734,10 @@ function retryFromStage(reason){
     flightT=cp.flightT; earthAngle=cp.earthAngle; moonAngle=Number.isFinite(cp.moonAngle)?cp.moonAngle:moonAngle;
     if(cp.binaryState&&binary)Object.assign(binary,cp.binaryState);
     if(cp.blackHoleState&&blackHole)Object.assign(blackHole,cp.blackHoleState);
+    if(cp.threeBodyState&&threeBody){
+      threeBody.seed=cp.threeBodyState.seed;threeBody.time=cp.threeBodyState.time;threeBody.pairs=cp.threeBodyState.pairs.map(p=>p.slice());threeBody.sides=cp.threeBodyState.sides.slice();threeBody.starTrails=[[],[],[]];threeBody.trailT=0;
+      cp.threeBodyState.bodies.forEach((s,i)=>Object.assign(BODIES[i],s));timelineCache=null;
+    }
     updateMoon(0); mission.stage=cp.stage;
     mission.worldStarted=!!cp.worldStarted;
     if(Number.isFinite(cp.lagrangeTarget)) mission.lagrangeTarget=cp.lagrangeTarget;
@@ -1638,6 +1748,7 @@ function retryFromStage(reason){
     if(cp.slingshot) Object.assign(mission,cp.slingshot);
     if(cp.binaryMission)Object.assign(mission,cp.binaryMission);
     if(cp.blackHoleMission)Object.assign(mission,cp.blackHoleMission);
+    if(cp.threeBodyMission)Object.assign(mission,cp.threeBodyMission);
     if(cp.asteroid&&asteroid)Object.assign(asteroid,cp.asteroid);
     if(cp.asteroidMission)Object.assign(mission,cp.asteroidMission);
     ghostShip=cp.ghost?{...cp.ghost}:null; ghostTrail=[];
@@ -1820,10 +1931,47 @@ function updateMissionL9(dt){
     if(m.energy>0){mission.blackHoleEscaping=true;advanceStage();return;}
   }else mission.dynHint=`向外 ${m.radial.toFixed(1)} u/s｜距救援门 ${Math.max(0,BH_ESCAPE_R-m.r).toFixed(0)}`;
 }
+function finishThreeBodyCrossing(m=threeBodyMetrics()){
+  if(level!==10||mission.done)return;
+  mission.done=true;state='complete';
+  const remaining=challengeRemainingFuel(),safe=!mission.threeDangerViolated;
+  const starResult=evaluateStars([
+    {ok:safe,label:'全程没有进入红色潮汐危险圈'},
+    {ok:remaining>=CHALLENGE_CONFIG[10].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[10].fuelStar}%`}
+  ]);
+  const result=saveLevelResult(10,performanceScore(),starResult.stars),seed=mission.threeSeed.toString(16).toUpperCase().padStart(8,'0');
+  syncUI();showMsg('🌀','混沌穿越完成！',
+    resultLine(result)+`本局种子 <b>${seed}</b> · 最近恒星净空 ${mission.threeMinClearance.toFixed(0)} u<br>`+
+    `${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
+    `<span style="color:#888">这条路线只属于这一局。重新开始会扰动三颗恒星的初始条件，时间线影子也会产生新的分叉。</span>`);
+}
+function updateMissionL10(dt){
+  if(!threeBody)return;
+  const m=threeBodyMetrics();
+  mission.threeMinClearance=Math.min(mission.threeMinClearance,m.clearance);
+  if(m.clearance<THREE_DANGER_PAD)mission.threeDangerViolated=true;
+  if(mission.stage<2){
+    const targetIndex=mission.stage,gate=threeBodyGate(targetIndex),distance=Math.hypot(rocket.x-gate.x,rocket.y-gate.y);
+    const split=timelineCache?.result?.divergence||0;
+    mission.dynHint=`时间锚 ${targetIndex+1}/2 · 距离 ${distance.toFixed(0)}｜时间线分岔 ${split.toFixed(0)} u`;
+    if(distance<=THREE_GATE_R){
+      mission.threeGateIndex=targetIndex+1;
+      advanceStage();
+      mission.toast=targetIndex===0?'✅ 时间锚 I 已记录｜目标切换到时间锚 II':'✅ 两个时间锚已记录｜寻找向外逃逸的时间线';
+      mission.toastT=4;
+    }
+    return;
+  }
+  const outward=m.r>=THREE_ESCAPE_R&&m.radial>12;
+  mission.threeEscapeT=outward?mission.threeEscapeT+dt:0;
+  mission.dynHint=`距逃逸圈 ${Math.max(0,THREE_ESCAPE_R-m.r).toFixed(0)}｜径向速度 ${m.radial.toFixed(1)}｜稳定 ${mission.threeEscapeT.toFixed(1)}/1.2s`;
+  if(mission.threeEscapeT>=1.2)finishThreeBodyCrossing(m);
+}
 
 // 任务阶段推进（每帧调用）
 function updateMission(dt){
   if(!mission || mission.done || state!=='fly' || !launched) return;
+  if(level===10){ updateMissionL10(dt); return; }
   if(level===2){ updateMissionL2(dt); return; }
   if(level===3){ updateMissionL3(dt); return; }
   if(level===4){ updateMissionL4(dt); return; }
@@ -2657,10 +2805,10 @@ function update(dt, dtReal){
     const vRel = Math.hypot(groundVx, groundVy);
 
     // 恒星不是可着陆天体：进入光球表面立即判定烧毁，避免低速时被通用着陆逻辑“停”在太阳上。
-    if(level===8&&b.isStar&&alt<=RING_OUT){
+    if((level===8||level===10)&&b.isStar&&alt<=RING_OUT){
       state='dead';rocket.alive=false;boom(rocket.x,rocket.y);
       if(mission.assistMode)retryTimer=setTimeout(()=>retryFromStage('进入恒星表面'),1000);
-      else showMsg('☀️','飞船被恒星吞没！',`距离${b.name}太近。按 R 重来`);
+      else showMsg('☀️','飞船被恒星吞没！',`距离${b.name}太近。${level===10?'本局时间线在这里终止。':'按 R 重来'}`);
       return;
     }
 
@@ -2774,9 +2922,10 @@ function update(dt, dtReal){
     }
   }
   // 飞出太远：新手模式只提醒（画面变暗+提示），不强制重置；跳过指引才判死
-  const distEarth = level===8?Math.hypot(rocket.x,rocket.y):Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y);
-  rocket._tooFar = distEarth > (level===8?10000:12000); // 双星关以系统质心为参考
-  if(distEarth > (level===8?80000:150000)){
+  const systemCenter=level===10?threeBodyBarycenter():null;
+  const distEarth = level===10?Math.hypot(rocket.x-systemCenter.x,rocket.y-systemCenter.y):level===8?Math.hypot(rocket.x,rocket.y):Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y);
+  rocket._tooFar = distEarth > (level===10?6500:level===8?10000:12000); // 双星/三体关以系统质心为参考
+  if(distEarth > (level===10?30000:level===8?80000:150000)){
     if(!mission.assistMode || mission.done){ state='dead'; showMsg('🛰️','迷失深空…','飞得太远了，按 R 重来'); }
   }
 }
@@ -2898,6 +3047,30 @@ function drawBinaryZones(){
   }
   ctx.textAlign='left';
 }
+function drawThreeBodyZones(){
+  if(!threeBody)return;
+  const center=threeBodyBarycenter(),pulse=.72+.2*Math.sin(threeBody.time*2.1);
+  // 三颗恒星的近期轨迹与瞬时引力三角形。
+  for(let i=0;i<3;i++){
+    const tr=threeBody.starTrails[i];
+    if(tr.length>1){ctx.strokeStyle=i===0?'rgba(255,240,168,.22)':i===1?'rgba(191,232,255,.2)':'rgba(255,208,217,.2)';ctx.lineWidth=1.4/cam.zoom;ctx.beginPath();ctx.moveTo(tr[0].x,tr[0].y);for(let j=1;j<tr.length;j++)ctx.lineTo(tr[j].x,tr[j].y);ctx.stroke();}
+  }
+  ctx.strokeStyle='rgba(207,224,255,.16)';ctx.lineWidth=1.2/cam.zoom;ctx.setLineDash([6/cam.zoom,9/cam.zoom]);ctx.beginPath();ctx.moveTo(EARTH.x,EARTH.y);ctx.lineTo(MARS.x,MARS.y);ctx.lineTo(MOON.x,MOON.y);ctx.closePath();ctx.stroke();ctx.setLineDash([]);
+  // 红圈只表示危险潮汐区，不是硬碰撞边界。
+  for(const b of BODIES){ctx.fillStyle='rgba(239,71,111,.055)';ctx.strokeStyle='rgba(239,71,111,.42)';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(b.x,b.y,b.r+THREE_DANGER_PAD,0,TAU);ctx.fill();ctx.stroke();}
+  ctx.strokeStyle='rgba(201,156,255,.25)';ctx.lineWidth=3/cam.zoom;ctx.setLineDash([12/cam.zoom,14/cam.zoom]);ctx.beginPath();ctx.arc(center.x,center.y,THREE_CHAOS_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle=mission.stage>=2?'rgba(95,208,104,.9)':'rgba(95,208,104,.34)';ctx.lineWidth=5/cam.zoom;ctx.setLineDash([18/cam.zoom,13/cam.zoom]);ctx.beginPath();ctx.arc(center.x,center.y,THREE_ESCAPE_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  if(W>=760){ctx.fillStyle='rgba(95,208,104,.88)';ctx.font=`900 ${14/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('混沌逃逸边界',center.x,center.y-THREE_ESCAPE_R-17/cam.zoom);}
+  for(let i=0;i<2;i++){
+    const g=threeBodyGate(i),active=mission.stage===i,visited=mission.stage>i,col=i===0?'76,201,240':'255,209,102';
+    ctx.fillStyle=`rgba(${col},${active ? .14 : visited ? .035 : .065})`;ctx.strokeStyle=`rgba(${col},${active ? pulse : visited ? .24 : .45})`;ctx.lineWidth=(active?5:2.5)/cam.zoom;
+    ctx.beginPath();ctx.arc(g.x,g.y,THREE_GATE_R,0,TAU);ctx.fill();ctx.stroke();
+    ctx.strokeStyle=`rgba(${col},${active ? .88 : .35})`;ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.moveTo(g.x-18/cam.zoom,g.y);ctx.lineTo(g.x+18/cam.zoom,g.y);ctx.moveTo(g.x,g.y-18/cam.zoom);ctx.lineTo(g.x,g.y+18/cam.zoom);ctx.stroke();
+    ctx.fillStyle=`rgba(${col},${active?1:.58})`;ctx.font=`900 ${(active?15:12)/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(`时间锚 ${i?'II':'I'}${visited?' · 已记录':''}`,g.x,g.y-THREE_GATE_R-14/cam.zoom);
+  }
+  if(mission.stage<2){const g=threeBodyGate(mission.stage);ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1.5/cam.zoom;ctx.setLineDash([5/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.moveTo(rocket.x,rocket.y);ctx.lineTo(g.x,g.y);ctx.stroke();ctx.setLineDash([]);}
+  ctx.fillStyle='rgba(255,255,255,.62)';ctx.beginPath();ctx.arc(center.x,center.y,5/cam.zoom,0,TAU);ctx.fill();ctx.textAlign='left';
+}
 function drawBlackHoleZones(){
   if(!blackHole)return;
   const m=blackHoleMetrics(),spin=blackHole.farTime*.42;
@@ -2945,6 +3118,7 @@ function drawBlackHoleZones(){
   if(W>=760){ctx.fillStyle='#aeeeff';ctx.font=`800 ${12/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText(`远方时钟 ${blackHole.farTime.toFixed(0)} s`,bx,by-17/cam.zoom);}ctx.textAlign='left';
 }
 function drawMissionZones(){
+  if(level===10){ drawThreeBodyZones(); return; }
   if(level===2){ drawLandingZone(); return; }
   if(level===3){ drawStationOrbitZone(); return; }
   if(level===4){ drawLunarFarSideZone(); return; }
@@ -3073,6 +3247,18 @@ function drawBinaryBody(b){
     const p=padAngle();ctx.fillStyle='#ffd166';ctx.beginPath();ctx.arc(b.x+Math.cos(p)*b.r,b.y+Math.sin(p)*b.r,5/cam.zoom,0,TAU);ctx.fill();
   }
   ctx.fillStyle='rgba(255,255,255,.88)';ctx.font=`800 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(b.name,b.x,b.y-b.r-16/cam.zoom);ctx.textAlign='left';
+}
+function drawThreeBodyStar(b){
+  ctx.save();
+  if(!lowPowerMode){
+    ctx.shadowColor=b.col;ctx.shadowBlur=Math.max(18,b.r*.16*cam.zoom);
+    const g=ctx.createRadialGradient(b.x-b.r*.28,b.y-b.r*.3,b.r*.06,b.x,b.y,b.r);
+    g.addColorStop(0,'#ffffff');g.addColorStop(.38,b.col);g.addColorStop(1,b===EARTH?'#d69a43':b===MARS?'#5f9bd1':'#c26f88');ctx.fillStyle=g;
+  }else ctx.fillStyle=b.col;
+  ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,TAU);ctx.fill();ctx.restore();
+  ctx.strokeStyle='rgba(255,255,255,.62)';ctx.lineWidth=3/cam.zoom;ctx.beginPath();ctx.arc(b.x,b.y,b.r+6/cam.zoom,0,TAU);ctx.stroke();
+  if(!lowPowerMode){ctx.strokeStyle='rgba(255,255,255,.22)';ctx.lineWidth=5/cam.zoom;for(let i=0;i<3;i++){const a=threeBody.time*(.55+i*.08)+i*2.1;ctx.beginPath();ctx.arc(b.x,b.y,b.r*(.34+i*.2),a,a+1.1);ctx.stroke();}}
+  ctx.fillStyle='rgba(255,255,255,.88)';ctx.font=`800 ${12/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(b.name,b.x,b.y-b.r-15/cam.zoom);ctx.textAlign='left';
 }
 // iOS 画质档：保留卡通大陆、冰盖和环形山，但把多层大面积渐变改为少量纯色路径。
 // 对满屏大小的地球而言，这比每帧重复光栅化多组渐变和贝塞尔云层省下大量填充率。
@@ -3238,6 +3424,19 @@ function drawGuideGhost(){
     : (ghostShip.complete?'标准示范完成':`示范：${ghostShip.label||'等待点火'}`);
   drawGuideRocket(ghostShip,ghostLabel+` · 燃料 ${ghostShip.fuel.toFixed(1)}%`);
 }
+function drawThreeBodyTimelines(){
+  if(level!==10||!threeBody||mission.hintsHidden||!showPred||state!=='fly')return;
+  const result=getThreeBodyTimelines();
+  for(const branch of result.branches){
+    if(branch.pts.length<2)continue;
+    ctx.save();ctx.strokeStyle=branch.color;ctx.lineWidth=(branch.id==='coast'?1.7:2.1)/cam.zoom;ctx.setLineDash(branch.id==='coast'?[4/cam.zoom,7/cam.zoom]:[8/cam.zoom,7/cam.zoom]);
+    ctx.beginPath();ctx.moveTo(branch.pts[0].x,branch.pts[0].y);for(let i=1;i<branch.pts.length;i++)ctx.lineTo(branch.pts[i].x,branch.pts[i].y);ctx.stroke();ctx.setLineDash([]);
+    const a=Math.atan2(branch.vy,branch.vx),size=8/cam.zoom;ctx.translate(branch.x,branch.y);ctx.rotate(a);ctx.globalAlpha=.58;ctx.fillStyle=branch.color;ctx.beginPath();ctx.moveTo(size*1.5,0);ctx.lineTo(-size,size*.72);ctx.lineTo(-size,-size*.72);ctx.closePath();ctx.fill();ctx.restore();
+    if(branch.impact){const s=8/cam.zoom;ctx.strokeStyle='#ef476f';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.moveTo(branch.impact.x-s,branch.impact.y-s);ctx.lineTo(branch.impact.x+s,branch.impact.y+s);ctx.moveTo(branch.impact.x+s,branch.impact.y-s);ctx.lineTo(branch.impact.x-s,branch.impact.y+s);ctx.stroke();}
+    if(W>=760){ctx.fillStyle=branch.color;ctx.font=`800 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(branch.impact?`${branch.label} · 终止`:branch.label,branch.x,branch.y-14/cam.zoom);}
+  }
+  ctx.textAlign='left';
+}
 
 function drawRocket(){
   if(!rocket.alive) return;
@@ -3351,7 +3550,50 @@ function predictBinaryPath(ship=rocket){
   }
   return {pts,markers:[],horizon,steps,impact,moonApproach:null};
 }
+function simulateThreeBodyTimelines(ship=rocket){
+  const bodies=BODIES.map(b=>({x:b.x,y:b.y,vx:b.vx,vy:b.vy,mu:b.mu,r:b.r,name:b.name}));
+  const center=threeBodyBarycenter(bodies),relVx=ship.vx-center.vx,relVy=ship.vy-center.vy;
+  const baseAngle=Math.hypot(relVx,relVy)>2?Math.atan2(relVy,relVx):ship.a;
+  const branchDefs=[
+    {id:'left',label:'左修正',offset:-.34,color:'rgba(76,240,221,.62)'},
+    {id:'coast',label:'继续滑行',offset:0,color:'rgba(235,244,255,.48)'},
+    {id:'right',label:'右修正',offset:.34,color:'rgba(255,126,174,.58)'}
+  ];
+  const branches=branchDefs.map(def=>({...def,x:ship.x,y:ship.y,vx:ship.vx,vy:ship.vy,pts:[{x:ship.x,y:ship.y}],impact:null}));
+  const coarse=lowPowerMode||W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches),steps=coarse?92:230,dt=.12;
+  for(let step=0;step<steps;step++){
+    const acc=bodies.map(()=>({x:0,y:0}));
+    for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){
+      const dx=bodies[j].x-bodies[i].x,dy=bodies[j].y-bodies[i].y,d2=dx*dx+dy*dy+900,d=Math.sqrt(d2),inv3=1/(d2*d);
+      acc[i].x+=dx*bodies[j].mu*inv3;acc[i].y+=dy*bodies[j].mu*inv3;acc[j].x-=dx*bodies[i].mu*inv3;acc[j].y-=dy*bodies[i].mu*inv3;
+    }
+    for(let i=0;i<3;i++){bodies[i].vx+=acc[i].x*dt;bodies[i].vy+=acc[i].y*dt;bodies[i].x+=bodies[i].vx*dt;bodies[i].y+=bodies[i].vy*dt;}
+    for(const branch of branches){
+      if(branch.impact)continue;
+      let ax=0,ay=0;
+      for(const b of bodies){const dx=b.x-branch.x,dy=b.y-branch.y,d2=dx*dx+dy*dy+400,d=Math.sqrt(d2),g=b.mu/d2;ax+=dx/d*g;ay+=dy/d*g;}
+      if(branch.offset&&step*dt<.9){const a=baseAngle+branch.offset;ax+=Math.cos(a)*12;ay+=Math.sin(a)*12;}
+      branch.vx+=ax*dt;branch.vy+=ay*dt;branch.x+=branch.vx*dt;branch.y+=branch.vy*dt;
+      if(step%2===0)branch.pts.push({x:branch.x,y:branch.y});
+      for(const b of bodies)if(Math.hypot(branch.x-b.x,branch.y-b.y)<=b.r+8){branch.impact={x:branch.x,y:branch.y,body:b.name};break;}
+    }
+  }
+  let divergence=0;
+  for(let i=0;i<branches.length;i++)for(let j=i+1;j<branches.length;j++)divergence=Math.max(divergence,Math.hypot(branches[i].x-branches[j].x,branches[i].y-branches[j].y));
+  if(threeBody)threeBody.maxSplit=Math.max(threeBody.maxSplit||0,divergence);
+  return {branches,divergence,horizon:steps*dt,steps};
+}
+function getThreeBodyTimelines(){
+  const now=performance.now(),cacheMs=lowPowerMode?650:220;
+  if(timelineCache&&now-timelineCache.t<cacheMs)return timelineCache.result;
+  const result=simulateThreeBodyTimelines();timelineCache={t:now,result};return result;
+}
+function predictThreeBodyPath(ship=rocket){
+  const result=ship===rocket?getThreeBodyTimelines():simulateThreeBodyTimelines(ship),coast=result.branches.find(b=>b.id==='coast')||result.branches[1];
+  return {pts:coast.pts,markers:[],horizon:result.horizon,steps:result.steps,impact:coast.impact,moonApproach:null};
+}
 function predictPath(ship=rocket){
+  if(level===10&&threeBody)return predictThreeBodyPath(ship);
   if(level===9&&blackHole)return predictBlackHolePath(ship);
   if(level===8&&binary)return predictBinaryPath(ship);
   let px=ship.x, py=ship.y, pvx=ship.vx, pvy=ship.vy;
@@ -3485,7 +3727,30 @@ function drawBlackHoleRadar(){
   ctx.restore();ctx.fillStyle='#fff';ctx.font=`800 ${portrait?8:9}px sans-serif`;ctx.textAlign='left';ctx.fillText(RS<=80?(radarMode===0?'深渊 · 点按':'全局 · 点按'):(radarMode===0?'深渊雷达 · 点击切换':'全局导航 · 点击切换'),cx+5,cy+11);
   ctx.fillStyle='rgba(255,255,255,.65)';ctx.font=`700 ${portrait?7:8}px sans-serif`;ctx.fillText(RS<=80?'紫点火 · 绿逃逸':'黑视界 · 紫点火 · 绿救援',cx+5,cy+RS-5);
 }
+function drawThreeBodyRadar(){
+  const landscape=H<=520,portrait=W<760&&!landscape,shortPortrait=portrait&&H<720,RS=landscape?76:portrait?(shortPortrait?76:108):130;
+  const cx=landscape?W-322:shortPortrait?12:W-RS-(portrait?12:14),cy=landscape?16:portrait?H-220-RS-12:H-RS-14;
+  radarHitBox={x:cx-10,y:cy-10,w:RS+20,h:RS+20};
+  const bary=threeBodyBarycenter(),mx=cx+RS/2,my=cy+RS/2+3,centerX=radarMode===0?bary.x:rocket.x,centerY=radarMode===0?bary.y:rocket.y,range=radarMode===0?4600:8500,scale=RS*.42/range;
+  const mapX=x=>mx+(x-centerX)*scale,mapY=y=>my+(y-centerY)*scale;
+  ctx.save();ctx.fillStyle='rgba(7,9,30,.9)';roundRect(cx-8,cy-8,RS+16,RS+16,15);ctx.fill();ctx.strokeStyle=radarMode===0?'rgba(190,113,255,.78)':'rgba(76,201,240,.74)';ctx.lineWidth=1.5;roundRect(cx-8,cy-8,RS+16,RS+16,15);ctx.stroke();
+  ctx.beginPath();ctx.rect(cx,cy+16,RS,RS-31);ctx.clip();
+  ctx.strokeStyle='rgba(190,113,255,.45)';ctx.lineWidth=1;ctx.setLineDash([2,3]);ctx.beginPath();ctx.arc(mapX(bary.x),mapY(bary.y),THREE_CHAOS_R*scale,0,TAU);ctx.stroke();
+  ctx.strokeStyle='rgba(95,208,104,.7)';ctx.beginPath();ctx.arc(mapX(bary.x),mapY(bary.y),THREE_ESCAPE_R*scale,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  if(showPred&&!mission.hintsHidden){
+    const timelines=getThreeBodyTimelines();
+    for(const branch of timelines.branches){ctx.strokeStyle=branch.color;ctx.lineWidth=1;ctx.setLineDash(branch.id==='coast'?[2,2]:[4,2]);ctx.beginPath();for(let i=0;i<branch.pts.length;i+=2){const p=branch.pts[i];i?ctx.lineTo(mapX(p.x),mapY(p.y)):ctx.moveTo(mapX(p.x),mapY(p.y));}ctx.stroke();}
+    ctx.setLineDash([]);
+  }
+  for(let i=0;i<2;i++){const gate=threeBodyGate(i);ctx.strokeStyle=i===mission.threeGateIndex?'#4cf0dd':'rgba(76,240,221,.38)';ctx.lineWidth=i===mission.threeGateIndex?1.8:1;ctx.beginPath();ctx.arc(mapX(gate.x),mapY(gate.y),Math.max(3,THREE_GATE_R*scale),0,TAU);ctx.stroke();}
+  for(const b of BODIES){const qx=mapX(b.x),qy=mapY(b.y),danger=(b.r+THREE_DANGER_PAD)*scale;ctx.fillStyle='rgba(239,71,111,.12)';ctx.beginPath();ctx.arc(qx,qy,Math.max(4,danger),0,TAU);ctx.fill();ctx.fillStyle=b.col;ctx.beginPath();ctx.arc(qx,qy,Math.max(3,b.r*scale),0,TAU);ctx.fill();}
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mapX(rocket.x),mapY(rocket.y),3.5,0,TAU);ctx.fill();
+  if(radarMode===1){const vw=Math.max(8,W/cam.zoom*scale),vh=Math.max(8,H/cam.zoom*scale);ctx.strokeStyle='#4cc9f0';ctx.setLineDash([3,2]);ctx.strokeRect(mapX(cam.x)-vw/2,mapY(cam.y)-vh/2,vw,vh);ctx.setLineDash([]);}
+  ctx.restore();ctx.fillStyle='#fff';ctx.font=`800 ${portrait?8:9}px sans-serif`;ctx.textAlign='left';ctx.fillText(RS<=80?(radarMode===0?'混沌 · 点按':'全局 · 点按'):(radarMode===0?'混沌雷达 · 点击切换':'全局导航 · 点击切换'),cx+5,cy+11);
+  ctx.fillStyle='rgba(255,255,255,.65)';ctx.font=`700 ${portrait?7:8}px sans-serif`;ctx.fillText(RS<=80?'三色时间线':'三色时间线 · 青色锚点',cx+5,cy+RS-5);
+}
 function drawRadar(){
+  if(level===10){drawThreeBodyRadar();return;}
   if(level===9){drawBlackHoleRadar();return;}
   if(level===8){drawBinaryRadar();return;}
   const landscape=H<=520, portrait=W<760&&!landscape, desktop=!portrait&&!landscape;
@@ -3649,7 +3914,8 @@ function draw(){
   updateActionCue();
   // 摄像机
   if(camInit){
-    if(level===9){cam.zoom=W<760?.22:.48;cam.x=(rocket.x+EARTH.x)/2;cam.y=(rocket.y+EARTH.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0);}
+    if(level===10){const target=threeBodyGate(0);cam.zoom=W<760?.16:.3;cam.x=(rocket.x+target.x)/2;cam.y=(rocket.y+target.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0);}
+    else if(level===9){cam.zoom=W<760?.22:.48;cam.x=(rocket.x+EARTH.x)/2;cam.y=(rocket.y+EARTH.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0);}
     else{cam.zoom=1.1;cam.x=rocket.x;cam.y=rocket.y;}
     cameraPointers.clear(); pinchState=null;
     cam.dragging=false; cam.pointerId=null; cv.classList.remove('is-panning');
@@ -3658,13 +3924,15 @@ function draw(){
   const sx = shake? (Math.random()-0.5)*shake : 0, sy = shake? (Math.random()-0.5)*shake : 0;
   if(cameraMode===0 && !cam.dragging){
     const focus=level===7&&!rocket.alive&&asteroid?asteroid:rocket;
-    const focusX=level===9?(focus.x+EARTH.x)/2:focus.x,focusY=level===9?(focus.y+EARTH.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0):focus.y;
+    const threeTarget=level===10?(mission.stage<2?threeBodyGate(mission.stage):threeBodyBarycenter()):null;
+    const focusX=level===10?(focus.x+threeTarget.x)/2:level===9?(focus.x+EARTH.x)/2:focus.x;
+    const focusY=level===10?(focus.y+threeTarget.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0):level===9?(focus.y+EARTH.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0):focus.y;
     cam.x += (focusX - cam.x)*0.12; cam.y += (focusY - cam.y)*0.12;
   }
   const cameraNow=performance.now();
   if(!lowPowerMode&&cameraNow-cameraDebugAt>500){
     cameraDebugAt=cameraNow;
-    document.documentElement.dataset.cameraState=JSON.stringify({mode:CAMERA_MODES[cameraMode],x:cam.x,y:cam.y,rocketX:rocket.x,rocketY:rocket.y,dragging:cam.dragging});
+    document.documentElement.dataset.cameraState=JSON.stringify({mode:cameraModeName(),x:cam.x,y:cam.y,rocketX:rocket.x,rocketY:rocket.y,dragging:cam.dragging});
   }
 
   // 背景
@@ -3698,10 +3966,11 @@ function draw(){
     ctx.stroke(); ctx.setLineDash([]);
   }
 
-  if(level===9)drawMissionZones();
+  if(level===9||level===10)drawMissionZones();
+  if(level===10)drawThreeBodyTimelines();
 
   // 未来轨迹辅助线（T 开关）+ 近/远地点标注
-  if(showPred && state==='fly' && !rocket.landed){
+  if(showPred && state==='fly' && !rocket.landed && level!==10){
     const pred = getPredictedPath();
     const pts = pred.pts, markers = pred.markers;
     if(pts.length>1){
@@ -3748,10 +4017,11 @@ function draw(){
     ctx.textAlign='left';
   }
 
-  if(level!==9)drawMissionZones();
+  if(level!==9&&level!==10)drawMissionZones();
   for(const b of BODIES){
     if(!worldCircleVisible(b,120))continue;
     if(level===9)continue;
+    else if(level===10)drawThreeBodyStar(b);
     else if(level===8){if(!b.isStar)drawGroundRing(b);drawBinaryBody(b);}
     else{drawGroundRing(b);drawBody(b);}
   }
@@ -3835,15 +4105,16 @@ function draw(){
   const earthAlt = Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y) - EARTH.r;
   const binaryM=level===8?binaryMetrics():null;
   const blackM=level===9?blackHoleMetrics():null;
+  const threeM=level===10?threeBodyMetrics():null;
   const lunarM=level>=4&&level<8?moonMetrics():null, nearMoon=!!(lunarM&&lunarM.distance<2600);
   const nearDeparture=level===8&&earthAlt<600;
-  const alt=level===9?blackM.alt:level===8?(nearDeparture?earthAlt:binaryM.distB-MOON.r):(nearMoon?lunarM.distance-MOON.r:earthAlt);
+  const alt=level===10?threeM.r:level===9?blackM.alt:level===8?(nearDeparture?earthAlt:binaryM.distB-MOON.r):(nearMoon?lunarM.distance-MOON.r:earthAlt);
   // 相对地球表面（扣自转）
   const dxE=rocket.x-EARTH.x, dyE=rocket.y-EARTH.y, dE=Math.hypot(dxE,dyE);
   const saE=Math.atan2(dyE,dxE);
   const relEvx=rocket.vx-((EARTH.vx||0)-Math.sin(saE)*EARTH_OMEGA*dE), relEvy=rocket.vy-((EARTH.vy||0)+Math.cos(saE)*EARTH_OMEGA*dE);
   const vRelEarth=Math.hypot(relEvx,relEvy);
-  const landscapeHUD=H<=520, teleCompact=W<760||landscapeHUD, teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?70:teleCompact?278:14, teleW=teleCompact?174:206, teleH=(level===9?146:(level===5||level===7||level===8)?126:level===1?86:(level===3||level===4||level===6)?106:66);
+  const landscapeHUD=H<=520, teleCompact=W<760||landscapeHUD, teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?70:teleCompact?278:14, teleW=teleCompact?174:206, teleH=((level===9||level===10)?146:(level===5||level===7||level===8)?126:level===1?86:(level===3||level===4||level===6)?106:66);
   ctx.fillStyle='rgba(8,14,38,.68)'; roundRect(teleX,teleY,teleW,teleH,14); ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1; roundRect(teleX,teleY,teleW,teleH,14); ctx.stroke();
   ctx.textAlign='right';
@@ -3852,7 +4123,9 @@ function draw(){
   ctx.fillText(level===9?`远方观测速 ${blackM.apparentSpeed.toFixed(1)} u/s`:`绝对速度 ${speed.toFixed(1)} u/s`, W-20, teleY+16);
   // 相对速度：靠近谁显示谁（地表附近/着陆区 → 相对地表；同步轨道附近 → 相对同步速度）
   ctx.fillStyle='#4cc9f0';
-  if(level===7&&asteroid){
+  if(level===10){
+    ctx.fillText(`最近 ${threeM.nearest.name.slice(-1)} · 净空 ${threeM.clearance.toFixed(0)} u`,W-20,teleY+36);
+  }else if(level===7&&asteroid){
     const am=asteroidMetrics();ctx.fillText(`小行星相对 ${am.relSpeed.toFixed(1)} u/s`,W-20,teleY+36);
   }else if(level===9){
     ctx.fillText(`本地速度 ${blackM.speed.toFixed(1)} · 运动 ×${blackM.coordinateFactor.toFixed(2)}`,W-20,teleY+36);
@@ -3866,7 +4139,7 @@ function draw(){
     ctx.fillText(`轨道速度 ${speed.toFixed(1)} u/s`, W-20, teleY+36);
   }
   ctx.fillStyle='rgba(255,255,255,.85)';
-  ctx.fillText(`${level===9?'距时间视界':level===8?(nearDeparture?'离晨曦星':'离暮光星'):nearMoon?'月面':'高度'} ${alt.toFixed(0)} u`, W-20, teleY+56);
+  ctx.fillText(`${level===10?'距系统质心':level===9?'距时间视界':level===8?(nearDeparture?'离晨曦星':'离暮光星'):nearMoon?'月面':'高度'} ${alt.toFixed(0)} u`, W-20, teleY+56);
   ctx.fillStyle='rgba(255,209,102,.9)';
   if(level===1) ctx.fillText(`同步带高度 ${(R_GEO-EARTH.r-GEO_BAND).toFixed(0)}~${(R_GEO-EARTH.r+GEO_BAND).toFixed(0)}`, W-20, teleY+76);
   if(level===3&&station){
@@ -3912,6 +4185,13 @@ function draw(){
     ctx.fillStyle=blackM.energy>0?'#5fd068':'#ffd166';ctx.fillText(`逃逸能量 ${blackM.energy>0?'+':''}${blackM.energy.toFixed(0)}`,W-20,teleY+96);
     ctx.fillStyle=blackM.tidal>18?'#ef476f':'#ffb26b';ctx.fillText(`首尾潮汐差 ${blackM.tidal.toFixed(1)} u/s²`,W-20,teleY+116);
     ctx.fillStyle=`rgba(255,${Math.round(210-blackHole.redshift*120)},${Math.round(190-blackHole.redshift*150)},.95)`;ctx.fillText(`引力红移 ${(blackHole.redshift*100).toFixed(0)}%`,W-20,teleY+136);
+  }
+  if(level===10&&threeBody){
+    const target=mission.stage<2?threeBodyGate(mission.stage):threeM.center,targetDist=Math.hypot(rocket.x-target.x,rocket.y-target.y),split=timelineCache?.result?.divergence;
+    ctx.fillStyle='#4cf0dd';ctx.fillText(mission.stage<2?`距时间锚 ${targetDist.toFixed(0)} u`:`距逃逸圈 ${Math.max(0,THREE_ESCAPE_R-threeM.r).toFixed(0)} u`,W-20,teleY+76);
+    ctx.fillStyle=mission.threeDangerViolated?'#ef476f':'#ffd166';ctx.fillText(`混沌指数 ${threeM.chaos.toFixed(2)} · ${mission.threeDangerViolated?'已闯红区':'净空安全'}`,W-20,teleY+96);
+    ctx.fillStyle='#d9c6ff';ctx.fillText(`时间线分岔 ${Number.isFinite(split)?split.toFixed(0):'等待观测'} u`,W-20,teleY+116);
+    ctx.fillStyle='rgba(255,255,255,.72)';ctx.fillText(`宇宙种子 #${threeBody.seed.toString(16).toUpperCase().padStart(8,'0')}`,W-20,teleY+136);
   }
   ctx.fillStyle='#fff';
   ctx.textAlign='left';
