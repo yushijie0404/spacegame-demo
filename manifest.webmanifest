@@ -2,7 +2,7 @@
   "id": "./",
   "name": "星际快递员",
   "short_name": "星际快递员",
-  "description": "用缩比多天体轨道物理完成卫星部署、月球任务、引力弹弓、小行星防御与双星摆渡。",
+  "description": "用缩比多天体轨道物理完成月球弹弓、小行星防御、双星摆渡与黑洞深渊点火。",
   "lang": "zh-CN",
   "start_url": "./index.html",
   "scope": "./",

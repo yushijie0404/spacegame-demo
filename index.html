@@ -168,6 +168,7 @@
     <article class="level-card" data-level-card="6" tabindex="0"><div class="level-number">MISSION 06</div><div class="level-icon">⚖️</div><h2>地月引力平衡点</h2><p>任选一个地月引力平衡点，把卫星送到那里并停稳。</p><div class="level-meta"><div class="level-stars" data-level-stars="6">☆☆☆</div><div class="level-score"><strong data-level-score="6">—</strong>最高分</div></div><button class="level-play" data-start-level="6">开始任务</button></article>
     <article class="level-card" data-level-card="7" tabindex="0"><div class="level-number">MISSION 07</div><div class="level-icon">☄️</div><h2>小行星拦截</h2><p>追上会撞向地球的小行星；软着陆持续推离，或直接撞击改变轨道。</p><div class="level-meta"><div class="level-stars" data-level-stars="7">☆☆☆</div><div class="level-score"><strong data-level-score="7">—</strong>最高分</div></div><button class="level-play" data-start-level="7">开始任务</button></article>
     <article class="level-card" data-level-card="8" tabindex="0"><div class="level-number">MISSION 08</div><div class="level-icon">☀️</div><h2>双星摆渡</h2><p>从一颗太阳的行星起飞，穿过移动引力通道，到另一颗太阳旁与空间站对接。</p><div class="level-meta"><div class="level-stars" data-level-stars="8">☆☆☆</div><div class="level-score"><strong data-level-score="8">—</strong>最高分</div></div><button class="level-play" data-start-level="8">开始任务</button></article>
+    <article class="level-card" data-level-card="9" tabindex="0"><div class="level-number">MISSION 09</div><div class="level-icon">🕳️</div><h2>黑洞深渊点火</h2><p>向时间变慢的深渊下潜，在最近点顺向点火，再逃回远方世界。</p><div class="level-meta"><div class="level-stars" data-level-stars="9">☆☆☆</div><div class="level-score"><strong data-level-score="9">—</strong>最高分</div></div><button class="level-play" data-start-level="9">开始任务</button></article>
   </div>
   <div class="level-footer"><button id="continueLevel" onclick="closeLevelSelect()">继续当前任务</button></div>
 </div></div>
@@ -223,7 +224,8 @@ const CHALLENGE_CONFIG={
   5:{fuel:31,parTime:300,life:0,mass:1,vInfStar:55,exitAngleStar:18},
   6:{fuel:100,parTime:480,life:0,mass:1},
   7:{fuel:100,fuelStar:18,parTime:220,life:0,mass:1},
-  8:{fuel:100,fuelStar:20,parTime:330,life:0,mass:1}
+  8:{fuel:100,fuelStar:20,parTime:330,life:0,mass:1},
+  9:{fuel:45,fuelStar:20,parTime:150,life:0,mass:1}
 };
 const STAR_RULES={
   1:['完成同步轨道部署：★','在绿色目标经度内释放：+★','挑战燃料剩余至少 15%：+★'],
@@ -233,7 +235,8 @@ const STAR_RULES={
   5:['飞出绿圈且不会返回：★','逃逸余速 v∞ 至少 55 u/s：+★','穿越绿圈时方向偏差不超过 18°：+★'],
   6:['抵达 L1：★','抵达 L4 或 L5：★★','抵达 L2 或 L3：★★★'],
   7:['让小行星同时避开地球和月球：★','飞船没有在撞击中损毁：+★','挑战燃料剩余至少 18%：+★'],
-  8:['抵达另一颗太阳旁的空间站：★','全程避开两颗恒星的高温区：+★','挑战燃料剩余至少 20%：+★']
+  8:['抵达另一颗太阳旁的空间站：★','全程避开两颗恒星的高温区：+★','挑战燃料剩余至少 20%：+★'],
+  9:['穿过救援门并逃离黑洞：★','在半径 360 u 内完成深渊点火：+★','挑战燃料剩余至少 20%：+★']
 };
 
 // ---------- 关卡框架 ----------
@@ -292,6 +295,8 @@ const BINARY_A_R=BINARY_SEPARATION*BINARY_MU_B/(BINARY_MU_A+BINARY_MU_B);
 const BINARY_B_R=BINARY_SEPARATION*BINARY_MU_A/(BINARY_MU_A+BINARY_MU_B);
 const BINARY_PLANET_R=720,BINARY_PLANET_OMEGA=Math.sqrt((BINARY_MU_A+3.0e5)/Math.pow(BINARY_PLANET_R,3));
 const BINARY_STATION_R=690,BINARY_STATION_OMEGA=Math.sqrt(BINARY_MU_B/Math.pow(BINARY_STATION_R,3));
+const BH_MU=2.2e6,BH_HORIZON=180,BH_PHOTON_RING=250,BH_BURN_R=390,BH_ESCAPE_R=2200;
+const BH_START_R=1100,BH_START_V=29.3,BH_BEACON_R=2550,BH_BEACON_OMEGA=.035;
 // 姿态控制模式（C 切换）：0=随速偏转 1=手动转向 2=纯惯性
 const ATT_MODES = ['随速偏转','手动转向','纯惯性'];
 let attMode = 1, velOffset = 0;
@@ -330,7 +335,8 @@ const LEVELS = {
   5: { title:'🪃 第五关 · 月球引力弹弓', sub:'借月球甩出去，飞出绿圈且不再掉回来' },
   6: { title:'⚖️ 第六关 · 地月引力平衡点', sub:'任选一个引力平衡点，把卫星送过去停稳' },
   7: { title:'☄️ 第七关 · 小行星拦截', sub:'追上危险小行星，改变它的轨道，保护地球和月球' },
-  8: { title:'☀️ 第八关 · 双星摆渡', sub:'穿过两颗太阳之间的引力通道，在另一边与空间站对接' }
+  8: { title:'☀️ 第八关 · 双星摆渡', sub:'穿过两颗太阳之间的引力通道，在另一边与空间站对接' },
+  9: { title:'🕳️ 第九关 · 黑洞深渊点火', sub:'让时间慢下来，在深渊最近点加速逃回远方' }
 };
 let level = 1;
 const stageInfoL1 = [
@@ -473,9 +479,23 @@ const stageInfoL8 = [
     science:'在双星系统中，空间站同时受到目标恒星和伴星的扰动，因此长期轨道需要定期修正。本关用短时间解析轨道近似，重点训练跨势阱转移、恒星捕获与最终相对导航。',
     success:'成功标志：点击对接后，飞船与暮光站一起绕蓝白星运行。'}
 ];
+const stageInfoL9 = [
+  {name:'① 向深渊下潜',hint:'轻点推进启动世界，然后关机滑向黑洞',
+    steps:['第一次轻点推进会解除待机，让远方信标与吸积盘开始转动。','随后关机沿紫色下潜轨道滑行，不要在远处浪费燃料。','观察右上角：越靠近黑洞，远方看到的位移和速度会连续变慢。'],
+    science:'靠近黑洞时，远方观察者会发现飞船上的钟越来越慢。本关用 √(1−rₛ/r) 表示飞船钟的引力红移，并用更强的视界坐标速率表现远方所见的运动冻结；两者都做了游戏化平滑，不是完整的广义相对论数值模拟。',
+    success:'成功标志：进入半径 480 u 内的紫色“深渊点火区”。'},
+  {name:'② 最近点顺向点火',hint:'机头对准青色速度方向，推进到逃逸能量变绿',
+    steps:['靠近紫色光环后，让机头和姿态表的青色速度刻度重合。','在半径约 260～390 u 内顺着速度短促点火。','右上角“逃逸能量”变为正数后立即停火，保留修正燃料。'],
+    science:'同样的速度增量，在速度最高的轨道近点施加，增加的轨道能量最多，这叫奥伯特效应。黑洞没有给发动机额外推力，而是先用引力把飞船加速，再让发动机更有效地改变总能量。',
+    success:'成功标志：黑洞相对轨道能量大于 0，黄色预测线转为向外开放。'},
+  {name:'③ 逃回远方世界',hint:'保持向外飞行，穿过绿色救援门即可完成',
+    steps:['确认径向速度为向外，必要时用很短的修正点火。','穿过绿色救援门时仍保持正逃逸能量，就会自动获救。','不要为了更深点火贴到黑色视界；远方看到的飞船会冻结在那里。'],
+    science:'“飞船停在视界上”是远方观察者的坐标图景：信号被无限红移、到达间隔无限拉长。对随飞船下落的宇航员而言，自身固有时间正常流逝，并会在有限时间内越过视界；本关故意采用远方任务控制中心的观察视角。',
+    success:'成功标志：向外穿过 2200 u 绿色救援门，并保持逃逸能量为正。'}
+];
 let mission;
 
-let rocket, station, asteroid, asteroidTrail, binary, trail, ghostShip, ghostTrail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
+let rocket, station, asteroid, asteroidTrail, binary, blackHole, trail, ghostShip, ghostTrail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
 let challengeMode=false;
 let paused = false, retryTimer = null;
 let rewindClickAt = 0, rewindHistoryIndex = -1;
@@ -532,6 +552,7 @@ function landAngle(){ return LAND_ANG0 + earthAngle; }
 // 月球质心绕地球公转；月面纹理也使用同一个角度旋转，因此始终以同一面朝向地球。
 function updateMoon(dt){
   if(typeof level!=='undefined'&&level===8){updateBinaryWorld(dt);return;}
+  if(typeof level!=='undefined'&&level===9)return;
   moonAngle+=MOON_OMEGA*dt;
   const c=Math.cos(moonAngle), s=Math.sin(moonAngle), v=MOON_OMEGA*MOON_ORBIT_R;
   MOON.x=EARTH.x+c*MOON_ORBIT_R; MOON.y=EARTH.y+s*MOON_ORBIT_R;
@@ -540,6 +561,7 @@ function updateMoon(dt){
 function restoreBaseWorld(){
   Object.assign(EARTH,BASE_WORLD.earth);Object.assign(MARS,BASE_WORLD.mars);Object.assign(MOON,BASE_WORLD.moon);
   EARTH.isStar=false;MARS.isStar=false;MOON.isStar=false;
+  EARTH.isBlackHole=false;MARS.isBlackHole=false;MOON.isBlackHole=false;
 }
 function configureBinaryWorld(){
   Object.assign(MARS,{r:285,mu:BINARY_MU_A,col:'#ff9f43',landMax:0,name:'曙光星 A',isStar:true});
@@ -547,6 +569,26 @@ function configureBinaryWorld(){
   Object.assign(EARTH,{r:118,mu:3.0e5,col:'#4cc9f0',landMax:15,name:'晨曦星',isStar:false});
   binary={angle:0,planetAngle:.18,gateCrossed:false,heatRadiusA:MARS.r+175,heatRadiusB:MOON.r+165};
   updateBinaryWorld(0);
+}
+function configureBlackHoleWorld(){
+  Object.assign(EARTH,{x:0,y:0,vx:0,vy:0,r:BH_HORIZON,mu:BH_MU,col:'#05030b',landMax:0,name:'卡戎深渊',isStar:false,isBlackHole:true});
+  Object.assign(MARS,{x:70000,y:70000,vx:0,vy:0,r:1,mu:0,col:'#000',landMax:0,name:'远方',isStar:false});
+  Object.assign(MOON,{x:-70000,y:-70000,vx:0,vy:0,r:1,mu:0,col:'#000',landMax:0,name:'远方',isStar:false});
+  blackHole={properTime:0,farTime:0,factor:1,coordinateFactor:1,minRadius:BH_START_R,beaconAngle:-.75,frozen:false,redshift:0};
+}
+function blackHoleMetrics(ship=rocket){
+  const dx=ship.x-EARTH.x,dy=ship.y-EARTH.y,r=Math.max(BH_HORIZON+1e-3,Math.hypot(dx,dy));
+  const v2=ship.vx*ship.vx+ship.vy*ship.vy,energy=.5*v2-BH_MU/r;
+  const radial=(ship.vx*dx+ship.vy*dy)/r;
+  const lapse=Math.max(0,1-BH_HORIZON/r);
+  const properFactor=Math.max(.025,Math.min(1,Math.sqrt(lapse)));
+  // 远方视角的坐标运动要比飞船钟更明显地趋近静止；在关卡起点归一化，避免开局就显得迟钝。
+  const startLapse=1-BH_HORIZON/BH_START_R;
+  const coordinateFactor=Math.max(.004,Math.min(1,Math.pow(lapse/startLapse,1.25)));
+  const tidal=2*BH_MU*34/Math.pow(r,3);
+  const speed=Math.sqrt(v2);
+  return {dx,dy,r,alt:r-BH_HORIZON,speed,energy,radial,factor:properFactor,properFactor,coordinateFactor,
+    apparentSpeed:speed*coordinateFactor,worldRate:Math.min(80,1/coordinateFactor),tidal};
 }
 function updateBinaryWorld(dt){
   if(!binary)return;
@@ -686,6 +728,7 @@ function earthSpecificEnergy(ship=rocket){
   return .5*(vx*vx+vy*vy)-EARTH.mu/Math.max(1,r);
 }
 function attitudeVelocity(ship=rocket){
+  if(level===9)return {vx:ship.vx,vy:ship.vy};
   if(level===8&&binary){
     const dPlanet=Math.hypot(ship.x-EARTH.x,ship.y-EARTH.y),dTarget=Math.hypot(ship.x-MOON.x,ship.y-MOON.y);
     const ref=dPlanet<420?EARTH:dTarget<1500?MOON:null;
@@ -750,7 +793,7 @@ function applyLagrangeAssist(dt){
   rocket.vx+=(m.point.vx-rocket.vx)*blend; rocket.vy+=(m.point.vy-rocket.vy)*blend;
 }
 // 当前关卡的教学步骤
-function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:level===4?stageInfoL4:level===5?stageInfoL5:level===6?stageInfoL6:level===7?stageInfoL7:stageInfoL8; }
+function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:level===4?stageInfoL4:level===5?stageInfoL5:level===6?stageInfoL6:level===7?stageInfoL7:level===8?stageInfoL8:stageInfoL9; }
 
 const SAVE_KEY='spacegame-progress-v2';
 function loadProgress(){
@@ -772,7 +815,7 @@ function saveLevelResult(levelId,score,earnedStars=1){
 }
 function updateLevelCards(){
   const progress=loadProgress();
-  for(let i=1;i<=8;i++){
+  for(let i=1;i<=9;i++){
     const result=progress[i]||{score:0,stars:0};
     const scoreEl=document.querySelector(`[data-level-score="${i}"]`), starsEl=document.querySelector(`[data-level-stars="${i}"]`);
     if(scoreEl) scoreEl.textContent=result.score||'—';
@@ -829,14 +872,14 @@ function closeLevelSelect(){
   syncUI();
 }
 function startLevel(levelId){
-  level=Math.max(1,Math.min(8,Number(levelId)||1));
+  level=Math.max(1,Math.min(9,Number(levelId)||1));
   challengeMode=false;
   gameStarted=true; levelSelectOpen=false; paused=false; lastBriefedLevel=0;
   document.getElementById('levelSelect').classList.remove('is-visible');
   resetGame();
 }
 function nextLevel(){
-  if(level<8) startLevel(level+1);
+  if(level<9) startLevel(level+1);
   else openLevelSelect();
 }
 function restartCurrent(full=false){
@@ -864,9 +907,10 @@ function resetGame(){
   rewindClickAt=0; rewindHistoryIndex=-1;
   paused = false;
   clearFlightInputs(); velOffset=0;
-  restoreBaseWorld();binary=null;
+  restoreBaseWorld();binary=null;blackHole=null;
   earthAngle = 0;
-  if(level===8)configureBinaryWorld();
+  if(level===9)configureBlackHoleWorld();
+  else if(level===8)configureBinaryWorld();
   else{moonAngle = level===5 ? 2.07 : level===7 ? -2.7 : MOON_ANG0; updateMoon(0);}
   station = level===3 ? {angle:.55,x:0,y:0,vx:0,vy:0,a:0,docked:false}
     :level===8?{angle:2.35,x:0,y:0,vx:0,vy:0,a:0,docked:false,host:'暮光星 B'}:null;
@@ -875,7 +919,13 @@ function resetGame(){
   const challengeCfg=CHALLENGE_CONFIG[level],lifeLimit=challengeMode&&challengeCfg.life?challengeCfg.life:LIFE_MAX;
   const initialFuel=level===5?SLING_LAUNCH_FUEL:challengeCfg.fuel;
   const rocketMass=challengeMode?challengeCfg.mass:1;
-  if(level===2){
+  if(level===9){
+    rocket={x:BH_START_R,y:0,vx:0,vy:BH_START_V,a:Math.PI/2,
+      fuel:initialFuel,landed:false,alive:true,body:null,life:lifeLimit,crewDead:false,deadReason:'',mass:rocketMass,
+      maxG:0,lastG:0,overT:0,thrusting:false,av:0,launchGrace:0,chute:false,chuteAngle:null,chuteFlowX:0,chuteFlowY:0,
+      _clearedPad:true,_launchAssistActive:false,_launchCompleted:true,_launchFrameActive:false,launchBaseVx:null,launchBaseVy:null,thrustPower:0};
+    launched=true;
+  }else if(level===2){
     // 第二关：从同步轨道起步（第一关通关状态）， circular 轨道
     const ang = 0; // 初始在 +x 方向的同步轨道上
     const orbV = EARTH_OMEGA * R_GEO; // 同步轨道线速度（与地球自转同步）
@@ -919,7 +969,8 @@ function resetGame(){
     lagrangeTarget:1,lagrangeDistance:Infinity,lagrangeRelSpeed:Infinity,
     asteroidContact:false,asteroidAnchored:false,asteroidMountAngle:0,hingeAngle:0,
     asteroidChanged:false,asteroidImpact:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null,
-    binaryHeatViolated:false,binaryCaptured:false,binaryGateCrossed:false,binaryTargetEnergy:Infinity};
+    binaryHeatViolated:false,binaryCaptured:false,binaryGateCrossed:false,binaryTargetEnergy:Infinity,
+    blackHoleMinR:Infinity,blackHoleDeepBurn:false,blackHoleEscaping:false,blackHoleFrozen:false};
   if(level===5){
     mission.slingInitialEnergy=earthSpecificEnergy(rocket);
     mission.slingEntryEnergy=mission.slingInitialEnergy;
@@ -932,6 +983,7 @@ function resetGame(){
   if(level===6) mission.dynHint='五个目标任选｜按推进后整个世界同步开始';
   if(level===7) mission.dynHint='红线会撞地球｜按推进后世界同步开始';
   if(level===8) mission.dynHint='两颗太阳都在运动｜按推进后双星世界同步开始';
+  if(level===9) mission.dynHint='轻点推进解除待机｜随后关机滑向紫色深渊';
   saveCheckpoint();
   camInit = true;
   hideMsg();
@@ -948,7 +1000,7 @@ function showMsg(emoji,title,text){
   document.getElementById('mText').innerHTML = text;
   const next = document.getElementById('mNext');
   next.style.display = mission && mission.done ? 'inline-block' : 'none';
-  next.textContent = level<8 ? '下一关 (L)' : '返回目录 (L)';
+  next.textContent = level<9 ? '下一关 (L)' : '返回目录 (L)';
   document.getElementById('msg').style.display = 'flex';
 }
 function openBriefing(){
@@ -1190,6 +1242,11 @@ function updateActionCue(){
         const brake=cueTurnTo(Math.atan2(-rvy,-rvx),.22);cues=brake?[brake]:['thrust'];
       }
     }
+  }else if(level===9){
+    if(!mission.worldStarted)cues=['thrust'];
+    else if(mission.stage===0)cues=['speed'];
+    else if(mission.stage===1){const turn=cueTurnTo(vAng,.16);cues=turn?[turn]:['thrust'];}
+    else cues=['speed'];
   }
   setActionCue(cues);
 }
@@ -1531,6 +1588,8 @@ function saveCheckpoint(){
     stationAngle:station?station.angle:null, launchBaseVx:rocket.launchBaseVx, launchBaseVy:rocket.launchBaseVy,
     binaryState:binary?{angle:binary.angle,planetAngle:binary.planetAngle,gateCrossed:binary.gateCrossed}:null,
     binaryMission:level===8?{binaryHeatViolated:mission.binaryHeatViolated,binaryCaptured:mission.binaryCaptured,binaryGateCrossed:mission.binaryGateCrossed}:null,
+    blackHoleState:blackHole?{properTime:blackHole.properTime,farTime:blackHole.farTime,factor:blackHole.factor,coordinateFactor:blackHole.coordinateFactor,minRadius:blackHole.minRadius,beaconAngle:blackHole.beaconAngle,frozen:false}:null,
+    blackHoleMission:level===9?{blackHoleMinR:mission.blackHoleMinR,blackHoleDeepBurn:mission.blackHoleDeepBurn,blackHoleEscaping:mission.blackHoleEscaping,blackHoleFrozen:false}:null,
     launchFrameActive:!!rocket._launchFrameActive, launchAssistActive:!!rocket._launchAssistActive,
     launchCompleted:!!rocket._launchCompleted, chute:!!rocket.chute, chuteAngle:rocket.chuteAngle,
     chuteFlowX:rocket.chuteFlowX||0, chuteFlowY:rocket.chuteFlowY||0,
@@ -1564,6 +1623,7 @@ function retryFromStage(reason){
     mission.lifeExpired=!!cp.lifeExpired; mission.usedChute=!!cp.usedChute;
     flightT=cp.flightT; earthAngle=cp.earthAngle; moonAngle=Number.isFinite(cp.moonAngle)?cp.moonAngle:moonAngle;
     if(cp.binaryState&&binary)Object.assign(binary,cp.binaryState);
+    if(cp.blackHoleState&&blackHole)Object.assign(blackHole,cp.blackHoleState);
     updateMoon(0); mission.stage=cp.stage;
     mission.worldStarted=!!cp.worldStarted;
     if(Number.isFinite(cp.lagrangeTarget)) mission.lagrangeTarget=cp.lagrangeTarget;
@@ -1573,6 +1633,7 @@ function retryFromStage(reason){
     if(station&&Number.isFinite(cp.stationAngle)){ station.angle=cp.stationAngle; updateStation(0); }
     if(cp.slingshot) Object.assign(mission,cp.slingshot);
     if(cp.binaryMission)Object.assign(mission,cp.binaryMission);
+    if(cp.blackHoleMission)Object.assign(mission,cp.blackHoleMission);
     if(cp.asteroid&&asteroid)Object.assign(asteroid,cp.asteroid);
     if(cp.asteroidMission)Object.assign(mission,cp.asteroidMission);
     ghostShip=cp.ghost?{...cp.ghost}:null; ghostTrail=[];
@@ -1716,6 +1777,45 @@ function tryMissionAction(){
   else if(level===8) tryDock();
 }
 
+function freezeAtHorizon(){
+  if(level!==9||!blackHole||blackHole.frozen)return;
+  blackHole.frozen=true;mission.blackHoleFrozen=true;state='horizon';clearFlightInputs();
+  const m=blackHoleMetrics(),d=Math.max(1,Math.hypot(m.dx,m.dy));rocket.x=EARTH.x+m.dx/d*(BH_HORIZON+4);rocket.y=EARTH.y+m.dy/d*(BH_HORIZON+4);
+  mission.toast='';syncUI();
+  showMsg('⌛','最后一束光停在了视界上',
+    `<b style="font-size:20px">飞船没有坠毁，但是你等不到它出来的那一天了。</b><br><br>`+
+    `远方任务时间 ${blackHole.farTime.toFixed(1)} s · 飞船固有时间 ${blackHole.properTime.toFixed(1)} s<br>`+
+    `<span style="color:#888">从远方看，信号间隔被无限拉长、颜色不断红移，飞船的最后影像像被冻结；对飞船自己而言，它会在有限固有时间内越过视界。按 R 回到本阶段，再早一点顺向点火。</span>`);
+}
+function finishBlackHoleEscape(m=blackHoleMetrics()){
+  if(level!==9||mission.done)return;
+  mission.done=true;state='complete';
+  const remaining=challengeRemainingFuel(),deep=mission.blackHoleDeepBurn&&mission.blackHoleMinR<=360&&mission.blackHoleMinR>BH_HORIZON+12;
+  const starResult=evaluateStars([
+    {ok:deep,label:'在半径 360 u 内完成深渊点火'},
+    {ok:remaining>=CHALLENGE_CONFIG[9].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[9].fuelStar}%`}
+  ]);
+  const result=saveLevelResult(9,performanceScore(),starResult.stars),vInf=Math.sqrt(Math.max(0,2*m.energy));
+  syncUI();showMsg('🌌','已从黑洞深渊返回！',
+    resultLine(result)+`向外穿过绿色救援门 · 逃逸余速 v∞ ${vInf.toFixed(1)} u/s<br>`+
+    `最近半径 ${mission.blackHoleMinR.toFixed(0)} u · 飞船时间 ${blackHole.properTime.toFixed(1)} s · 远方时间 ${blackHole.farTime.toFixed(1)} s<br>`+
+    `${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
+    `<span style="color:#888">你利用的是近点高速下的奥伯特效应。双时钟之差表现引力时间膨胀；视界冻结则采用远方观察者的坐标图景。</span>`);
+}
+function updateMissionL9(dt){
+  if(!blackHole)return;
+  const m=blackHoleMetrics();mission.blackHoleMinR=Math.min(mission.blackHoleMinR,m.r);blackHole.minRadius=Math.min(blackHole.minRadius,m.r);
+  const directEscape=m.r>=BH_ESCAPE_R&&m.radial>0&&m.energy>0;
+  if(directEscape){finishBlackHoleEscape(m);return;}
+  if(mission.stage===0){
+    mission.dynHint=`距视界 ${m.alt.toFixed(0)}｜飞船时间倍率 ×${m.factor.toFixed(2)}｜关机下潜`;
+    if(m.r<BH_BURN_R+90){advanceStage();return;}
+  }else if(mission.stage===1){
+    mission.dynHint=`半径 ${m.r.toFixed(0)}｜逃逸能量 ${m.energy.toFixed(0)}｜顺向点火至正数`;
+    if(m.energy>0){mission.blackHoleEscaping=true;advanceStage();return;}
+  }else mission.dynHint=`向外 ${m.radial.toFixed(1)} u/s｜距救援门 ${Math.max(0,BH_ESCAPE_R-m.r).toFixed(0)}`;
+}
+
 // 任务阶段推进（每帧调用）
 function updateMission(dt){
   if(!mission || mission.done || state!=='fly' || !launched) return;
@@ -1726,6 +1826,7 @@ function updateMission(dt){
   if(level===6){ updateMissionL6(dt); return; }
   if(level===7){ updateMissionL7(dt); return; }
   if(level===8){ updateMissionL8(dt); return; }
+  if(level===9){ updateMissionL9(dt); return; }
   if(rocket.landed) return;
   const direct=directSyncStatus(rocket,1);
   if(mission.stage<3){
@@ -2121,6 +2222,8 @@ function advanceStage(){
   if(level===8 && mission.stage===1){ mission.toast='✅ 已离开晨曦星｜瞄准两颗太阳之间移动的青色通道'; mission.toastT=4; }
   if(level===8 && mission.stage===2){ mission.toast='✅ 已穿过引力通道｜靠近暮光星 B 后反推捕获'; mission.toastT=4; }
   if(level===8 && mission.stage===3){ mission.toast='✅ 已被目标恒星捕获｜追上暮光站，消除相对速度'; mission.toastT=4; }
+  if(level===9 && mission.stage===1){ mission.toast='⌛ 已进入深渊点火区｜对准速度方向，短促推进'; mission.toastT=4; }
+  if(level===9 && mission.stage===2){ mission.toast='✅ 逃逸能量已为正｜关机向外穿过绿色救援门'; mission.toastT=4; }
   syncUI();
 }
 function unlockFinalStage(targetStage,message){
@@ -2289,6 +2392,7 @@ function updateSlingshotGhost(dt,dtReal=dt){
 
 function update(dt, dtReal){
   if(dtReal===undefined) dtReal = dt; // 实时时间（旋转用），默认=平移dt
+  const observationDt=dtReal;
   // 所有关卡的示范、玩家与天体共用同一只起跑钟：首次推进前整个物理世界保持静止。
   // 这样地球、月球、空间站和轨道中的第二关飞船都不会在示范仍“等待点火”时自行移动。
   const waitingForGuideIgnition=mission&&!mission.worldStarted;
@@ -2296,6 +2400,14 @@ function update(dt, dtReal){
     if(!(keys['ArrowUp']||keys['KeyW'])) return;
     mission.worldStarted=true;
     if(ghostShip) ghostShip.started=true;
+  }
+  if(level===9&&blackHole){
+    const clockDt=dt,m=blackHoleMetrics(),proper=Math.max(.025,m.properFactor),coordinate=Math.max(.004,m.coordinateFactor);
+    blackHole.factor=proper;blackHole.coordinateFactor=coordinate;blackHole.redshift=1-proper;
+    blackHole.farTime+=clockDt/coordinate;blackHole.properTime+=clockDt*proper;
+    blackHole.beaconAngle=normalizeAngle(blackHole.beaconAngle+BH_BEACON_OMEGA*clockDt/coordinate);
+    // 采用远方任务控制中心的坐标视角：位移、推进和转向在视界前连续趋近静止。
+    dt*=coordinate;dtReal*=Math.max(.035,coordinate);
   }
   earthAngle += EARTH_OMEGA*dt;
   updateMoon(dt);
@@ -2408,6 +2520,7 @@ function update(dt, dtReal){
   rocket.thrusting = (keys['ArrowUp']||keys['KeyW']) && (infiniteFuel || rocket.fuel>0);
   rocket.thrustPower = 0;
   if(rocket.thrusting){
+    if(level===9){const bm=blackHoleMetrics();if(bm.r<=360&&bm.r>BH_HORIZON+12)mission.blackHoleDeepBurn=true;}
     if(rocket.landed){ rocket.landed=false; rocket.body=null; launched=true; rocket.launchGrace=1.2; } // 起飞离地宽限
     let thrustPower=1;
     if(mission.assistMode && (level===1||level===3||level===4) && mission.stage===0){
@@ -2494,19 +2607,29 @@ function update(dt, dtReal){
   if(rocket.launchGrace>0) rocket.launchGrace -= dt;
   if(rocket.asteroidGrace>0)rocket.asteroidGrace-=dt;
   rocket.x += rocket.vx*dt; rocket.y += rocket.vy*dt;
-  trailSampleT+=dt;
+  // 黑洞关按远方观察者的真实取样节奏留下轨迹；运动越慢，轨迹点越密，冻结不只体现在数字上。
+  trailSampleT+=level===9?observationDt:dt;
   const trailInterval=lowPowerMode?.075:.032;
   if(trail.length===0||trailSampleT>=trailInterval){ trail.push({x:rocket.x,y:rocket.y}); trailSampleT=0; }
 
   // 教学模式下，推进键就是精细机动键；发射锁定结束后，按住推进持续进入适度子弹时间。
   if(mission.assistMode && !mission.done && launched && state==='fly'){
-    if(rocket.thrusting&&!launchLocked) bulletT=.24;
+    if(level!==9){
+      if(rocket.thrusting&&!launchLocked) bulletT=.24;
+    }
   }
   if(bulletT>0) bulletT=Math.max(0,bulletT-dtReal);
   if(trail.length>(lowPowerMode?180:600)) trail.shift();
 
   // 第七关小行星接触：软着陆进入表面操作；高速接触则按动能撞击传递线动量与角动量。
   if(asteroidContactCheck())return;
+
+  // 第九关没有“撞进黑洞”的爆炸画面：远方观察坐标中，最后信号冻结在视界之外。
+  if(level===9){
+    const m=blackHoleMetrics();
+    if(m.r<=BH_HORIZON+8){freezeAtHorizon();return;}
+    rocket._tooFar=false;return;
+  }
 
   // 碰撞检测（起飞宽限期内跳过，避免点火瞬间误判）
   for(const b of BODIES){
@@ -2763,6 +2886,52 @@ function drawBinaryZones(){
   }
   ctx.textAlign='left';
 }
+function drawBlackHoleZones(){
+  if(!blackHole)return;
+  const m=blackHoleMetrics(),spin=blackHole.farTime*.42;
+  // 绿色救援门与紫色深渊点火带：玩法信息保持比特效更清楚。
+  ctx.strokeStyle=m.energy>0?'rgba(95,208,104,.92)':'rgba(95,208,104,.36)';ctx.lineWidth=5/cam.zoom;ctx.setLineDash([17/cam.zoom,12/cam.zoom]);
+  ctx.beginPath();ctx.arc(0,0,BH_ESCAPE_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(95,208,104,.9)';ctx.font=`900 ${15/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('远方救援门',0,-BH_ESCAPE_R-18/cam.zoom);
+  ctx.strokeStyle='rgba(174,104,255,.22)';ctx.lineWidth=BH_BURN_R-(BH_PHOTON_RING+12);ctx.beginPath();ctx.arc(0,0,(BH_BURN_R+BH_PHOTON_RING+12)/2,0,TAU);ctx.stroke();
+  ctx.strokeStyle='rgba(210,157,255,.78)';ctx.lineWidth=2.5/cam.zoom;ctx.beginPath();ctx.arc(0,0,BH_BURN_R,0,TAU);ctx.stroke();
+  if(W>=760){ctx.fillStyle='#d9a6ff';ctx.font=`800 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText('深渊点火区',0,-BH_BURN_R-14/cam.zoom);}
+
+  // 炽白吸积盘：先画被黑洞遮住的后半盘，再画透镜抬升的上下弧像、光子环与前半盘。
+  const diskTilt=.22,diskAngle=.14;
+  ctx.save();ctx.rotate(diskAngle);ctx.scale(1,diskTilt);
+  if(!lowPowerMode){ctx.shadowColor='rgba(244,250,255,.94)';ctx.shadowBlur=28*cam.zoom;}
+  for(let i=0;i<4;i++){
+    const rr=BH_HORIZON+100+i*52,pulse=.42+.18*Math.sin(spin+i*1.9);
+    ctx.strokeStyle=`rgba(248,252,255,${pulse})`;ctx.lineWidth=(19-i*3)/cam.zoom;
+    ctx.beginPath();ctx.arc(0,0,rr,Math.PI,TAU);ctx.stroke();
+  }
+  ctx.restore();
+  // 后方盘面被强引力弯折到黑洞上、下两侧，形成两条白色弧像。
+  ctx.save();if(!lowPowerMode){ctx.shadowColor='rgba(255,255,255,.92)';ctx.shadowBlur=17*cam.zoom;}
+  ctx.strokeStyle='rgba(250,253,255,.82)';ctx.lineWidth=5.5/cam.zoom;
+  ctx.beginPath();ctx.arc(0,0,BH_PHOTON_RING+25,Math.PI*1.08,Math.PI*1.92);ctx.stroke();
+  ctx.strokeStyle='rgba(224,237,247,.48)';ctx.lineWidth=3/cam.zoom;
+  ctx.beginPath();ctx.arc(0,0,BH_PHOTON_RING+38,.08*Math.PI,.92*Math.PI);ctx.stroke();ctx.restore();
+  if(!lowPowerMode){const halo=ctx.createRadialGradient(0,0,BH_HORIZON*.9,0,0,BH_PHOTON_RING*1.65);halo.addColorStop(0,'rgba(0,0,0,1)');halo.addColorStop(.52,'rgba(0,0,0,1)');halo.addColorStop(.7,'rgba(235,246,255,.11)');halo.addColorStop(1,'rgba(235,246,255,0)');ctx.fillStyle=halo;ctx.beginPath();ctx.arc(0,0,BH_PHOTON_RING*1.65,0,TAU);ctx.fill();}
+  ctx.fillStyle='#000';ctx.beginPath();ctx.arc(0,0,BH_HORIZON,0,TAU);ctx.fill();
+  ctx.save();if(!lowPowerMode){ctx.shadowColor='rgba(255,255,255,.96)';ctx.shadowBlur=21*cam.zoom;}
+  ctx.strokeStyle='rgba(255,255,255,.96)';ctx.lineWidth=7/cam.zoom;ctx.beginPath();ctx.arc(0,0,BH_PHOTON_RING,0,TAU);ctx.stroke();ctx.restore();
+  ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(0,0,BH_HORIZON+5/cam.zoom,0,TAU);ctx.stroke();
+  ctx.save();ctx.rotate(diskAngle);ctx.scale(1,diskTilt);
+  if(!lowPowerMode){ctx.shadowColor='rgba(255,255,255,.9)';ctx.shadowBlur=24*cam.zoom;}
+  for(let i=3;i>=0;i--){const rr=BH_HORIZON+100+i*52,pulse=.5+.22*Math.sin(spin+i*1.9);ctx.strokeStyle=`rgba(255,255,255,${pulse})`;ctx.lineWidth=(17-i*2.5)/cam.zoom;ctx.beginPath();ctx.arc(0,0,rr,0,Math.PI);ctx.stroke();}
+  // 少量沿盘旋转的高亮物质结，不使用彩色条带。
+  if(!lowPowerMode){ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=5/cam.zoom;for(let i=0;i<3;i++){const rr=BH_HORIZON+118+i*66,a=normalizeAngle(spin*.12+i*2.1);ctx.beginPath();ctx.arc(0,0,rr,a,a+.22);ctx.stroke();}}
+  ctx.restore();
+  ctx.fillStyle='rgba(235,244,250,.82)';ctx.font=`900 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText('时间视界',0,8/cam.zoom);
+
+  // 远方信标每走一圈代表远方世界时间；越接近视界，它相对飞船转得越快。
+  const bx=Math.cos(blackHole.beaconAngle)*BH_BEACON_R,by=Math.sin(blackHole.beaconAngle)*BH_BEACON_R;
+  ctx.strokeStyle='rgba(76,201,240,.22)';ctx.lineWidth=1.5/cam.zoom;ctx.setLineDash([8/cam.zoom,11/cam.zoom]);ctx.beginPath();ctx.arc(0,0,BH_BEACON_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#7de3ff';ctx.strokeStyle='#fff';ctx.lineWidth=1.5/cam.zoom;ctx.beginPath();ctx.arc(bx,by,9/cam.zoom,0,TAU);ctx.fill();ctx.stroke();
+  if(W>=760){ctx.fillStyle='#aeeeff';ctx.font=`800 ${12/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText(`远方时钟 ${blackHole.farTime.toFixed(0)} s`,bx,by-17/cam.zoom);}ctx.textAlign='left';
+}
 function drawMissionZones(){
   if(level===2){ drawLandingZone(); return; }
   if(level===3){ drawStationOrbitZone(); return; }
@@ -2771,6 +2940,7 @@ function drawMissionZones(){
   if(level===6){ drawLagrangeZones(); return; }
   if(level===7){ drawAsteroidDefenseZones(); return; }
   if(level===8){ drawBinaryZones(); return; }
+  if(level===9){ drawBlackHoleZones(); return; }
   const slot = padAngle();
   // 同步轨道环形带（金色）
   ctx.strokeStyle='rgba(255,209,102,.35)'; ctx.lineWidth=GEO_BAND*2;
@@ -3065,6 +3235,14 @@ function drawRocket(){
   }
   ctx.save();
   ctx.translate(rocket.x, rocket.y);
+  let blackHoleVisual=null;
+  if(level===9&&blackHole){
+    const m=blackHoleMetrics(),tidal=Math.max(0,Math.min(1,(520-m.r)/330));blackHoleVisual={m,tidal,shift:blackHole.redshift};
+    const radial=Math.atan2(m.dy,m.dx);ctx.rotate(radial);ctx.scale(1+tidal*1.45,Math.max(.5,1-tidal*.42));ctx.rotate(-radial);
+    ctx.globalAlpha=Math.max(.42,.98-blackHole.redshift*.48);
+    if(!lowPowerMode)ctx.filter=`sepia(${Math.round(blackHole.redshift*80)}%) saturate(${100+Math.round(blackHole.redshift*170)}%) hue-rotate(-18deg) brightness(${100-Math.round(blackHole.redshift*34)}%)`;
+  }
+  const redshift=blackHoleVisual?blackHoleVisual.shift:0;
   // 降落伞使用独立世界朝向：伞面随气流平滑变化，不再粘在机头上一起翻转。
   if(rocket.chute){
     ctx.save();
@@ -3081,25 +3259,26 @@ function drawRocket(){
   // 尾焰
   if((keys['ArrowUp']||keys['KeyW']) && rocket.fuel>0 && state==='fly'){
     const f = 14 + Math.random()*10;
-    ctx.fillStyle='#ffb142';
+    ctx.fillStyle=redshift>0?`rgb(255,${Math.round(177-82*redshift)},${Math.round(66-38*redshift)})`:'#ffb142';
     ctx.beginPath(); ctx.moveTo(-5,14); ctx.quadraticCurveTo(0,14+f+8,5,14); ctx.closePath(); ctx.fill();
     ctx.fillStyle='#fff3b0';
     ctx.beginPath(); ctx.moveTo(-2.5,14); ctx.quadraticCurveTo(0,14+f*0.6,2.5,14); ctx.closePath(); ctx.fill();
   }
   // 尾翼
-  ctx.fillStyle='#ef476f';
+  const wingColor=redshift>0?`rgb(239,${Math.round(71-42*redshift)},${Math.round(111-62*redshift)})`:'#ef476f';
+  ctx.fillStyle=wingColor;
   ctx.beginPath(); ctx.moveTo(-6,6); ctx.lineTo(-13,17); ctx.lineTo(-6,14); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(6,6); ctx.lineTo(13,17); ctx.lineTo(6,14); ctx.closePath(); ctx.fill();
   // 机身
-  ctx.fillStyle='#f8f9fa'; ctx.strokeStyle='#222'; ctx.lineWidth=2.2;
+  ctx.fillStyle=redshift>0?`rgb(248,${Math.round(249-105*redshift)},${Math.round(250-160*redshift)})`:'#f8f9fa'; ctx.strokeStyle='#222'; ctx.lineWidth=2.2;
   ctx.beginPath(); ctx.moveTo(0,-22);
   ctx.quadraticCurveTo(8,-10,7,6); ctx.lineTo(7,14); ctx.lineTo(-7,14); ctx.lineTo(-7,6);
   ctx.quadraticCurveTo(-8,-10,0,-22); ctx.closePath(); ctx.fill(); ctx.stroke();
   // 舷窗
-  ctx.fillStyle='#4cc9f0'; ctx.beginPath(); ctx.arc(0,-4,4,0,TAU); ctx.fill();
+  ctx.fillStyle=redshift>0?`rgb(${Math.round(76+145*redshift)},${Math.round(201-95*redshift)},${Math.round(240-175*redshift)})`:'#4cc9f0'; ctx.beginPath(); ctx.arc(0,-4,4,0,TAU); ctx.fill();
   ctx.lineWidth=1.8; ctx.stroke();
   // 条纹
-  ctx.fillStyle='#ef476f'; ctx.fillRect(-7,9,14,3.2); ctx.strokeRect(-7,9,14,3.2);
+  ctx.fillStyle=wingColor; ctx.fillRect(-7,9,14,3.2); ctx.strokeRect(-7,9,14,3.2);
   ctx.restore();
 }
 
@@ -3123,6 +3302,19 @@ function drawStation(){
 }
 
 // 预测未来轨迹（无动力滑行，与主物理同模型）；同时标注近/远地点
+function predictBlackHolePath(ship=rocket){
+  let px=ship.x,py=ship.y,pvx=ship.vx,pvy=ship.vy;
+  const coarse=lowPowerMode||W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches);
+  const horizon=95,steps=coarse?150:460,dt=horizon/steps,pts=[];let impact=null,closest=null,closestR=Infinity;
+  for(let i=0;i<steps;i++){
+    const dx=-px,dy=-py,d2=Math.max(1,dx*dx+dy*dy),d=Math.sqrt(d2),g=BH_MU/d2;
+    pvx+=dx/d*g*dt;pvy+=dy/d*g*dt;px+=pvx*dt;py+=pvy*dt;
+    if(i%2===0)pts.push({x:px,y:py});
+    const r=Math.hypot(px,py);if(r<closestR){closestR=r;closest={x:px,y:py,r};}
+    if(r<=BH_HORIZON+8){impact={x:px,y:py,body:'时间视界'};break;}
+  }
+  return {pts,markers:closest?[{x:closest.x,y:closest.y,apo:false,blackHole:true,r:closest.r}]:[],horizon,steps,impact,moonApproach:null};
+}
 function predictBinaryPath(ship=rocket){
   let px=ship.x,py=ship.y,pvx=ship.vx,pvy=ship.vy;
   const coarse=lowPowerMode||W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches);
@@ -3148,6 +3340,7 @@ function predictBinaryPath(ship=rocket){
   return {pts,markers:[],horizon,steps,impact,moonApproach:null};
 }
 function predictPath(ship=rocket){
+  if(level===9&&blackHole)return predictBlackHolePath(ship);
   if(level===8&&binary)return predictBinaryPath(ship);
   let px=ship.x, py=ship.y, pvx=ship.vx, pvy=ship.vy;
   const dx0=px-EARTH.x, dy0=py-EARTH.y, r0=Math.hypot(dx0,dy0), v20=pvx*pvx+pvy*pvy;
@@ -3263,7 +3456,25 @@ function drawBinaryRadar(){
   ctx.restore();ctx.fillStyle='#fff';ctx.font=`800 ${portrait?8:9}px sans-serif`;ctx.textAlign='left';ctx.fillText(RS<=80?(radarMode===0?'双星 · 点按':'全局 · 点按'):(radarMode===0?'双星雷达 · 点击切换':'全局导航 · 点击切换'),cx+5,cy+11);
   ctx.fillStyle='rgba(255,255,255,.65)';ctx.font=`700 ${portrait?7:8}px sans-serif`;ctx.fillText(RS<=80?'白船 · 青门':'白船 · 青门 · 绿站',cx+5,cy+RS-5);
 }
+function drawBlackHoleRadar(){
+  const landscape=H<=520,portrait=W<760&&!landscape,shortPortrait=portrait&&H<720,RS=landscape?76:portrait?(shortPortrait?76:108):130;
+  const cx=landscape?W-322:shortPortrait?12:W-RS-(portrait?12:14),cy=landscape?16:portrait?H-220-RS-12:H-RS-14;
+  radarHitBox={x:cx-10,y:cy-10,w:RS+20,h:RS+20};const mx=cx+RS/2,my=cy+RS/2+3,centerX=radarMode===0?0:rocket.x,centerY=radarMode===0?0:rocket.y,range=radarMode===0?2800:5200,scale=RS*.42/range;
+  const mapX=x=>mx+(x-centerX)*scale,mapY=y=>my+(y-centerY)*scale;
+  ctx.save();ctx.fillStyle='rgba(8,4,20,.9)';roundRect(cx-8,cy-8,RS+16,RS+16,15);ctx.fill();ctx.strokeStyle=radarMode===0?'rgba(190,113,255,.78)':'rgba(95,208,104,.72)';ctx.lineWidth=1.5;roundRect(cx-8,cy-8,RS+16,RS+16,15);ctx.stroke();
+  ctx.beginPath();ctx.rect(cx,cy+16,RS,RS-31);ctx.clip();
+  ctx.strokeStyle='rgba(174,104,255,.55)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(mapX(0),mapY(0),BH_BURN_R*scale,0,TAU);ctx.stroke();
+  ctx.strokeStyle='rgba(95,208,104,.7)';ctx.setLineDash([3,3]);ctx.beginPath();ctx.arc(mapX(0),mapY(0),BH_ESCAPE_R*scale,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  if(showPred){const p=getPredictedPath();ctx.strokeStyle='rgba(255,209,102,.8)';ctx.lineWidth=1;ctx.beginPath();for(let i=0;i<p.pts.length;i++){const q=p.pts[i];i?ctx.lineTo(mapX(q.x),mapY(q.y)):ctx.moveTo(mapX(q.x),mapY(q.y));}ctx.stroke();}
+  ctx.fillStyle='#000';ctx.strokeStyle='#ffb26b';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(mapX(0),mapY(0),Math.max(4,BH_HORIZON*scale),0,TAU);ctx.fill();ctx.stroke();
+  const bx=Math.cos(blackHole.beaconAngle)*BH_BEACON_R,by=Math.sin(blackHole.beaconAngle)*BH_BEACON_R;ctx.fillStyle='#7de3ff';ctx.beginPath();ctx.arc(mapX(bx),mapY(by),2.5,0,TAU);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mapX(rocket.x),mapY(rocket.y),3.5,0,TAU);ctx.fill();
+  if(radarMode===1){const vw=Math.max(8,W/cam.zoom*scale),vh=Math.max(8,H/cam.zoom*scale);ctx.strokeStyle='#4cc9f0';ctx.setLineDash([3,2]);ctx.strokeRect(mapX(cam.x)-vw/2,mapY(cam.y)-vh/2,vw,vh);ctx.setLineDash([]);}
+  ctx.restore();ctx.fillStyle='#fff';ctx.font=`800 ${portrait?8:9}px sans-serif`;ctx.textAlign='left';ctx.fillText(RS<=80?(radarMode===0?'深渊 · 点按':'全局 · 点按'):(radarMode===0?'深渊雷达 · 点击切换':'全局导航 · 点击切换'),cx+5,cy+11);
+  ctx.fillStyle='rgba(255,255,255,.65)';ctx.font=`700 ${portrait?7:8}px sans-serif`;ctx.fillText(RS<=80?'紫点火 · 绿逃逸':'黑视界 · 紫点火 · 绿救援',cx+5,cy+RS-5);
+}
 function drawRadar(){
+  if(level===9){drawBlackHoleRadar();return;}
   if(level===8){drawBinaryRadar();return;}
   const landscape=H<=520, portrait=W<760&&!landscape, desktop=!portrait&&!landscape;
   if(!portrait&&!landscape&&!desktop){ radarHitBox=null; return; }
@@ -3408,11 +3619,26 @@ function drawRadar(){
   ctx.textAlign='left';
 }
 
+function drawBlackHoleStarfield(t){
+  const cx=(EARTH.x-cam.x)*cam.zoom+W/2,cy=(EARTH.y-cam.y)*cam.zoom+H/2,einstein=Math.max(42,BH_PHOTON_RING*cam.zoom*1.08);
+  const step=lowPowerMode?2:1;
+  for(let i=0;i<stars.length;i+=step){
+    const s=stars[i],px=s.x-cam.x*.35,py=s.y-cam.y*.35,wx=((px%W)+W)%W,wy=((py%H)+H)%H;
+    const dx=wx-cx,dy=wy-cy,r=Math.max(8,Math.hypot(dx,dy)),bend=einstein*einstein/(r+einstein*.28)*.34,wr=r+bend;
+    const qx=cx+dx/r*wr,qy=cy+dy/r*wr,nearRing=Math.abs(wr-einstein)<einstein*.18;
+    ctx.globalAlpha=lowPowerMode?.65:.45+.4*Math.sin(t*2+s.tw);ctx.fillStyle=nearRing?'#f7fbff':s.c;
+    if(lowPowerMode)ctx.fillRect(qx,qy,Math.max(1,s.r),Math.max(1,s.r));else{ctx.beginPath();ctx.arc(qx,qy,s.r*(nearRing?1.45:1),0,TAU);ctx.fill();}
+    if(!lowPowerMode&&nearRing){ctx.globalAlpha*=.28;ctx.beginPath();ctx.arc(cx-dx/r*(einstein*.92),cy-dy/r*(einstein*.92),s.r*.8,0,TAU);ctx.fill();}
+  }
+  ctx.globalAlpha=1;
+}
+
 function draw(){
   updateActionCue();
   // 摄像机
   if(camInit){
-    cam.zoom=1.1; cam.x=rocket.x; cam.y=rocket.y;
+    if(level===9){cam.zoom=W<760?.22:.48;cam.x=(rocket.x+EARTH.x)/2;cam.y=(rocket.y+EARTH.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0);}
+    else{cam.zoom=1.1;cam.x=rocket.x;cam.y=rocket.y;}
     cameraPointers.clear(); pinchState=null;
     cam.dragging=false; cam.pointerId=null; cv.classList.remove('is-panning');
     camInit=false;
@@ -3420,7 +3646,8 @@ function draw(){
   const sx = shake? (Math.random()-0.5)*shake : 0, sy = shake? (Math.random()-0.5)*shake : 0;
   if(cameraMode===0 && !cam.dragging){
     const focus=level===7&&!rocket.alive&&asteroid?asteroid:rocket;
-    cam.x += (focus.x - cam.x)*0.12; cam.y += (focus.y - cam.y)*0.12;
+    const focusX=level===9?(focus.x+EARTH.x)/2:focus.x,focusY=level===9?(focus.y+EARTH.y)/2+((W<760&&H>650)?(H/2-235)/cam.zoom:0):focus.y;
+    cam.x += (focusX - cam.x)*0.12; cam.y += (focusY - cam.y)*0.12;
   }
   const cameraNow=performance.now();
   if(!lowPowerMode&&cameraNow-cameraDebugAt>500){
@@ -3433,15 +3660,16 @@ function draw(){
 
   // 星星（视差）
   const t = performance.now()/1000;
-  for(const s of stars){
-    const px = s.x - cam.x*0.35, py = s.y - cam.y*0.35;
-    const wx = ((px % W)+W)%W, wy = ((py % H)+H)%H;
-    // iOS 不逐星计算闪烁正弦，也不为微小星点建立圆弧路径。
-    ctx.globalAlpha = lowPowerMode?.72:0.5 + 0.5*Math.sin(t*2 + s.tw);
-    ctx.fillStyle = s.c;
-    if(lowPowerMode) ctx.fillRect(wx,wy,Math.max(1,s.r),Math.max(1,s.r));
-    else{ ctx.beginPath(); ctx.arc(wx, wy, s.r, 0, TAU); ctx.fill(); }
-  }
+  if(level===9)drawBlackHoleStarfield(blackHole?blackHole.farTime:t);
+  else for(const s of stars){
+      const px = s.x - cam.x*0.35, py = s.y - cam.y*0.35;
+      const wx = ((px % W)+W)%W, wy = ((py % H)+H)%H;
+      // iOS 不逐星计算闪烁正弦，也不为微小星点建立圆弧路径。
+      ctx.globalAlpha = lowPowerMode?.72:0.5 + 0.5*Math.sin(t*2 + s.tw);
+      ctx.fillStyle = s.c;
+      if(lowPowerMode) ctx.fillRect(wx,wy,Math.max(1,s.r),Math.max(1,s.r));
+      else{ ctx.beginPath(); ctx.arc(wx, wy, s.r, 0, TAU); ctx.fill(); }
+    }
   ctx.globalAlpha = 1;
 
   ctx.save();
@@ -3457,6 +3685,8 @@ function draw(){
     for(let i=trailStep;i<trail.length;i+=trailStep) ctx.lineTo(trail[i].x,trail[i].y);
     ctx.stroke(); ctx.setLineDash([]);
   }
+
+  if(level===9)drawMissionZones();
 
   // 未来轨迹辅助线（T 开关）+ 近/远地点标注
   if(showPred && state==='fly' && !rocket.landed){
@@ -3476,11 +3706,13 @@ function draw(){
       ctx.strokeStyle=col; ctx.lineWidth=2.2/cam.zoom;
       ctx.beginPath(); ctx.arc(mk.x, mk.y, 10/cam.zoom, 0, TAU); ctx.stroke();
       ctx.beginPath(); ctx.arc(mk.x, mk.y, 4/cam.zoom, 0, TAU); ctx.stroke();
-      ctx.fillStyle=col;
-      ctx.fillText(mk.apo?'远地点':'近地点', mk.x, mk.y - 16/cam.zoom);
-      ctx.fillStyle='rgba(255,255,255,.7)';
-      ctx.font='600 '+(10/cam.zoom)+'px "Baloo 2",sans-serif';
-      ctx.fillText('点火', mk.x, mk.y + 26/cam.zoom);
+      if(!(mk.blackHole&&W<760)){
+        ctx.fillStyle=col;
+        ctx.fillText(mk.blackHole?`预计最近点 ${mk.r.toFixed(0)} u`:(mk.apo?'远地点':'近地点'), mk.x, mk.y - 16/cam.zoom);
+        ctx.fillStyle='rgba(255,255,255,.7)';
+        ctx.font='600 '+(10/cam.zoom)+'px "Baloo 2",sans-serif';
+        ctx.fillText(mk.blackHole?'深渊点火': '点火', mk.x, mk.y + 26/cam.zoom);
+      }
       ctx.font='800 '+fs+'px "Baloo 2",sans-serif';
     }
     if(pred.impact){
@@ -3490,10 +3722,10 @@ function draw(){
       ctx.beginPath(); ctx.moveTo(p.x-s*.65,p.y-s*.65); ctx.lineTo(p.x+s*.65,p.y+s*.65);
       ctx.moveTo(p.x+s*.65,p.y-s*.65); ctx.lineTo(p.x-s*.65,p.y+s*.65); ctx.stroke();
       ctx.font=`900 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;
-      ctx.fillText(`预计撞击${p.body}`,p.x,p.y-21/cam.zoom);
+      ctx.fillText(level===9?'预计冻结于时间视界':`预计撞击${p.body}`,p.x,p.y-21/cam.zoom);
       ctx.font=`800 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;
       ctx.fillStyle='rgba(255,138,164,.96)';
-      ctx.fillText('导航电脑 · 预计碰撞概率 99.9999%',p.x,p.y-6/cam.zoom);
+      ctx.fillText(level===9?'远方信号将无限红移':'导航电脑 · 预计碰撞概率 99.9999%',p.x,p.y-6/cam.zoom);
     }else if(level===5&&pred.moonApproach&&pred.moonApproach.altitude<1800){
       const p=pred.moonApproach,col=p.altitude<80?'#ef476f':p.altitude<350?'#ffd166':'#4cc9f0';
       ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=2.5/cam.zoom; ctx.setLineDash([4/cam.zoom,5/cam.zoom]);
@@ -3504,10 +3736,11 @@ function draw(){
     ctx.textAlign='left';
   }
 
-  drawMissionZones();
+  if(level!==9)drawMissionZones();
   for(const b of BODIES){
     if(!worldCircleVisible(b,120))continue;
-    if(level===8){if(!b.isStar)drawGroundRing(b);drawBinaryBody(b);}
+    if(level===9)continue;
+    else if(level===8){if(!b.isStar)drawGroundRing(b);drawBinaryBody(b);}
     else{drawGroundRing(b);drawBody(b);}
   }
   drawAsteroid();
@@ -3526,6 +3759,20 @@ function draw(){
   ctx.restore();
   drawLagrangeScreenCue();
   drawBinaryScreenCue();
+
+  if(level===9&&blackHole){
+    const bhx=(EARTH.x-cam.x)*cam.zoom+W/2,bhy=(EARTH.y-cam.y)*cam.zoom+H/2,z=Math.max(0,blackHole.redshift);
+    ctx.save();
+    if(lowPowerMode){ctx.fillStyle=`rgba(72,4,18,${z*.08})`;ctx.fillRect(0,0,W,H);}
+    else{
+      const vg=ctx.createRadialGradient(bhx,bhy,Math.max(35,BH_HORIZON*cam.zoom),bhx,bhy,Math.max(W,H)*.78);
+      // 让吸积盘和光子环保持白炽；红移主要落在画面边缘与飞船本体上。
+      vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(.36,`rgba(70,4,18,${z*.035})`);vg.addColorStop(1,`rgba(16,0,8,${z*.42})`);ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+      ctx.strokeStyle=`rgba(255,255,255,${z*.15})`;ctx.lineWidth=1.2;for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(bhx,bhy,(BH_PHOTON_RING*cam.zoom)+(i-1)*4,0,TAU);ctx.stroke();}
+    }
+    if(blackHole.frozen){ctx.fillStyle='rgba(5,0,9,.42)';ctx.fillRect(0,0,W,H);}
+    ctx.restore();
+  }
 
   // ---- HUD 仪表 ----
   const speed = Math.hypot(rocket.vx, rocket.vy);
@@ -3575,25 +3822,28 @@ function draw(){
   // 速度显示：绝对速度 + 关键相对速度（靠近哪个显示哪个）
   const earthAlt = Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y) - EARTH.r;
   const binaryM=level===8?binaryMetrics():null;
-  const lunarM=level>=4&&level!==8?moonMetrics():null, nearMoon=!!(lunarM&&lunarM.distance<2600);
+  const blackM=level===9?blackHoleMetrics():null;
+  const lunarM=level>=4&&level<8?moonMetrics():null, nearMoon=!!(lunarM&&lunarM.distance<2600);
   const nearDeparture=level===8&&earthAlt<600;
-  const alt=level===8?(nearDeparture?earthAlt:binaryM.distB-MOON.r):(nearMoon?lunarM.distance-MOON.r:earthAlt);
+  const alt=level===9?blackM.alt:level===8?(nearDeparture?earthAlt:binaryM.distB-MOON.r):(nearMoon?lunarM.distance-MOON.r:earthAlt);
   // 相对地球表面（扣自转）
   const dxE=rocket.x-EARTH.x, dyE=rocket.y-EARTH.y, dE=Math.hypot(dxE,dyE);
   const saE=Math.atan2(dyE,dxE);
   const relEvx=rocket.vx-((EARTH.vx||0)-Math.sin(saE)*EARTH_OMEGA*dE), relEvy=rocket.vy-((EARTH.vy||0)+Math.cos(saE)*EARTH_OMEGA*dE);
   const vRelEarth=Math.hypot(relEvx,relEvy);
-  const landscapeHUD=H<=520, teleCompact=W<760||landscapeHUD, teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?70:teleCompact?278:14, teleW=teleCompact?174:206, teleH=((level===5||level===7||level===8)?126:level===1?86:(level===3||level===4||level===6)?106:66);
+  const landscapeHUD=H<=520, teleCompact=W<760||landscapeHUD, teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?70:teleCompact?278:14, teleW=teleCompact?174:206, teleH=(level===9?146:(level===5||level===7||level===8)?126:level===1?86:(level===3||level===4||level===6)?106:66);
   ctx.fillStyle='rgba(8,14,38,.68)'; roundRect(teleX,teleY,teleW,teleH,14); ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1; roundRect(teleX,teleY,teleW,teleH,14); ctx.stroke();
   ctx.textAlign='right';
   ctx.font=`800 ${teleCompact?11.5:13}px "Baloo 2",sans-serif`;
   ctx.fillStyle='#fff';
-  ctx.fillText(`绝对速度 ${speed.toFixed(1)} u/s`, W-20, teleY+16);
+  ctx.fillText(level===9?`远方观测速 ${blackM.apparentSpeed.toFixed(1)} u/s`:`绝对速度 ${speed.toFixed(1)} u/s`, W-20, teleY+16);
   // 相对速度：靠近谁显示谁（地表附近/着陆区 → 相对地表；同步轨道附近 → 相对同步速度）
   ctx.fillStyle='#4cc9f0';
   if(level===7&&asteroid){
     const am=asteroidMetrics();ctx.fillText(`小行星相对 ${am.relSpeed.toFixed(1)} u/s`,W-20,teleY+36);
+  }else if(level===9){
+    ctx.fillText(`本地速度 ${blackM.speed.toFixed(1)} · 运动 ×${blackM.coordinateFactor.toFixed(2)}`,W-20,teleY+36);
   }else if(level===8){
     const sm=stationMetrics();ctx.fillText(mission.stage>=2?`暮光站相对 ${sm.relSpeed.toFixed(1)} u/s`:`目标星相对 ${binaryM.targetRel.toFixed(1)} u/s`,W-20,teleY+36);
   }else if(nearMoon){
@@ -3604,7 +3854,7 @@ function draw(){
     ctx.fillText(`轨道速度 ${speed.toFixed(1)} u/s`, W-20, teleY+36);
   }
   ctx.fillStyle='rgba(255,255,255,.85)';
-  ctx.fillText(`${level===8?(nearDeparture?'离晨曦星':'离暮光星'):nearMoon?'月面':'高度'} ${alt.toFixed(0)} u`, W-20, teleY+56);
+  ctx.fillText(`${level===9?'距时间视界':level===8?(nearDeparture?'离晨曦星':'离暮光星'):nearMoon?'月面':'高度'} ${alt.toFixed(0)} u`, W-20, teleY+56);
   ctx.fillStyle='rgba(255,209,102,.9)';
   if(level===1) ctx.fillText(`同步带高度 ${(R_GEO-EARTH.r-GEO_BAND).toFixed(0)}~${(R_GEO-EARTH.r+GEO_BAND).toFixed(0)}`, W-20, teleY+76);
   if(level===3&&station){
@@ -3644,6 +3894,12 @@ function draw(){
     ctx.fillStyle=mission.binaryGateCrossed?'#5fd068':'#4cf0dd';ctx.fillText(`引力通道 ${binaryM.gateDistance.toFixed(0)} u`,W-20,teleY+76);
     ctx.fillStyle=binaryM.targetEnergy<0?'#5fd068':'#ffd166';ctx.fillText(binaryM.targetEnergy<0?'已被暮光星捕获':`捕获能量 +${binaryM.targetEnergy.toFixed(0)}`,W-20,teleY+96);
     ctx.fillStyle=mission.binaryHeatViolated?'#ef476f':'#9fe7ff';ctx.fillText(`空间站 ${sm.distance.toFixed(0)} u · ${mission.binaryHeatViolated?'曾进高温区':'热区安全'}`,W-20,teleY+116);
+  }
+  if(level===9&&blackM){
+    ctx.fillStyle='#cbb5ff';ctx.fillText(`飞船 τ ${blackHole.properTime.toFixed(1)}s · 远方 ×${blackM.worldRate.toFixed(1)}`,W-20,teleY+76);
+    ctx.fillStyle=blackM.energy>0?'#5fd068':'#ffd166';ctx.fillText(`逃逸能量 ${blackM.energy>0?'+':''}${blackM.energy.toFixed(0)}`,W-20,teleY+96);
+    ctx.fillStyle=blackM.tidal>18?'#ef476f':'#ffb26b';ctx.fillText(`首尾潮汐差 ${blackM.tidal.toFixed(1)} u/s²`,W-20,teleY+116);
+    ctx.fillStyle=`rgba(255,${Math.round(210-blackHole.redshift*120)},${Math.round(190-blackHole.redshift*150)},.95)`;ctx.fillText(`引力红移 ${(blackHole.redshift*100).toFixed(0)}%`,W-20,teleY+136);
   }
   ctx.fillStyle='#fff';
   ctx.textAlign='left';
