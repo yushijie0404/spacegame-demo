@@ -1078,7 +1078,7 @@ function resetGame(){
     asteroidContact:false,asteroidAnchored:false,asteroidMountAngle:0,hingeAngle:0,
     asteroidChanged:false,asteroidImpact:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null,
     binaryHeatViolated:false,binaryCaptured:false,binaryGateCrossed:false,binaryTargetEnergy:Infinity,
-    blackHoleMinR:Infinity,blackHoleDeepBurn:false,blackHoleEscaping:false,blackHoleFrozen:false,blackHoleAwaitRelease:false,
+    blackHoleMinR:Infinity,blackHoleDeepBurn:false,blackHoleEscaping:false,blackHoleFrozen:false,blackHoleAwaitRelease:false,blackHoleInvalidExitT:0,blackHoleExitFailed:false,
     threeGateIndex:0,threeDangerViolated:false,threeMinClearance:Infinity,threeEscapeT:0,threeSeed:threeBody?.seed||0};
   if(level===5){
     mission.slingInitialEnergy=earthSpecificEnergy(rocket);
@@ -1706,7 +1706,7 @@ function saveCheckpoint(){
     binaryState:binary?{angle:binary.angle,planetAngle:binary.planetAngle,gateCrossed:binary.gateCrossed}:null,
     binaryMission:level===8?{binaryHeatViolated:mission.binaryHeatViolated,binaryCaptured:mission.binaryCaptured,binaryGateCrossed:mission.binaryGateCrossed}:null,
     blackHoleState:blackHole?{properTime:blackHole.properTime,farTime:blackHole.farTime,factor:blackHole.factor,coordinateFactor:blackHole.coordinateFactor,minRadius:blackHole.minRadius,beaconAngle:blackHole.beaconAngle,frozen:false}:null,
-    blackHoleMission:level===9?{blackHoleMinR:mission.blackHoleMinR,blackHoleDeepBurn:mission.blackHoleDeepBurn,blackHoleEscaping:mission.blackHoleEscaping,blackHoleFrozen:false,blackHoleAwaitRelease:!!mission.blackHoleAwaitRelease}:null,
+    blackHoleMission:level===9?{blackHoleMinR:mission.blackHoleMinR,blackHoleDeepBurn:mission.blackHoleDeepBurn,blackHoleEscaping:mission.blackHoleEscaping,blackHoleFrozen:false,blackHoleAwaitRelease:!!mission.blackHoleAwaitRelease,blackHoleInvalidExitT:0,blackHoleExitFailed:false}:null,
     threeBodyState:threeBody?{seed:threeBody.seed,time:threeBody.time,pairs:threeBody.pairs.map(p=>p.slice()),sides:threeBody.sides.slice(),bodies:BODIES.map(b=>({x:b.x,y:b.y,vx:b.vx,vy:b.vy}))}:null,
     threeBodyMission:level===10?{threeGateIndex:mission.threeGateIndex,threeDangerViolated:mission.threeDangerViolated,threeMinClearance:mission.threeMinClearance,threeEscapeT:mission.threeEscapeT,threeSeed:mission.threeSeed}:null,
     launchFrameActive:!!rocket._launchFrameActive, launchAssistActive:!!rocket._launchAssistActive,
@@ -1926,11 +1926,27 @@ function finishBlackHoleEscape(m=blackHoleMetrics()){
     `${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
     `<span style="color:#888">你利用的是近点高速下的奥伯特效应。双时钟之差表现引力时间膨胀；视界冻结则采用远方观察者的坐标图景。</span>`);
 }
+function failBlackHoleEscape(m=blackHoleMetrics()){
+  if(level!==9||mission.done||mission.blackHoleExitFailed)return;
+  mission.blackHoleExitFailed=true;state='failed';clearFlightInputs();syncUI();
+  const deficit=Math.abs(Math.min(0,m.energy)),apo=m.energy<0?-BH_MU/m.energy:Infinity;
+  showMsg('↩️','穿过救援圈，但还会掉回来',
+    `<b style="font-size:19px">飞船到了绿色圈外，却没有获得真正的逃逸能量。</b><br><br>`+
+    `当前逃逸能量 ${m.energy.toFixed(0)} · 束缚轨道尺度 ${Number.isFinite(apo)?apo.toFixed(0):'未知'} u<br>`+
+    `<span style="color:#888">距离并不等于逃逸：能量仍差 ${deficit.toFixed(0)}，轨道最终会转头落回黑洞。按 R 回到近点点火阶段，尽量在紫色区域顺着速度方向推进。</span>`);
+}
 function updateMissionL9(dt){
   if(!blackHole)return;
   const m=blackHoleMetrics();mission.blackHoleMinR=Math.min(mission.blackHoleMinR,m.r);blackHole.minRadius=Math.min(blackHole.minRadius,m.r);
-  const directEscape=m.r>=BH_ESCAPE_R&&m.radial>0&&m.energy>0;
-  if(directEscape){finishBlackHoleEscape(m);return;}
+  const crossedOut=m.r>=BH_ESCAPE_R&&m.radial>0;
+  if(crossedOut&&m.energy>0){finishBlackHoleEscape(m);return;}
+  if(crossedOut){
+    mission.blackHoleInvalidExitT+=dt;
+    mission.dynHint=`已穿救援圈，但能量 ${m.energy.toFixed(0)} 仍为负｜还会掉回来`;
+    if(mission.blackHoleInvalidExitT>=1)failBlackHoleEscape(m);
+    return;
+  }
+  mission.blackHoleInvalidExitT=0;
   if(mission.stage===0){
     mission.dynHint=`距视界 ${m.alt.toFixed(0)}｜运动倍率 ×${m.coordinateFactor.toFixed(2)}｜燃料只够近点一烧`;
     if(m.r<BH_BURN_R+90){advanceStage();return;}
@@ -3093,9 +3109,10 @@ function drawBlackHoleZones(){
   if(!blackHole)return;
   const m=blackHoleMetrics(),spin=blackHole.farTime*.42;
   // 绿色救援门与紫色深渊点火带：玩法信息保持比特效更清楚。
-  ctx.strokeStyle=m.energy>0?'rgba(95,208,104,.92)':'rgba(95,208,104,.36)';ctx.lineWidth=5/cam.zoom;ctx.setLineDash([17/cam.zoom,12/cam.zoom]);
+  const invalidExit=mission.blackHoleInvalidExitT>0;
+  ctx.strokeStyle=invalidExit?'rgba(239,71,111,.92)':m.energy>0?'rgba(95,208,104,.92)':'rgba(95,208,104,.36)';ctx.lineWidth=5/cam.zoom;ctx.setLineDash([17/cam.zoom,12/cam.zoom]);
   ctx.beginPath();ctx.arc(0,0,BH_ESCAPE_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle='rgba(95,208,104,.9)';ctx.font=`900 ${15/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('远方救援门',0,-BH_ESCAPE_R-18/cam.zoom);
+  ctx.fillStyle=invalidExit?'rgba(255,120,145,.96)':'rgba(95,208,104,.9)';ctx.font=`900 ${15/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(invalidExit?'能量不足 · 仍会返回':'远方救援门 · 需正逃逸能量',0,-BH_ESCAPE_R-18/cam.zoom);
   ctx.strokeStyle='rgba(174,104,255,.22)';ctx.lineWidth=BH_BURN_R-BH_BURN_IN;ctx.beginPath();ctx.arc(0,0,(BH_BURN_R+BH_BURN_IN)/2,0,TAU);ctx.stroke();
   ctx.strokeStyle='rgba(210,157,255,.78)';ctx.lineWidth=2.5/cam.zoom;ctx.beginPath();ctx.arc(0,0,BH_BURN_R,0,TAU);ctx.stroke();
   if(W>=760){ctx.fillStyle='#d9a6ff';ctx.font=`800 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText('深渊点火区',0,-BH_BURN_R-14/cam.zoom);}
@@ -3736,7 +3753,7 @@ function drawBlackHoleRadar(){
   ctx.save();ctx.fillStyle='rgba(8,4,20,.9)';roundRect(cx-8,cy-8,RS+16,RS+16,15);ctx.fill();ctx.strokeStyle=radarMode===0?'rgba(190,113,255,.78)':'rgba(95,208,104,.72)';ctx.lineWidth=1.5;roundRect(cx-8,cy-8,RS+16,RS+16,15);ctx.stroke();
   ctx.beginPath();ctx.rect(cx,cy+16,RS,RS-31);ctx.clip();
   ctx.strokeStyle='rgba(174,104,255,.55)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(mapX(0),mapY(0),BH_BURN_R*scale,0,TAU);ctx.stroke();
-  ctx.strokeStyle='rgba(95,208,104,.7)';ctx.setLineDash([3,3]);ctx.beginPath();ctx.arc(mapX(0),mapY(0),BH_ESCAPE_R*scale,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle=mission.blackHoleInvalidExitT>0?'rgba(239,71,111,.9)':'rgba(95,208,104,.7)';ctx.setLineDash([3,3]);ctx.beginPath();ctx.arc(mapX(0),mapY(0),BH_ESCAPE_R*scale,0,TAU);ctx.stroke();ctx.setLineDash([]);
   if(showPred){const p=getPredictedPath();ctx.strokeStyle='rgba(255,209,102,.8)';ctx.lineWidth=1;ctx.beginPath();for(let i=0;i<p.pts.length;i++){const q=p.pts[i];i?ctx.lineTo(mapX(q.x),mapY(q.y)):ctx.moveTo(mapX(q.x),mapY(q.y));}ctx.stroke();}
   ctx.fillStyle='#000';ctx.strokeStyle='#ffb26b';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(mapX(0),mapY(0),Math.max(4,BH_HORIZON*scale),0,TAU);ctx.fill();ctx.stroke();
   const bx=Math.cos(blackHole.beaconAngle)*BH_BEACON_R,by=Math.sin(blackHole.beaconAngle)*BH_BEACON_R;ctx.fillStyle='#7de3ff';ctx.beginPath();ctx.arc(mapX(bx),mapY(by),2.5,0,TAU);ctx.fill();
