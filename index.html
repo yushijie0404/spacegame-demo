@@ -18,6 +18,7 @@
   html,body{margin:0;height:100%;overflow:hidden;background:#0b1026;font-family:'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   button{font:inherit}
   #cv{display:block;width:100vw;height:100vh;touch-action:none;cursor:grab}
+  #hudCv{position:fixed;inset:0;z-index:3;display:block;width:100vw;height:100vh;pointer-events:none}
   #cv.is-panning{cursor:grabbing}
   .hud{position:fixed;top:14px;left:16px;max-width:min(660px,calc(100vw - 245px));padding:11px 14px 10px;color:var(--ink);z-index:5;text-shadow:0 2px 0 rgba(0,0,0,.35);background:linear-gradient(135deg,rgba(13,23,60,.86),rgba(10,16,43,.68));border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 30px rgba(0,0,0,.2);backdrop-filter:blur(8px)}
   .brand-row{display:flex;align-items:center;gap:10px}
@@ -105,7 +106,7 @@
 </style>
 </head>
 <body>
-<canvas id="cv"></canvas>
+<canvas id="cv"></canvas><canvas id="hudCv" aria-hidden="true"></canvas>
 <div class="hud">
   <div class="brand-row"><div class="brand-mark" aria-hidden="true">🚀</div><div><div class="title">🛰️ 第一关 · 地球同步卫星</div><div class="sub">跟着底部指引完成轨道机动，绿色区域是额外挑战目标</div><div id="modeBadge" class="mode-badge">教学模式 · 无限燃料 · 完成得 1 星</div></div></div>
 </div>
@@ -181,23 +182,30 @@
 </div></div>
 <script>
 "use strict";
-const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const cv = document.getElementById('cv'), hudCv=document.getElementById('hudCv');
+const worldCtx=cv.getContext('2d'),hudCtx=hudCv.getContext('2d');
+let ctx=worldCtx;
 const IOS_DEVICE=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 document.documentElement.classList.toggle('ios-device',IOS_DEVICE);
-let W = 0, H = 0, DPR = 1, lowPowerMode=false, bgGradient=null, bulletGradient=null, farGradient=null;
+let W = 0, H = 0, DPR = 1, HUD_DPR=1, lowPowerMode=false, mobileEconomy=false, bgGradient=null, bulletGradient=null, farGradient=null;
+let lowFpsWindows=0,stableFpsWindows=0,lastHudDrawAt=0;
 function resize(){
   const coarsePointer=typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches;
   // 横屏旗舰手机常超过 900 CSS px；不能只按宽度判断，否则会误开桌面级 DPR、星空和轨道预测。
   lowPowerMode=IOS_DEVICE||coarsePointer||innerWidth<760;
   document.documentElement.classList.toggle('low-power',lowPowerMode);
-  // 手机 1× Canvas 在 Retina 屏上文字明显发虚；提升到 1.25×，同时用总像素预算保护大屏手机和平板性能。
-  // 典型 390×844 手机约 51 万像素，仍远低于直接使用 2×/3× DPR 的开销。
-  const mobilePixelScale=Math.max(1,Math.min(1.25,Math.sqrt(850000/Math.max(1,innerWidth*innerHeight))));
-  DPR=Math.min(devicePixelRatio||1,lowPowerMode?mobilePixelScale:1.25);
-  W = innerWidth; H = innerHeight; cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
-  bgGradient=ctx.createLinearGradient(0,0,0,H); bgGradient.addColorStop(0,'#0b1026'); bgGradient.addColorStop(1,'#1b2350');
-  bulletGradient=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75); bulletGradient.addColorStop(0,'rgba(0,0,0,0)'); bulletGradient.addColorStop(1,'rgba(20,30,80,.55)');
-  farGradient=ctx.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.7); farGradient.addColorStop(0,'rgba(0,0,0,0)'); farGradient.addColorStop(1,'rgba(0,0,0,.72)');
+  // 世界层负责天体与轨迹，手机保持 1×；HUD 单独使用高清倍率并以较低频率重绘。
+  // 这样不会让每一颗行星都承担 Retina 像素成本，文字、雷达和表盘仍保持清楚。
+  DPR=Math.min(devicePixelRatio||1,lowPowerMode?1:1.25);
+  const hudPixelScale=Math.max(1,Math.min(lowPowerMode?1.5:1.6,Math.sqrt(1200000/Math.max(1,innerWidth*innerHeight))));
+  HUD_DPR=Math.min(devicePixelRatio||1,hudPixelScale);
+  W = innerWidth; H = innerHeight;
+  cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);hudCv.width=Math.round(W*HUD_DPR);hudCv.height=Math.round(H*HUD_DPR);
+  worldCtx.setTransform(DPR,0,0,DPR,0,0);hudCtx.setTransform(HUD_DPR,0,0,HUD_DPR,0,0);ctx=worldCtx;
+  bgGradient=worldCtx.createLinearGradient(0,0,0,H); bgGradient.addColorStop(0,'#0b1026'); bgGradient.addColorStop(1,'#1b2350');
+  bulletGradient=hudCtx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75); bulletGradient.addColorStop(0,'rgba(0,0,0,0)'); bulletGradient.addColorStop(1,'rgba(20,30,80,.55)');
+  farGradient=hudCtx.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.7); farGradient.addColorStop(0,'rgba(0,0,0,0)'); farGradient.addColorStop(1,'rgba(0,0,0,.72)');
+  lastHudDrawAt=0;
 }
 addEventListener('resize', resize); resize();
 
@@ -1237,7 +1245,7 @@ function syncUI(){
   }
   updateModePanel();
   const perfStatus=document.getElementById('perfStatus');
-  if(perfStatus) perfStatus.textContent=(lowPowerMode?'性能：手机轻量画质':'性能：桌面画质')+' · 目标 60 帧 · 实际绘制约 '+measuredFps+' 帧';
+  if(perfStatus) perfStatus.textContent=(lowPowerMode?(mobileEconomy?'性能：自动省电档':'性能：手机均衡档'):'性能：桌面画质')+` · 世界 ${DPR.toFixed(2)}× / 高清HUD ${HUD_DPR.toFixed(2)}× · 目标 ${mobileEconomy?50:60} 帧 · 实际约 ${measuredFps} 帧`;
 }
 
 function cueTurnTo(target,tolerance=0.24){
@@ -1674,7 +1682,7 @@ function updateMountedAsteroidRocket(dt,dtReal){
     if(!infiniteFuel){const spent=9*poweredDt;rocket.fuel=Math.max(0,rocket.fuel-spent);mission.fuelUsed+=spent;}
     exhaustAccumulator=Math.min(3,exhaustAccumulator+dtReal*(lowPowerMode?32:58));
     const count=Math.floor(exhaustAccumulator);exhaustAccumulator-=count;
-    for(let i=0;i<count&&particles.length<(lowPowerMode?70:150);i++)particles.push({
+    for(let i=0;i<count&&particles.length<(lowPowerMode?(mobileEconomy?45:70):150);i++)particles.push({
       x:rocket.x-fx*14,y:rocket.y-fy*14,vx:asteroid.vx-fx*(55+Math.random()*30),vy:asteroid.vy-fy*(55+Math.random()*30),
       life:.2+Math.random()*.25,c:i%2?'#ff7043':'#ffd166'});
     if(mission.assistMode)bulletT=.24;
@@ -2704,7 +2712,7 @@ function update(dt, dtReal){
     }
     // 固定“每秒”生成量，避免 8 倍速子步或低帧率时一帧生成几十个粒子。
     exhaustAccumulator=Math.min(3,exhaustAccumulator+dtReal*(lowPowerMode?42:78)*thrustPower);
-    const spawnCount=Math.floor(exhaustAccumulator),particleCap=lowPowerMode?80:180;
+    const spawnCount=Math.floor(exhaustAccumulator),particleCap=lowPowerMode?(mobileEconomy?52:80):180;
     exhaustAccumulator-=spawnCount;
     for(let i=0;i<spawnCount&&particles.length<particleCap;i++) particles.push({
       x:rocket.x-fx*14+(Math.random()-.5)*5,y:rocket.y-fy*14+(Math.random()-.5)*5,
@@ -2780,7 +2788,7 @@ function update(dt, dtReal){
     }
   }
   if(bulletT>0) bulletT=Math.max(0,bulletT-dtReal);
-  if(trail.length>(lowPowerMode?180:600)) trail.shift();
+  if(trail.length>(lowPowerMode?(mobileEconomy?130:180):600)) trail.shift();
 
   // 第七关小行星接触：软着陆进入表面操作；高速接触则按动能撞击传递线动量与角动量。
   if(asteroidContactCheck())return;
@@ -3570,7 +3578,7 @@ function simulateThreeBodyTimelines(ship=rocket){
     {id:'right',label:'右修正',offset:.34,color:'rgba(255,126,174,.58)'}
   ];
   const branches=branchDefs.map(def=>({...def,x:ship.x,y:ship.y,vx:ship.vx,vy:ship.vy,pts:[{x:ship.x,y:ship.y}],impact:null}));
-  const coarse=lowPowerMode||W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches),steps=coarse?92:230,dt=.12;
+  const coarse=lowPowerMode||W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches),steps=coarse?(mobileEconomy?64:92):230,dt=.12;
   for(let step=0;step<steps;step++){
     const acc=bodies.map(()=>({x:0,y:0}));
     for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){
@@ -3594,7 +3602,7 @@ function simulateThreeBodyTimelines(ship=rocket){
   return {branches,divergence,horizon:steps*dt,steps};
 }
 function getThreeBodyTimelines(){
-  const now=performance.now(),cacheMs=lowPowerMode?650:220;
+  const now=performance.now(),cacheMs=lowPowerMode?(mobileEconomy?850:650):220;
   if(timelineCache&&now-timelineCache.t<cacheMs)return timelineCache.result;
   const result=simulateThreeBodyTimelines();timelineCache={t:now,result};return result;
 }
@@ -3616,7 +3624,7 @@ function predictPath(ship=rocket){
     horizon=Math.min(lunarMission?280:180,Math.max(lunarMission?70:40,period*1.1));
   }
   const coarse=lowPowerMode||W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches);
-  const steps=coarse?150:520, dt=horizon/steps, pts=[];
+  const steps=coarse?(mobileEconomy?110:150):520, dt=horizon/steps, pts=[];
   let vrPrev=null, markers=[],impact=null,moonApproach=null,closestMoon=Infinity;
   for(let i=0;i<steps;i++){
     let ax=0, ay=0;
@@ -3908,7 +3916,7 @@ function drawRadar(){
 
 function drawBlackHoleStarfield(t){
   const cx=(EARTH.x-cam.x)*cam.zoom+W/2,cy=(EARTH.y-cam.y)*cam.zoom+H/2,einstein=Math.max(42,BH_PHOTON_RING*cam.zoom*1.08);
-  const step=lowPowerMode?2:1;
+  const step=lowPowerMode?(mobileEconomy?3:2):1;
   for(let i=0;i<stars.length;i+=step){
     const s=stars[i],px=s.x-cam.x*.35,py=s.y-cam.y*.35,wx=((px%W)+W)%W,wy=((py%H)+H)%H;
     const dx=wx-cx,dy=wy-cy,r=Math.max(8,Math.hypot(dx,dy)),bend=einstein*einstein/(r+einstein*.28)*.34,wr=r+bend;
@@ -3921,6 +3929,8 @@ function drawBlackHoleStarfield(t){
 }
 
 function draw(){
+  ctx=worldCtx;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
   updateActionCue();
   // 摄像机
   if(camInit){
@@ -4049,6 +4059,9 @@ function draw(){
 
   drawRocket();
   ctx.restore();
+  const hudNow=performance.now(),hudInterval=lowPowerMode?(mobileEconomy?1000/24:1000/30):0;
+  if(hudInterval&&hudNow-lastHudDrawAt<hudInterval)return;
+  lastHudDrawAt=hudNow;ctx=hudCtx;ctx.setTransform(HUD_DPR,0,0,HUD_DPR,0,0);ctx.clearRect(0,0,W,H);
   drawLagrangeScreenCue();
   drawBinaryScreenCue();
   drawThreeBodyScreenCue();
@@ -4341,9 +4354,19 @@ function fitText(text,x,y,maxWidth,minSize=10){
 }
 
 let last = performance.now(), renderInterval=1000/60, renderAccumulator=0, measuredFps=60, fpsWindowStart=last, fpsWindowFrames=0;
+function updateAdaptiveQuality(fps){
+  if(!lowPowerMode||document.hidden||!gameStarted||paused||state!=='fly')return;
+  if(fps<44){lowFpsWindows++;stableFpsWindows=0;}
+  else if(fps>=(mobileEconomy?48:54)){stableFpsWindows++;lowFpsWindows=0;}
+  else{lowFpsWindows=Math.max(0,lowFpsWindows-1);stableFpsWindows=0;}
+  let changed=false;
+  if(!mobileEconomy&&lowFpsWindows>=2){mobileEconomy=true;lowFpsWindows=0;stableFpsWindows=0;changed=true;}
+  else if(mobileEconomy&&stableFpsWindows>=8){mobileEconomy=false;lowFpsWindows=0;stableFpsWindows=0;changed=true;}
+  if(changed){renderInterval=1000/(mobileEconomy?50:60);renderAccumulator=0;timelineCache=null;predictionCache=null;document.documentElement.classList.toggle('economy-render',mobileEconomy);syncUI();}
+}
 function loop(now){
   const rawFrameMs=now-last, dt = Math.min(0.05, rawFrameMs/1000); last = now;
-  if(now-fpsWindowStart>=1000){ measuredFps=Math.round(fpsWindowFrames*1000/(now-fpsWindowStart)); fpsWindowFrames=0; fpsWindowStart=now; }
+  if(now-fpsWindowStart>=1000){ measuredFps=Math.round(fpsWindowFrames*1000/(now-fpsWindowStart));updateAdaptiveQuality(measuredFps);fpsWindowFrames=0; fpsWindowStart=now; }
   // 子弹时间：平移物理慢速(slow)，旋转保持实时但灵敏度降低（方案1）
   const slow = bulletT>0 ? 0.48 : 1;
   const steps = keys['Space'] ? 8 : 1;
@@ -4355,7 +4378,7 @@ function loop(now){
   }
   // 60/63Hz 屏每次回调都绘制；75/90/120Hz 用累加器稳定抽到约 60 帧，不能简单“隔帧”。
   renderAccumulator=Math.min(renderInterval*2,renderAccumulator+rawFrameMs);
-  const nativeSixty=rawFrameMs>=14;
+  const nativeSixty=!mobileEconomy&&rawFrameMs>=14;
   if(nativeSixty||renderAccumulator>=renderInterval){
     draw(); fpsWindowFrames++;
     renderAccumulator=nativeSixty?0:Math.max(0,renderAccumulator-renderInterval);
