@@ -167,6 +167,7 @@
     <article class="level-card" data-level-card="5" tabindex="0"><div class="level-number">MISSION 05</div><div class="level-icon">🪃</div><h2>月球引力弹弓</h2><p>燃料不够直接逃走；借月球甩出去，飞出绿色大圈且不再掉回来。</p><div class="level-meta"><div class="level-stars" data-level-stars="5">☆☆☆</div><div class="level-score"><strong data-level-score="5">—</strong>最高分</div></div><button class="level-play" data-start-level="5">开始任务</button></article>
     <article class="level-card" data-level-card="6" tabindex="0"><div class="level-number">MISSION 06</div><div class="level-icon">⚖️</div><h2>地月引力平衡点</h2><p>任选一个地月引力平衡点，把卫星送到那里并停稳。</p><div class="level-meta"><div class="level-stars" data-level-stars="6">☆☆☆</div><div class="level-score"><strong data-level-score="6">—</strong>最高分</div></div><button class="level-play" data-start-level="6">开始任务</button></article>
     <article class="level-card" data-level-card="7" tabindex="0"><div class="level-number">MISSION 07</div><div class="level-icon">☄️</div><h2>小行星拦截</h2><p>追上会撞向地球的小行星；软着陆持续推离，或直接撞击改变轨道。</p><div class="level-meta"><div class="level-stars" data-level-stars="7">☆☆☆</div><div class="level-score"><strong data-level-score="7">—</strong>最高分</div></div><button class="level-play" data-start-level="7">开始任务</button></article>
+    <article class="level-card" data-level-card="8" tabindex="0"><div class="level-number">MISSION 08</div><div class="level-icon">☀️</div><h2>双星摆渡</h2><p>从一颗太阳的行星起飞，穿过移动引力通道，到另一颗太阳旁与空间站对接。</p><div class="level-meta"><div class="level-stars" data-level-stars="8">☆☆☆</div><div class="level-score"><strong data-level-score="8">—</strong>最高分</div></div><button class="level-play" data-start-level="8">开始任务</button></article>
   </div>
   <div class="level-footer"><button id="continueLevel" onclick="closeLevelSelect()">继续当前任务</button></div>
 </div></div>
@@ -203,6 +204,7 @@ const EARTH = { x:0,      y:0,     vx:0, vy:0, r:600,  mu:2.0e7, col:'#3aa0ff', 
 const MARS  = { x:38000,  y:-9000, vx:0, vy:0, r:320,  mu:5.0e6, col:'#ff7043', landMax:15, name:'火星' };
 const MOON  = { x:-7500,  y:-3500, vx:0, vy:0, r:160,  mu:1.2e6, col:'#cfd8dc', landMax:15, name:'月球' };
 const BODIES = [EARTH, MARS, MOON];
+const BASE_WORLD={earth:{...EARTH},mars:{...MARS},moon:{...MOON}};
 const THRUST = 80, ROT = 1.2;
 // 生命维持 & 过载（加速度单位与游戏一致：地表重力≈55.6 = 1G）
 const LIFE_MAX = 420;        // 生命维持倒计时（秒）
@@ -220,7 +222,8 @@ const CHALLENGE_CONFIG={
   4:{fuel:95,fuelStar:18,parTime:390,life:0,mass:1},
   5:{fuel:31,parTime:300,life:0,mass:1,vInfStar:55,exitAngleStar:18},
   6:{fuel:100,parTime:480,life:0,mass:1},
-  7:{fuel:100,fuelStar:18,parTime:220,life:0,mass:1}
+  7:{fuel:100,fuelStar:18,parTime:220,life:0,mass:1},
+  8:{fuel:100,fuelStar:20,parTime:330,life:0,mass:1}
 };
 const STAR_RULES={
   1:['完成同步轨道部署：★','在绿色目标经度内释放：+★','挑战燃料剩余至少 15%：+★'],
@@ -229,7 +232,8 @@ const STAR_RULES={
   4:['安全着陆月球背面：★','精确落入绿色月背中央区：+★','挑战燃料剩余至少 18%：+★'],
   5:['飞出绿圈且不会返回：★','逃逸余速 v∞ 至少 55 u/s：+★','穿越绿圈时方向偏差不超过 18°：+★'],
   6:['抵达 L1：★','抵达 L4 或 L5：★★','抵达 L2 或 L3：★★★'],
-  7:['让小行星同时避开地球和月球：★','飞船没有在撞击中损毁：+★','挑战燃料剩余至少 18%：+★']
+  7:['让小行星同时避开地球和月球：★','飞船没有在撞击中损毁：+★','挑战燃料剩余至少 18%：+★'],
+  8:['抵达另一颗太阳旁的空间站：★','全程避开两颗恒星的高温区：+★','挑战燃料剩余至少 20%：+★']
 };
 
 // ---------- 关卡框架 ----------
@@ -282,6 +286,12 @@ const ASTEROID_R=85, ASTEROID_SOFT_SPEED=22, ASTEROID_IMPACT_SPEED=58;
 const ASTEROID_PUSH_FORCE=80.5, ASTEROID_CONTACT_FORCE=29.4, ASTEROID_HINGE_LIMIT=Math.PI/3;
 const ASTEROID_MU_PER_MASS=220;         // 缩比引力参数与质量绑定；表面重力约为地球的 1/26。
 const ASTEROID_SAFE_EARTH=EARTH.r+ASTEROID_R+120, ASTEROID_SAFE_MOON=MOON.r+ASTEROID_R+80;
+const BINARY_SEPARATION=4200,BINARY_MU_A=8.0e6,BINARY_MU_B=6.0e6;
+const BINARY_OMEGA=Math.sqrt((BINARY_MU_A+BINARY_MU_B)/Math.pow(BINARY_SEPARATION,3));
+const BINARY_A_R=BINARY_SEPARATION*BINARY_MU_B/(BINARY_MU_A+BINARY_MU_B);
+const BINARY_B_R=BINARY_SEPARATION*BINARY_MU_A/(BINARY_MU_A+BINARY_MU_B);
+const BINARY_PLANET_R=720,BINARY_PLANET_OMEGA=Math.sqrt((BINARY_MU_A+3.0e5)/Math.pow(BINARY_PLANET_R,3));
+const BINARY_STATION_R=690,BINARY_STATION_OMEGA=Math.sqrt(BINARY_MU_B/Math.pow(BINARY_STATION_R,3));
 // 姿态控制模式（C 切换）：0=随速偏转 1=手动转向 2=纯惯性
 const ATT_MODES = ['随速偏转','手动转向','纯惯性'];
 let attMode = 1, velOffset = 0;
@@ -319,7 +329,8 @@ const LEVELS = {
   4: { title:'🌘 第四关 · 月背动力着陆', sub:'飞到月球背面，只靠发动机安全落地' },
   5: { title:'🪃 第五关 · 月球引力弹弓', sub:'借月球甩出去，飞出绿圈且不再掉回来' },
   6: { title:'⚖️ 第六关 · 地月引力平衡点', sub:'任选一个引力平衡点，把卫星送过去停稳' },
-  7: { title:'☄️ 第七关 · 小行星拦截', sub:'追上危险小行星，改变它的轨道，保护地球和月球' }
+  7: { title:'☄️ 第七关 · 小行星拦截', sub:'追上危险小行星，改变它的轨道，保护地球和月球' },
+  8: { title:'☀️ 第八关 · 双星摆渡', sub:'穿过两颗太阳之间的引力通道，在另一边与空间站对接' }
 };
 let level = 1;
 const stageInfoL1 = [
@@ -444,9 +455,27 @@ const stageInfoL7 = [
     science:'一次成功偏转不只看“错过地球”，还要复核月球和未来回归轨道。现实任务会用长期精密测轨不断更新撞击走廊，而不是只看一次瞬时预测。',
     success:'成功标志：未来预测同时避开地球和月球，并保持安全状态 2.5 秒。'}
 ];
+const stageInfoL8 = [
+  {name:'① 从晨曦星起飞',hint:'先离开蓝色行星，再顺着它的运动方向加速',
+    steps:['两颗太阳和出发行星会在你第一次推进时一起开始运动。','从蓝色“晨曦星”起飞，先避开橙色恒星的高温光圈。','建立安全飞行速度后，把黄色预测线拉向两颗太阳之间。'],
+    science:'双星不是一颗恒星绕着另一颗静止恒星转，而是两颗恒星都围绕共同质心运动。行星又在其中一颗恒星附近公转，因此火箭起飞时已经继承了行星和恒星的双重运动速度。',
+    success:'成功标志：离开晨曦星 300 u 以上，并保持在恒星表面之外。'},
+  {name:'② 穿过移动引力通道',hint:'瞄准两颗太阳之间的青色通道，不要直接撞向目标',
+    steps:['青色门是两颗恒星引力互相拉扯形成的动态狭口，会随双星一起转动。','提前瞄准青色门未来的位置，用短促点火修正黄色预测线。','穿过通道后，火箭会从橙星一侧进入蓝白星一侧。'],
+    science:'这个通道对应旋转参考系中两个引力势阱之间的“颈部”。它与拉格朗日点有关，但本关不要求停在那里，而是利用势能通道从一颗恒星的势力范围摆渡到另一颗。',
+    success:'成功标志：飞船穿过青色门，且距离蓝白色目标恒星比橙色恒星更近。'},
+  {name:'③ 被目标恒星捕获',hint:'接近蓝白星后反推，把掠过轨迹变成闭合轨道',
+    steps:['接近蓝白星时重点看右上角“目标星相对速度”和捕获状态。','把机头转到相对速度反方向，短促反推降低轨道能量。','不要进入红色高温圈；让黄色预测线绕蓝白星闭合。'],
+    science:'飞到目标恒星旁边并不等于完成转移。若相对能量仍为正，飞船只会高速掠过；必须反推降低相对速度，才能从双曲飞越变成受目标恒星束缚的轨道。',
+    success:'成功标志：HUD 显示“目标星已捕获”，并进入空间站所在轨道附近。'},
+  {name:'④ 与暮光站对接',hint:'距离和速度差都足够小时，点击“执行对接”',
+    steps:['先消除与空间站的相对速度，再从后方慢慢靠近。','进入 36 u、相对速度低于 9 u/s 后，对接按钮会发光。','直接跳过前面步骤抵达对接窗口也可以正常完成任务。'],
+    science:'在双星系统中，空间站同时受到目标恒星和伴星的扰动，因此长期轨道需要定期修正。本关用短时间解析轨道近似，重点训练跨势阱转移、恒星捕获与最终相对导航。',
+    success:'成功标志：点击对接后，飞船与暮光站一起绕蓝白星运行。'}
+];
 let mission;
 
-let rocket, station, asteroid, asteroidTrail, trail, ghostShip, ghostTrail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
+let rocket, station, asteroid, asteroidTrail, binary, trail, ghostShip, ghostTrail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
 let challengeMode=false;
 let paused = false, retryTimer = null;
 let rewindClickAt = 0, rewindHistoryIndex = -1;
@@ -502,10 +531,52 @@ function padAngle(){ return PAD_ANG0 + earthAngle; }
 function landAngle(){ return LAND_ANG0 + earthAngle; }
 // 月球质心绕地球公转；月面纹理也使用同一个角度旋转，因此始终以同一面朝向地球。
 function updateMoon(dt){
+  if(typeof level!=='undefined'&&level===8){updateBinaryWorld(dt);return;}
   moonAngle+=MOON_OMEGA*dt;
   const c=Math.cos(moonAngle), s=Math.sin(moonAngle), v=MOON_OMEGA*MOON_ORBIT_R;
   MOON.x=EARTH.x+c*MOON_ORBIT_R; MOON.y=EARTH.y+s*MOON_ORBIT_R;
   MOON.vx=-s*v; MOON.vy=c*v;
+}
+function restoreBaseWorld(){
+  Object.assign(EARTH,BASE_WORLD.earth);Object.assign(MARS,BASE_WORLD.mars);Object.assign(MOON,BASE_WORLD.moon);
+  EARTH.isStar=false;MARS.isStar=false;MOON.isStar=false;
+}
+function configureBinaryWorld(){
+  Object.assign(MARS,{r:285,mu:BINARY_MU_A,col:'#ff9f43',landMax:0,name:'曙光星 A',isStar:true});
+  Object.assign(MOON,{r:250,mu:BINARY_MU_B,col:'#dbe9ff',landMax:0,name:'暮光星 B',isStar:true});
+  Object.assign(EARTH,{r:118,mu:3.0e5,col:'#4cc9f0',landMax:15,name:'晨曦星',isStar:false});
+  binary={angle:0,planetAngle:.18,gateCrossed:false,heatRadiusA:MARS.r+175,heatRadiusB:MOON.r+165};
+  updateBinaryWorld(0);
+}
+function updateBinaryWorld(dt){
+  if(!binary)return;
+  binary.angle=normalizeAngle(binary.angle+BINARY_OMEGA*dt);
+  const c=Math.cos(binary.angle),s=Math.sin(binary.angle);
+  MARS.x=-c*BINARY_A_R;MARS.y=-s*BINARY_A_R;MARS.vx=s*BINARY_OMEGA*BINARY_A_R;MARS.vy=-c*BINARY_OMEGA*BINARY_A_R;
+  MOON.x=c*BINARY_B_R;MOON.y=s*BINARY_B_R;MOON.vx=-s*BINARY_OMEGA*BINARY_B_R;MOON.vy=c*BINARY_OMEGA*BINARY_B_R;
+  binary.planetAngle=normalizeAngle(binary.planetAngle+BINARY_PLANET_OMEGA*dt);
+  const pc=Math.cos(binary.planetAngle),ps=Math.sin(binary.planetAngle),pv=BINARY_PLANET_OMEGA*BINARY_PLANET_R;
+  EARTH.x=MARS.x+pc*BINARY_PLANET_R;EARTH.y=MARS.y+ps*BINARY_PLANET_R;
+  EARTH.vx=MARS.vx-ps*pv;EARTH.vy=MARS.vy+pc*pv;
+}
+function binaryGatePoint(){
+  if(!binary)return {x:0,y:0,vx:0,vy:0};
+  const dx=MOON.x-MARS.x,dy=MOON.y-MARS.y,d=Math.max(1,Math.hypot(dx,dy)),ux=dx/d,uy=dy/d;
+  const ratio=Math.sqrt(MARS.mu)/(Math.sqrt(MARS.mu)+Math.sqrt(MOON.mu));
+  const x=MARS.x+dx*ratio,y=MARS.y+dy*ratio;
+  return {x,y,vx:-BINARY_OMEGA*y,vy:BINARY_OMEGA*x,ux,uy};
+}
+function specificEnergyAround(body,ship=rocket){
+  const dx=ship.x-body.x,dy=ship.y-body.y,r=Math.max(1,Math.hypot(dx,dy));
+  const vx=ship.vx-(body.vx||0),vy=ship.vy-(body.vy||0);
+  return .5*(vx*vx+vy*vy)-body.mu/r;
+}
+function binaryMetrics(ship=rocket){
+  if(!binary)return {distA:Infinity,distB:Infinity,targetRel:Infinity,targetEnergy:Infinity,gateDistance:Infinity};
+  const ax=ship.x-MARS.x,ay=ship.y-MARS.y,bx=ship.x-MOON.x,by=ship.y-MOON.y;
+  const gate=binaryGatePoint(),gvx=ship.vx-gate.vx,gvy=ship.vy-gate.vy;
+  return {distA:Math.hypot(ax,ay),distB:Math.hypot(bx,by),targetRel:Math.hypot(ship.vx-MOON.vx,ship.vy-MOON.vy),
+    targetEnergy:specificEnergyAround(MOON,ship),gate,gateDistance:Math.hypot(ship.x-gate.x,ship.y-gate.y),gateRel:Math.hypot(gvx,gvy)};
 }
 function createAsteroid(){
   const mass=70;
@@ -615,6 +686,11 @@ function earthSpecificEnergy(ship=rocket){
   return .5*(vx*vx+vy*vy)-EARTH.mu/Math.max(1,r);
 }
 function attitudeVelocity(ship=rocket){
+  if(level===8&&binary){
+    const dPlanet=Math.hypot(ship.x-EARTH.x,ship.y-EARTH.y),dTarget=Math.hypot(ship.x-MOON.x,ship.y-MOON.y);
+    const ref=dPlanet<420?EARTH:dTarget<1500?MOON:null;
+    if(ref)return {vx:ship.vx-(ref.vx||0),vy:ship.vy-(ref.vy||0)};
+  }
   if(level===4&&mission&&mission.stage>=2) return {vx:ship.vx-MOON.vx,vy:ship.vy-MOON.vy};
   // 地球发射锁定结束后，随速模式直接跟踪正常地心速度；发射初段由垂直锁定负责。
   if(ship._launchCompleted) return {vx:ship.vx,vy:ship.vy};
@@ -626,11 +702,19 @@ function attitudeVelocity(ship=rocket){
   return {vx:ship.vx,vy:ship.vy};
 }
 function surfaceVelocity(body,dx,dy){
-  const omega=body===EARTH?EARTH_OMEGA:body===MOON?MOON_OMEGA:0;
+  const omega=body===EARTH?EARTH_OMEGA:body===MOON&&(typeof level==='undefined'||level!==8)?MOON_OMEGA:(body.spin||0);
   return {vx:(body.vx||0)-omega*dy,vy:(body.vy||0)+omega*dx};
 }
 function updateStation(dt){
   if(!station) return;
+  if(typeof level!=='undefined'&&level===8&&typeof binary!=='undefined'&&binary){
+    station.angle=normalizeAngle(station.angle+BINARY_STATION_OMEGA*dt);
+    const c=Math.cos(station.angle),s=Math.sin(station.angle),v=BINARY_STATION_OMEGA*BINARY_STATION_R;
+    station.x=MOON.x+c*BINARY_STATION_R;station.y=MOON.y+s*BINARY_STATION_R;
+    station.vx=MOON.vx-s*v;station.vy=MOON.vy+c*v;station.a=station.angle+Math.PI/2;
+    if(station.docked){rocket.x=station.x;rocket.y=station.y;rocket.vx=station.vx;rocket.vy=station.vy;rocket.a=station.a;}
+    return;
+  }
   station.angle+=STATION_OMEGA*dt;
   const c=Math.cos(station.angle), s=Math.sin(station.angle), v=STATION_OMEGA*STATION_R;
   station.x=EARTH.x+c*STATION_R; station.y=EARTH.y+s*STATION_R;
@@ -647,7 +731,7 @@ function stationMetrics(){
   return {dx,dy,distance,rvx,rvy,relSpeed,closing};
 }
 function applyDockingAssist(dt){
-  if(level!==3||!station||!mission.assistMode||mission.stage<2||mission.done) return;
+  if((level!==3&&level!==8)||!station||!mission.assistMode||mission.stage<2||mission.done) return;
   const m=stationMetrics();
   if(m.distance>220||m.distance<1) return;
   const ux=m.dx/m.distance, uy=m.dy/m.distance;
@@ -666,7 +750,7 @@ function applyLagrangeAssist(dt){
   rocket.vx+=(m.point.vx-rocket.vx)*blend; rocket.vy+=(m.point.vy-rocket.vy)*blend;
 }
 // 当前关卡的教学步骤
-function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:level===4?stageInfoL4:level===5?stageInfoL5:level===6?stageInfoL6:stageInfoL7; }
+function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:level===4?stageInfoL4:level===5?stageInfoL5:level===6?stageInfoL6:level===7?stageInfoL7:stageInfoL8; }
 
 const SAVE_KEY='spacegame-progress-v2';
 function loadProgress(){
@@ -688,7 +772,7 @@ function saveLevelResult(levelId,score,earnedStars=1){
 }
 function updateLevelCards(){
   const progress=loadProgress();
-  for(let i=1;i<=7;i++){
+  for(let i=1;i<=8;i++){
     const result=progress[i]||{score:0,stars:0};
     const scoreEl=document.querySelector(`[data-level-score="${i}"]`), starsEl=document.querySelector(`[data-level-stars="${i}"]`);
     if(scoreEl) scoreEl.textContent=result.score||'—';
@@ -745,14 +829,14 @@ function closeLevelSelect(){
   syncUI();
 }
 function startLevel(levelId){
-  level=Math.max(1,Math.min(7,Number(levelId)||1));
+  level=Math.max(1,Math.min(8,Number(levelId)||1));
   challengeMode=false;
   gameStarted=true; levelSelectOpen=false; paused=false; lastBriefedLevel=0;
   document.getElementById('levelSelect').classList.remove('is-visible');
   resetGame();
 }
 function nextLevel(){
-  if(level<7) startLevel(level+1);
+  if(level<8) startLevel(level+1);
   else openLevelSelect();
 }
 function restartCurrent(full=false){
@@ -780,9 +864,12 @@ function resetGame(){
   rewindClickAt=0; rewindHistoryIndex=-1;
   paused = false;
   clearFlightInputs(); velOffset=0;
+  restoreBaseWorld();binary=null;
   earthAngle = 0;
-  moonAngle = level===5 ? 2.07 : level===7 ? -2.7 : MOON_ANG0; updateMoon(0);
-  station = level===3 ? {angle:.55,x:0,y:0,vx:0,vy:0,a:0,docked:false} : null;
+  if(level===8)configureBinaryWorld();
+  else{moonAngle = level===5 ? 2.07 : level===7 ? -2.7 : MOON_ANG0; updateMoon(0);}
+  station = level===3 ? {angle:.55,x:0,y:0,vx:0,vy:0,a:0,docked:false}
+    :level===8?{angle:2.35,x:0,y:0,vx:0,vy:0,a:0,docked:false,host:'暮光星 B'}:null;
   if(station) updateStation(0);
   asteroid=level===7?createAsteroid():null; asteroidTrail=[];
   const challengeCfg=CHALLENGE_CONFIG[level],lifeLimit=challengeMode&&challengeCfg.life?challengeCfg.life:LIFE_MAX;
@@ -808,7 +895,7 @@ function resetGame(){
     // 第一、三、四、五关：发射台起步
     const pad = padAngle();
     const px = EARTH.x + Math.cos(pad)*(EARTH.r+1), py = EARTH.y + Math.sin(pad)*(EARTH.r+1);
-    const launchVx=-Math.sin(pad)*EARTH_OMEGA*(EARTH.r+1), launchVy=Math.cos(pad)*EARTH_OMEGA*(EARTH.r+1);
+    const launchVx=(EARTH.vx||0)-Math.sin(pad)*EARTH_OMEGA*(EARTH.r+1), launchVy=(EARTH.vy||0)+Math.cos(pad)*EARTH_OMEGA*(EARTH.r+1);
     rocket = {
       x:px, y:py,
       vx:launchVx, vy:launchVy,
@@ -831,7 +918,8 @@ function resetGame(){
     slingWasInside:false,slingFlybyValid:false,slingGain:0,slingVInf:0,slingFailed:false,
     lagrangeTarget:1,lagrangeDistance:Infinity,lagrangeRelSpeed:Infinity,
     asteroidContact:false,asteroidAnchored:false,asteroidMountAngle:0,hingeAngle:0,
-    asteroidChanged:false,asteroidImpact:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null};
+    asteroidChanged:false,asteroidImpact:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null,
+    binaryHeatViolated:false,binaryCaptured:false,binaryGateCrossed:false,binaryTargetEnergy:Infinity};
   if(level===5){
     mission.slingInitialEnergy=earthSpecificEnergy(rocket);
     mission.slingEntryEnergy=mission.slingInitialEnergy;
@@ -843,6 +931,7 @@ function resetGame(){
   }:createRecordedGuide(level);
   if(level===6) mission.dynHint='五个目标任选｜按推进后整个世界同步开始';
   if(level===7) mission.dynHint='红线会撞地球｜按推进后世界同步开始';
+  if(level===8) mission.dynHint='两颗太阳都在运动｜按推进后双星世界同步开始';
   saveCheckpoint();
   camInit = true;
   hideMsg();
@@ -859,7 +948,7 @@ function showMsg(emoji,title,text){
   document.getElementById('mText').innerHTML = text;
   const next = document.getElementById('mNext');
   next.style.display = mission && mission.done ? 'inline-block' : 'none';
-  next.textContent = level<7 ? '下一关 (L)' : '返回目录 (L)';
+  next.textContent = level<8 ? '下一关 (L)' : '返回目录 (L)';
   document.getElementById('msg').style.display = 'flex';
 }
 function openBriefing(){
@@ -942,7 +1031,7 @@ function missionActionState(){
     const rvx=rocket.vx-(EARTH.vx||0),rvy=rocket.vy-(EARTH.vy||0),vOut=(rvx*dx+rvy*dy)/Math.max(1,d);
     if(alt>0&&alt<=CHUTE_ALT&&vOut<0) return {visible:true,icon:'🪂',label:'打开降落伞',aria:'打开返回舱降落伞'};
   }
-  if(level===3&&mission.dockReady) return {visible:true,icon:'🧩',label:'执行对接',aria:'执行空间站对接'};
+  if((level===3||level===8)&&mission.dockReady) return {visible:true,icon:'🧩',label:'执行对接',aria:'执行空间站对接'};
   return {visible:false};
 }
 function syncMissionAction(){
@@ -1086,6 +1175,21 @@ function updateActionCue(){
       const target=m.relSpeed>ASTEROID_SOFT_SPEED*.8?cancelAngle:approachAngle;
       const turn=cueTurnTo(target,.24);cues=turn?[turn]:['thrust'];
     }
+  }else if(level===8){
+    const bm=binaryMetrics(),sm=stationMetrics();
+    if(rocket.landed)cues=['thrust'];
+    else if(mission.stage<=1){
+      const gate=binaryGatePoint(),approach=Math.atan2(gate.y-rocket.y,gate.x-rocket.x);
+      const turn=cueTurnTo(approach,.24);cues=turn?[turn]:['thrust'];
+    }else{
+      const cancel=Math.atan2(-sm.rvy,-sm.rvx),approach=Math.atan2(sm.dy,sm.dx);
+      const target=sm.relSpeed>(mission.stage>=3?10:28)?cancel:approach;
+      const turn=cueTurnTo(target,mission.stage>=3?.16:.24);cues=turn?[turn]:['thrust'];
+      if(mission.stage===2&&bm.targetEnergy>0&&bm.distB<1500){
+        const rvx=rocket.vx-MOON.vx,rvy=rocket.vy-MOON.vy;
+        const brake=cueTurnTo(Math.atan2(-rvy,-rvx),.22);cues=brake?[brake]:['thrust'];
+      }
+    }
   }
   setActionCue(cues);
 }
@@ -1123,10 +1227,24 @@ function performanceDetail(){
 }
 
 function finishDocking(){
-  if(level!==3||!station||mission.done) return;
+  if((level!==3&&level!==8)||!station||mission.done) return;
   const metrics=stationMetrics();
   station.docked=true; mission.done=true; state='complete';
   rocket.x=station.x; rocket.y=station.y; rocket.vx=station.vx; rocket.vy=station.vy; rocket.a=station.a;
+  if(level===8){
+    const remaining=challengeRemainingFuel(),starResult=evaluateStars([
+      {ok:!mission.binaryHeatViolated,label:'全程避开两颗恒星的高温区'},
+      {ok:remaining>=CHALLENGE_CONFIG[8].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[8].fuelStar}%`}
+    ]);
+    const result=saveLevelResult(8,performanceScore(),starResult.stars),bm=binaryMetrics();
+    syncUI();
+    showMsg('☀️','双星摆渡成功！',
+      resultLine(result)+`已穿越双星引力通道并被暮光星 B 捕获<br>`+
+      `最终对接距离 ${metrics.distance.toFixed(1)} u · 相对速度 ${metrics.relSpeed.toFixed(1)} u/s<br>`+
+      `目标星轨道能量 ${bm.targetEnergy.toFixed(0)} u²/s² · ${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
+      `<span style="color:#888">两颗恒星始终共同绕质心运动；你不是飞向一个静止目标，而是在两个移动引力势阱之间完成摆渡。</span>`);
+    return;
+  }
   const remaining=challengeRemainingFuel(),starResult=evaluateStars([
     {ok:true,label:'重载货运火箭完成对接：挑战奖励星'},
     {ok:remaining>=CHALLENGE_CONFIG[3].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[3].fuelStar}%`}
@@ -1411,6 +1529,8 @@ function saveCheckpoint(){
     worldStarted:!!mission.worldStarted,lagrangeTarget:mission.lagrangeTarget,
     landed:!!rocket.landed,bodyName:rocket.body&&rocket.body.name,launched:!!launched,clearedPad:!!rocket._clearedPad,landLocalAngle:rocket.landLocalAngle,
     stationAngle:station?station.angle:null, launchBaseVx:rocket.launchBaseVx, launchBaseVy:rocket.launchBaseVy,
+    binaryState:binary?{angle:binary.angle,planetAngle:binary.planetAngle,gateCrossed:binary.gateCrossed}:null,
+    binaryMission:level===8?{binaryHeatViolated:mission.binaryHeatViolated,binaryCaptured:mission.binaryCaptured,binaryGateCrossed:mission.binaryGateCrossed}:null,
     launchFrameActive:!!rocket._launchFrameActive, launchAssistActive:!!rocket._launchAssistActive,
     launchCompleted:!!rocket._launchCompleted, chute:!!rocket.chute, chuteAngle:rocket.chuteAngle,
     chuteFlowX:rocket.chuteFlowX||0, chuteFlowY:rocket.chuteFlowY||0,
@@ -1442,7 +1562,9 @@ function retryFromStage(reason){
     rocket.x=cp.x; rocket.y=cp.y; rocket.vx=cp.vx; rocket.vy=cp.vy; rocket.a=cp.a;
     rocket.fuel=cp.fuel; mission.fuelUsed=cp.fuelUsed||0; rocket.life=Number.isFinite(cp.life)?cp.life:mission.lifeLimit;
     mission.lifeExpired=!!cp.lifeExpired; mission.usedChute=!!cp.usedChute;
-    flightT=cp.flightT; earthAngle=cp.earthAngle; moonAngle=Number.isFinite(cp.moonAngle)?cp.moonAngle:moonAngle; updateMoon(0); mission.stage=cp.stage;
+    flightT=cp.flightT; earthAngle=cp.earthAngle; moonAngle=Number.isFinite(cp.moonAngle)?cp.moonAngle:moonAngle;
+    if(cp.binaryState&&binary)Object.assign(binary,cp.binaryState);
+    updateMoon(0); mission.stage=cp.stage;
     mission.worldStarted=!!cp.worldStarted;
     if(Number.isFinite(cp.lagrangeTarget)) mission.lagrangeTarget=cp.lagrangeTarget;
     velOffset=cp.velOffset||0;
@@ -1450,6 +1572,7 @@ function retryFromStage(reason){
     rocket._launchAssistActive=!!cp.launchAssistActive; rocket._launchCompleted=!!cp.launchCompleted;
     if(station&&Number.isFinite(cp.stationAngle)){ station.angle=cp.stationAngle; updateStation(0); }
     if(cp.slingshot) Object.assign(mission,cp.slingshot);
+    if(cp.binaryMission)Object.assign(mission,cp.binaryMission);
     if(cp.asteroid&&asteroid)Object.assign(asteroid,cp.asteroid);
     if(cp.asteroidMission)Object.assign(mission,cp.asteroidMission);
     ghostShip=cp.ghost?{...cp.ghost}:null; ghostTrail=[];
@@ -1475,7 +1598,7 @@ function retryFromStage(reason){
     const pad = padAngle();
     rocket.x = EARTH.x + Math.cos(pad)*(EARTH.r+1);
     rocket.y = EARTH.y + Math.sin(pad)*(EARTH.r+1);
-    rocket.vx = -Math.sin(pad)*EARTH_OMEGA*(EARTH.r+1); rocket.vy = Math.cos(pad)*EARTH_OMEGA*(EARTH.r+1);
+    rocket.vx = (EARTH.vx||0)-Math.sin(pad)*EARTH_OMEGA*(EARTH.r+1); rocket.vy = (EARTH.vy||0)+Math.cos(pad)*EARTH_OMEGA*(EARTH.r+1);
     rocket.a = pad; rocket.fuel = level===5?SLING_LAUNCH_FUEL:CHALLENGE_CONFIG[level].fuel; mission.fuelUsed=0;
     rocket.landed = true; rocket.body = EARTH; launched = false;
     rocket._clearedPad=false; rocket.landLocalAngle=null;
@@ -1541,7 +1664,13 @@ function tryOpenChute(){
   else{ mission.toast='🪂 降落伞已打开！'; mission.toastT=2.5; syncUI(); }
 }
 function tryDock(){
-  if(level!==3||!mission||mission.done||state!=='fly'||!mission.dockReady) return;
+  if((level!==3&&level!==8)||!mission||mission.done||state!=='fly'||!mission.dockReady) return;
+  if(level===8){
+    const m=stationMetrics(),distanceLimit=mission.assistMode?46:36,speedLimit=mission.assistMode?13:9;
+    if(m.distance>=distanceLimit||m.relSpeed>=speedLimit){
+      mission.dockReady=false;mission.toast='对接口已错开｜先靠近并把相对速度降下来';mission.toastT=3;syncUI();return;
+    }
+  }
   finishDocking();
 }
 function toggleAsteroidAnchor(){
@@ -1584,6 +1713,7 @@ function tryMissionAction(){
   else if(level===2) tryOpenChute();
   else if(level===3) tryDock();
   else if(level===7) toggleAsteroidAnchor();
+  else if(level===8) tryDock();
 }
 
 // 任务阶段推进（每帧调用）
@@ -1595,6 +1725,7 @@ function updateMission(dt){
   if(level===5){ updateMissionL5(dt); return; }
   if(level===6){ updateMissionL6(dt); return; }
   if(level===7){ updateMissionL7(dt); return; }
+  if(level===8){ updateMissionL8(dt); return; }
   if(rocket.landed) return;
   const direct=directSyncStatus(rocket,1);
   if(mission.stage<3){
@@ -1914,6 +2045,45 @@ function updateMissionL7(dt){
     mission.dynHint=`姿态不限｜相对 ≤${ASTEROID_SOFT_SPEED} 软着陆｜高速=撞击`;
   }else mission.dynHint=`距小行星 ${m.distance.toFixed(0)}｜慢速接触表面`;
 }
+function updateMissionL8(dt){
+  if(!binary||!station)return;
+  const bm=binaryMetrics(),sm=stationMetrics(),planetD=Math.hypot(rocket.x-EARTH.x,rocket.y-EARTH.y);
+  mission.binaryTargetEnergy=bm.targetEnergy;
+  if(bm.distA<binary.heatRadiusA||bm.distB<binary.heatRadiusB)mission.binaryHeatViolated=true;
+
+  // 最终结果独立于教学顺序：只要真实进入对接窗口，就开放任务按钮。
+  const directDock=sm.distance<(mission.assistMode?46:36)&&sm.relSpeed<(mission.assistMode?13:9);
+  mission.finalHoldT=directDock?mission.finalHoldT+dt:0;
+  if(!mission.dockReady&&mission.finalHoldT>=.7){
+    mission.dockReady=true;
+    if(mission.stage<3)unlockFinalStage(3,'✅ 已直接抵达暮光站对接窗口！点击“执行对接”');
+    else{mission.toast='✅ 对接窗口稳定｜点击“执行对接”';mission.toastT=4;syncUI();}
+    return;
+  }
+  if(mission.dockReady&&!directDock){mission.dockReady=false;syncUI();}
+  if(rocket.landed)return;
+
+  if(mission.stage===0){
+    mission.dynHint=`离晨曦星 ${Math.max(0,planetD-EARTH.r).toFixed(0)}｜朝青色通道飞`;
+    if(planetD>EARTH.r+300){mission.holdT+=dt;if(mission.holdT>.6)advanceStage();}
+    else mission.holdT=0;
+    return;
+  }
+  if(mission.stage===1){
+    mission.dynHint=`距通道 ${bm.gateDistance.toFixed(0)}｜${bm.distB<bm.distA?'已进入暮光星一侧':'瞄准移动青门'}`;
+    if(bm.gateDistance<520||bm.distB<bm.distA){mission.binaryGateCrossed=true;binary.gateCrossed=true;advanceStage();}
+    return;
+  }
+  const captured=bm.targetEnergy<0&&bm.distB>MOON.r+75&&bm.distB<1550;
+  mission.binaryCaptured=captured||mission.binaryCaptured;
+  if(mission.stage===2){
+    mission.dynHint=`目标星能量 ${bm.targetEnergy.toFixed(0)}｜${captured?'已捕获':'反推至负数'}｜距站 ${sm.distance.toFixed(0)}`;
+    if(captured){mission.holdT+=dt;if(mission.holdT>.7)advanceStage();}
+    else mission.holdT=0;
+    return;
+  }
+  mission.dynHint=`暮光站 ${sm.distance.toFixed(0)}｜相对 ${sm.relSpeed.toFixed(1)}｜低速靠近后点对接`;
+}
 function advanceStage(){
   mission.stage++;
   mission.holdT = 0;
@@ -1948,6 +2118,9 @@ function advanceStage(){
   if(level===7 && mission.stage===1){ mission.toast='✅ 已进入拦截区｜着陆姿态不限，只需降低相对速度；也可直接撞击'; mission.toastT=5; }
   if(level===7 && mission.stage===2){ mission.toast='✅ 已贴住小行星｜锚定翻转，或直接低效率推进'; mission.toastT=4; }
   if(level===7 && mission.stage===3){ mission.toast='⚓ 左右调铰链，推进直到危险红线变绿'; mission.toastT=4; }
+  if(level===8 && mission.stage===1){ mission.toast='✅ 已离开晨曦星｜瞄准两颗太阳之间移动的青色通道'; mission.toastT=4; }
+  if(level===8 && mission.stage===2){ mission.toast='✅ 已穿过引力通道｜靠近暮光星 B 后反推捕获'; mission.toastT=4; }
+  if(level===8 && mission.stage===3){ mission.toast='✅ 已被目标恒星捕获｜追上暮光站，消除相对速度'; mission.toastT=4; }
   syncUI();
 }
 function unlockFinalStage(targetStage,message){
@@ -1962,7 +2135,8 @@ const GUIDE_DEMOS={
   1:{duration:38,budget:32,burnRate:2.0},
   2:{duration:38,budget:14,burnRate:1.75},
   3:{duration:46,budget:35,burnRate:1.25},
-  4:{duration:74,budget:44,burnRate:1.6}
+  4:{duration:74,budget:44,burnRate:1.6},
+  8:{duration:82,budget:42,burnRate:.75}
 };
 function smooth01(v){ v=Math.max(0,Math.min(1,v)); return v*v*(3-2*v); }
 function createRecordedGuide(levelId){
@@ -2030,6 +2204,25 @@ function guideDemoPosition(g,t){
     }
     const u=smooth01((t-58)/16),a=moonAngle-1.15*(1-u),r=900-(900-MOON.r-1)*u;
     return {x:MOON.x+Math.cos(a)*r,y:MOON.y+Math.sin(a)*r,heading:a,thrust:t>62,chute:false,label:u>.96?'月背安全着陆':'月球反推捕获并下降'};
+  }
+  if(g.level===8){
+    const gate=binaryGatePoint(),toGate=Math.atan2(gate.y-EARTH.y,gate.x-EARTH.x);
+    if(t<10){
+      const u=smooth01(t/10),startA=a0+EARTH_OMEGA*t,sx=EARTH.x+Math.cos(startA)*(EARTH.r+1),sy=EARTH.y+Math.sin(startA)*(EARTH.r+1);
+      const ex=EARTH.x+Math.cos(toGate)*620,ey=EARTH.y+Math.sin(toGate)*620;
+      return {x:sx+(ex-sx)*u,y:sy+(ey-sy)*u,heading:toGate,thrust:true,label:'离开发射星 · 对准两星之间'};
+    }
+    if(t<43){
+      const u=smooth01((t-10)/33),sx=EARTH.x+Math.cos(toGate)*620,sy=EARTH.y+Math.sin(toGate)*620;
+      return {x:sx+(gate.x-sx)*u,y:sy+(gate.y-sy)*u,heading:toGate,thrust:t<17||t>38,label:t>38?'修正穿门':'关机滑向移动通道'};
+    }
+    const stationSpeed=Math.max(1,Math.hypot(station.vx,station.vy)),backX=-station.vx/stationSpeed,backY=-station.vy/stationSpeed;
+    if(t<68){
+      const u=smooth01((t-43)/25),tx=station.x+backX*520,ty=station.y+backY*520;
+      return {x:gate.x+(tx-gate.x)*u,y:gate.y+(ty-gate.y)*u,heading:t<58?Math.atan2(ty-gate.y,tx-gate.x):Math.atan2(-station.vy,-station.vx),thrust:t>56,label:t>56?'反推进入目标星轨道':'借目标星引力转弯'};
+    }
+    const u=smooth01((t-68)/14),offset=520*(1-u),x=station.x+backX*offset,y=station.y+backY*offset;
+    return {x,y,heading:t<77?Math.atan2(-station.vy,-station.vx):Math.atan2(station.y-y,station.x-x),thrust:t<78,label:u>.95?'暮光站低速对接':'匹配空间站速度'};
   }
   return {x:g.x,y:g.y,thrust:false,label:'示范完成'};
 }
@@ -2114,8 +2307,8 @@ function update(dt, dtReal){
     const pad = padAngle();
     rocket.x = EARTH.x + Math.cos(pad)*(EARTH.r+1);
     rocket.y = EARTH.y + Math.sin(pad)*(EARTH.r+1);
-    rocket.vx=-Math.sin(pad)*EARTH_OMEGA*(EARTH.r+1);
-    rocket.vy= Math.cos(pad)*EARTH_OMEGA*(EARTH.r+1);
+    rocket.vx=(EARTH.vx||0)-Math.sin(pad)*EARTH_OMEGA*(EARTH.r+1);
+    rocket.vy=(EARTH.vy||0)+Math.cos(pad)*EARTH_OMEGA*(EARTH.r+1);
     rocket.launchBaseVx=rocket.vx; rocket.launchBaseVy=rocket.vy; rocket._launchFrameActive=true;
     rocket._launchAssistActive=true; rocket._launchCompleted=false;
     rocket.a = pad;
@@ -2287,8 +2480,8 @@ function update(dt, dtReal){
       }
       const groundAng=rocket._clearedPad?earthAngle+rocket.landLocalAngle:padAngle();
       rocket.x=EARTH.x+Math.cos(groundAng)*rr; rocket.y=EARTH.y+Math.sin(groundAng)*rr;
-      rocket.vx=-Math.sin(groundAng)*EARTH_OMEGA*rr;
-      rocket.vy= Math.cos(groundAng)*EARTH_OMEGA*rr;
+      rocket.vx=(EARTH.vx||0)-Math.sin(groundAng)*EARTH_OMEGA*rr;
+      rocket.vy=(EARTH.vy||0)+Math.cos(groundAng)*EARTH_OMEGA*rr;
       rocket.launchBaseVx=rocket.vx; rocket.launchBaseVy=rocket.vy; rocket._launchFrameActive=true;
       rocket._launchAssistActive=true; rocket._launchCompleted=false;
     }else if(rocket.body===MOON){
@@ -2327,6 +2520,14 @@ function update(dt, dtReal){
     const surfaceV=surfaceVelocity(b,dx,dy);
     let groundVx = rocket.vx-surfaceV.vx, groundVy = rocket.vy-surfaceV.vy;
     const vRel = Math.hypot(groundVx, groundVy);
+
+    // 恒星不是可着陆天体：进入光球表面立即判定烧毁，避免低速时被通用着陆逻辑“停”在太阳上。
+    if(level===8&&b.isStar&&alt<=RING_OUT){
+      state='dead';rocket.alive=false;boom(rocket.x,rocket.y);
+      if(mission.assistMode)retryTimer=setTimeout(()=>retryFromStage('进入恒星表面'),1000);
+      else showMsg('☀️','飞船被恒星吞没！',`距离${b.name}太近。按 R 重来`);
+      return;
+    }
 
     // ---- 降落伞（仅第二关、由玩家在低空窗口点击任务按钮打开）----
     if(rocket.chute && b===EARTH && !rocket.landed){
@@ -2438,9 +2639,9 @@ function update(dt, dtReal){
     }
   }
   // 飞出太远：新手模式只提醒（画面变暗+提示），不强制重置；跳过指引才判死
-  const distEarth = Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y);
-  rocket._tooFar = distEarth > 12000; // 提醒阈值（远超同步轨道）
-  if(distEarth > 150000){
+  const distEarth = level===8?Math.hypot(rocket.x,rocket.y):Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y);
+  rocket._tooFar = distEarth > (level===8?10000:12000); // 双星关以系统质心为参考
+  if(distEarth > (level===8?80000:150000)){
     if(!mission.assistMode || mission.done){ state='dead'; showMsg('🛰️','迷失深空…','飞得太远了，按 R 重来'); }
   }
 }
@@ -2506,6 +2707,16 @@ function drawLagrangeScreenCue(){
   ctx.save();ctx.translate(rx,ry);ctx.rotate(ang);ctx.fillStyle=p.color;ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(-9,-9);ctx.lineTo(-5,0);ctx.lineTo(-9,9);ctx.closePath();ctx.fill();ctx.restore();
   ctx.fillStyle=p.color;ctx.font='900 13px "Microsoft YaHei",sans-serif';ctx.textAlign='center';ctx.fillText(`L${p.id} · ${lagrangeMetrics().distance.toFixed(0)} u`,rx,ry+25);ctx.textAlign='left';
 }
+function drawBinaryScreenCue(){
+  if(level!==8||!binary||mission.done||mission.stage===0)return;
+  const target=mission.stage===1?binaryGatePoint():station,label=mission.stage===1?'引力通道':'暮光站';
+  const sx=(target.x-cam.x)*cam.zoom+W/2,sy=(target.y-cam.y)*cam.zoom+H/2,margin=68;
+  if(sx>margin&&sx<W-margin&&sy>90&&sy<H-180)return;
+  const cx=W/2,cy=H/2,ang=Math.atan2(sy-cy,sx-cx),rx=Math.max(42,Math.min(W-42,cx+Math.cos(ang)*(W/2-56))),ry=Math.max(94,Math.min(H-184,cy+Math.sin(ang)*(H/2-112)));
+  ctx.save();ctx.translate(rx,ry);ctx.rotate(ang);ctx.fillStyle=mission.stage===1?'#4cf0dd':'#5fd068';ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(-9,-9);ctx.lineTo(-5,0);ctx.lineTo(-9,9);ctx.closePath();ctx.fill();ctx.restore();
+  ctx.fillStyle=mission.stage===1?'#4cf0dd':'#5fd068';ctx.font='900 13px "Microsoft YaHei",sans-serif';ctx.textAlign='center';
+  const dist=Math.hypot(target.x-rocket.x,target.y-rocket.y);ctx.fillText(`${label} · ${dist.toFixed(0)} u`,rx,ry+25);ctx.textAlign='left';
+}
 // 任务区域渲染：第一关=同步带；第二关=着陆区；第三关=空间站；第四关=月背；第五关=弹弓；第六关=五个平衡点
 function drawAsteroidDefenseZones(){
   if(!asteroid)return;
@@ -2527,6 +2738,31 @@ function drawAsteroidDefenseZones(){
     }
   }
 }
+function drawBinaryZones(){
+  if(!binary)return;
+  ctx.lineWidth=1.6/cam.zoom;ctx.setLineDash([9/cam.zoom,11/cam.zoom]);
+  ctx.strokeStyle='rgba(255,255,255,.13)';
+  ctx.beginPath();ctx.arc(0,0,BINARY_A_R,0,TAU);ctx.stroke();ctx.beginPath();ctx.arc(0,0,BINARY_B_R,0,TAU);ctx.stroke();
+  ctx.strokeStyle='rgba(76,201,240,.22)';ctx.beginPath();ctx.arc(MARS.x,MARS.y,BINARY_PLANET_R,0,TAU);ctx.stroke();
+  ctx.strokeStyle='rgba(166,222,255,.3)';ctx.beginPath();ctx.arc(MOON.x,MOON.y,BINARY_STATION_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  for(const s of [MARS,MOON]){
+    const hr=s===MARS?binary.heatRadiusA:binary.heatRadiusB;
+    ctx.strokeStyle='rgba(255,91,71,.42)';ctx.lineWidth=4/cam.zoom;ctx.setLineDash([14/cam.zoom,10/cam.zoom]);
+    ctx.beginPath();ctx.arc(s.x,s.y,hr,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  }
+  const g=binaryGatePoint(),dx=MOON.x-MARS.x,dy=MOON.y-MARS.y,d=Math.max(1,Math.hypot(dx,dy)),nx=-dy/d,ny=dx/d,gw=260;
+  ctx.strokeStyle=mission.binaryGateCrossed?'rgba(95,208,104,.9)':'rgba(76,240,221,.9)';ctx.lineWidth=5/cam.zoom;
+  ctx.beginPath();ctx.moveTo(g.x-nx*gw,g.y-ny*gw);ctx.lineTo(g.x+nx*gw,g.y+ny*gw);ctx.stroke();
+  ctx.fillStyle=mission.binaryGateCrossed?'#5fd068':'#4cf0dd';ctx.beginPath();ctx.arc(g.x,g.y,14/cam.zoom,0,TAU);ctx.fill();
+  ctx.font=`900 ${14/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('移动引力通道',g.x,g.y-24/cam.zoom);
+  ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.moveTo(-13/cam.zoom,0);ctx.lineTo(13/cam.zoom,0);ctx.moveTo(0,-13/cam.zoom);ctx.lineTo(0,13/cam.zoom);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.65)';ctx.font=`800 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText('共同质心',0,-20/cam.zoom);
+  if(mission.stage>=1&&!mission.done){
+    const tx=mission.stage===1?g.x:station.x,ty=mission.stage===1?g.y:station.y;
+    ctx.strokeStyle='rgba(255,209,102,.45)';ctx.lineWidth=1.6/cam.zoom;ctx.setLineDash([5/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.moveTo(rocket.x,rocket.y);ctx.lineTo(tx,ty);ctx.stroke();ctx.setLineDash([]);
+  }
+  ctx.textAlign='left';
+}
 function drawMissionZones(){
   if(level===2){ drawLandingZone(); return; }
   if(level===3){ drawStationOrbitZone(); return; }
@@ -2534,6 +2770,7 @@ function drawMissionZones(){
   if(level===5){ drawSlingshotZones(); return; }
   if(level===6){ drawLagrangeZones(); return; }
   if(level===7){ drawAsteroidDefenseZones(); return; }
+  if(level===8){ drawBinaryZones(); return; }
   const slot = padAngle();
   // 同步轨道环形带（金色）
   ctx.strokeStyle='rgba(255,209,102,.35)'; ctx.lineWidth=GEO_BAND*2;
@@ -2631,6 +2868,29 @@ function drawGroundRing(b){
   ctx.strokeStyle='rgba(255,255,255,.10)';
   ctx.lineWidth = RING_OUT + RING_IN;
   ctx.beginPath(); ctx.arc(b.x, b.y, b.r + (RING_OUT-RING_IN)/2, 0, TAU); ctx.stroke();
+}
+function drawBinaryBody(b){
+  if(b.isStar){
+    if(!lowPowerMode){
+      ctx.save();ctx.shadowColor=b===MARS?'rgba(255,145,55,.78)':'rgba(146,214,255,.72)';ctx.shadowBlur=Math.max(18,b.r*.11*cam.zoom);
+      const g=ctx.createRadialGradient(b.x-b.r*.28,b.y-b.r*.3,b.r*.06,b.x,b.y,b.r);
+      if(b===MARS){g.addColorStop(0,'#fff8bd');g.addColorStop(.45,'#ffc04d');g.addColorStop(1,'#f46b2f');}
+      else{g.addColorStop(0,'#ffffff');g.addColorStop(.48,'#bce6ff');g.addColorStop(1,'#5c94e8');}
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,TAU);ctx.fill();ctx.restore();
+    }else{ctx.fillStyle=b===MARS?'#ffad3d':'#9fd5ff';ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,TAU);ctx.fill();}
+    ctx.strokeStyle=b===MARS?'rgba(255,214,104,.7)':'rgba(215,242,255,.72)';ctx.lineWidth=7/cam.zoom;
+    ctx.beginPath();ctx.arc(b.x,b.y,b.r+9/cam.zoom,0,TAU);ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.35)';
+    for(let i=0;i<5;i++){const a=i*1.9+(binary?.angle||0)*.7;ctx.beginPath();ctx.ellipse(b.x+Math.cos(a)*b.r*.48,b.y+Math.sin(a)*b.r*.48,b.r*.13,b.r*.045,a,0,TAU);ctx.fill();}
+  }else{
+    ctx.fillStyle='#2f8fc5';ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,TAU);ctx.fill();
+    ctx.save();ctx.translate(b.x,b.y);ctx.rotate(earthAngle);ctx.beginPath();ctx.arc(0,0,b.r*.98,0,TAU);ctx.clip();
+    ctx.fillStyle='#59c783';ctx.beginPath();ctx.ellipse(-b.r*.26,-b.r*.15,b.r*.38,b.r*.19,.35,0,TAU);ctx.fill();ctx.beginPath();ctx.ellipse(b.r*.35,b.r*.34,b.r*.3,b.r*.15,-.4,0,TAU);ctx.fill();
+    ctx.fillStyle='rgba(235,247,255,.72)';ctx.beginPath();ctx.ellipse(0,-b.r*.82,b.r*.55,b.r*.12,0,0,TAU);ctx.fill();ctx.restore();
+    ctx.strokeStyle='rgba(126,224,255,.7)';ctx.lineWidth=4/cam.zoom;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,TAU);ctx.stroke();
+    const p=padAngle();ctx.fillStyle='#ffd166';ctx.beginPath();ctx.arc(b.x+Math.cos(p)*b.r,b.y+Math.sin(p)*b.r,5/cam.zoom,0,TAU);ctx.fill();
+  }
+  ctx.fillStyle='rgba(255,255,255,.88)';ctx.font=`800 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(b.name,b.x,b.y-b.r-16/cam.zoom);ctx.textAlign='left';
 }
 // iOS 画质档：保留卡通大陆、冰盖和环形山，但把多层大面积渐变改为少量纯色路径。
 // 对满屏大小的地球而言，这比每帧重复光栅化多组渐变和贝塞尔云层省下大量填充率。
@@ -2859,11 +3119,36 @@ function drawStation(){
   ctx.beginPath(); ctx.arc(0,0,20,0,TAU); ctx.stroke();
   ctx.restore();
   ctx.fillStyle='#dff7ff'; ctx.font=`800 ${12/cam.zoom}px "Microsoft YaHei",sans-serif`; ctx.textAlign='center';
-  ctx.fillText(station.docked?'已对接':'天宫实验站',station.x,station.y-30/cam.zoom); ctx.textAlign='left';
+  ctx.fillText(station.docked?'已对接':(level===8?'暮光站':'天宫实验站'),station.x,station.y-30/cam.zoom); ctx.textAlign='left';
 }
 
 // 预测未来轨迹（无动力滑行，与主物理同模型）；同时标注近/远地点
+function predictBinaryPath(ship=rocket){
+  let px=ship.x,py=ship.y,pvx=ship.vx,pvy=ship.vy;
+  const coarse=lowPowerMode||W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches);
+  const horizon=150,steps=coarse?150:460,dt=horizon/steps,pts=[];
+  let impact=null;
+  for(let i=0;i<steps;i++){
+    const t=(i+1)*dt,starA=binary.angle+BINARY_OMEGA*t;
+    const axA=-Math.cos(starA)*BINARY_A_R,ayA=-Math.sin(starA)*BINARY_A_R;
+    const bx=Math.cos(starA)*BINARY_B_R,by=Math.sin(starA)*BINARY_B_R;
+    const planetA=binary.planetAngle+BINARY_PLANET_OMEGA*t;
+    const ex=axA+Math.cos(planetA)*BINARY_PLANET_R,ey=ayA+Math.sin(planetA)*BINARY_PLANET_R;
+    let gx=0,gy=0;
+    for(const b of [{x:axA,y:ayA,mu:BINARY_MU_A,r:MARS.r,name:MARS.name},{x:bx,y:by,mu:BINARY_MU_B,r:MOON.r,name:MOON.name},{x:ex,y:ey,mu:EARTH.mu,r:EARTH.r,name:EARTH.name}]){
+      const dx=b.x-px,dy=b.y-py,d2=Math.max(1,dx*dx+dy*dy),d=Math.sqrt(d2),g=b.mu/d2;
+      gx+=dx/d*g;gy+=dy/d*g;
+    }
+    pvx+=gx*dt;pvy+=gy*dt;px+=pvx*dt;py+=pvy*dt;
+    if(i%2===0)pts.push({x:px,y:py});
+    for(const b of [{x:axA,y:ayA,r:MARS.r,name:MARS.name},{x:bx,y:by,r:MOON.r,name:MOON.name},{x:ex,y:ey,r:EARTH.r,name:EARTH.name}]){
+      if(Math.hypot(px-b.x,py-b.y)<b.r){impact={x:px,y:py,body:b.name};return {pts,markers:[],horizon,steps,impact,moonApproach:null};}
+    }
+  }
+  return {pts,markers:[],horizon,steps,impact,moonApproach:null};
+}
 function predictPath(ship=rocket){
+  if(level===8&&binary)return predictBinaryPath(ship);
   let px=ship.x, py=ship.y, pvx=ship.vx, pvy=ship.vy;
   const dx0=px-EARTH.x, dy0=py-EARTH.y, r0=Math.hypot(dx0,dy0), v20=pvx*pvx+pvy*pvy;
   const energy=v20/2-EARTH.mu/r0;
@@ -2929,10 +3214,11 @@ function getPredictedPath(){
     const dv=Math.hypot(rocket.vx-predictionCache.vx,rocket.vy-predictionCache.vy);
     const age=now-predictionCache.t, cacheMs=lowPowerMode?520:120;
     // 手机端必须至少复用到缓存期限；否则起飞时重力与推力带来的 dv 会让预测几乎每几帧重算。
-    if((lowPowerMode&&age<cacheMs)||(!lowPowerMode&&age<cacheMs&&moved<30&&dv<15&&Math.abs(moonAngle-predictionCache.moonAngle)<.004)) return predictionCache.result;
+    const worldMoved=level===8?Math.abs(normalizeAngle((binary?.angle||0)-(predictionCache.binaryAngle||0))):Math.abs(moonAngle-predictionCache.moonAngle);
+    if((lowPowerMode&&age<cacheMs)||(!lowPowerMode&&age<cacheMs&&moved<30&&dv<15&&worldMoved<.004)) return predictionCache.result;
   }
   const result=predictPath();
-  predictionCache={t:now,x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,moonAngle,result};
+  predictionCache={t:now,x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,moonAngle,binaryAngle:binary?.angle||0,result};
   return result;
 }
 function runPhysicsSelfChecks(){
@@ -2956,7 +3242,29 @@ function runPhysicsSelfChecks(){
     chuteRemainsOutward:canopyOutwardDot>=0.35,period,horizon};
 }
 
+function drawBinaryRadar(){
+  const landscape=H<=520,portrait=W<760&&!landscape,shortPortrait=portrait&&H<720;
+  const RS=landscape?76:portrait?(shortPortrait?76:108):130;
+  const cx=landscape?W-322:shortPortrait?12:W-RS-(portrait?12:14),cy=landscape?16:portrait?H-220-RS-12:H-RS-14;
+  radarHitBox={x:cx-10,y:cy-10,w:RS+20,h:RS+20};
+  const mx=cx+RS/2,my=cy+RS/2+3,centerX=radarMode===0?0:rocket.x,centerY=radarMode===0?0:rocket.y,range=radarMode===0?5600:12000,scale=RS*.42/range;
+  const mapX=x=>mx+(x-centerX)*scale,mapY=y=>my+(y-centerY)*scale;
+  ctx.save();ctx.fillStyle='rgba(8,14,38,.86)';roundRect(cx-8,cy-8,RS+16,RS+16,15);ctx.fill();
+  ctx.strokeStyle=radarMode===0?'rgba(76,201,240,.75)':'rgba(255,209,102,.7)';ctx.lineWidth=1.5;roundRect(cx-8,cy-8,RS+16,RS+16,15);ctx.stroke();
+  ctx.beginPath();ctx.rect(cx,cy+16,RS,RS-31);ctx.clip();
+  const gate=binaryGatePoint();
+  ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1;ctx.setLineDash([2,3]);ctx.beginPath();ctx.arc(mapX(0),mapY(0),BINARY_A_R*scale,0,TAU);ctx.stroke();ctx.beginPath();ctx.arc(mapX(0),mapY(0),BINARY_B_R*scale,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  if(showPred&&!rocket.landed){const p=getPredictedPath();ctx.strokeStyle='rgba(255,209,102,.75)';ctx.lineWidth=1;ctx.setLineDash([2,2]);ctx.beginPath();for(let i=0;i<p.pts.length;i++){const q=p.pts[i];i?ctx.lineTo(mapX(q.x),mapY(q.y)):ctx.moveTo(mapX(q.x),mapY(q.y));}ctx.stroke();ctx.setLineDash([]);}
+  for(const b of [MARS,MOON,EARTH]){const r=Math.max(b.isStar?4:2.5,b.r*scale);ctx.fillStyle=b===MARS?'#ffad3d':b===MOON?'#b9e4ff':'#4cc9f0';ctx.beginPath();ctx.arc(mapX(b.x),mapY(b.y),r,0,TAU);ctx.fill();}
+  ctx.fillStyle='#4cf0dd';ctx.beginPath();ctx.arc(mapX(gate.x),mapY(gate.y),3,0,TAU);ctx.fill();
+  ctx.fillStyle='#5fd068';ctx.beginPath();ctx.arc(mapX(station.x),mapY(station.y),3,0,TAU);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mapX(rocket.x),mapY(rocket.y),3.5,0,TAU);ctx.fill();
+  if(radarMode===1){const vw=Math.max(8,W/cam.zoom*scale),vh=Math.max(8,H/cam.zoom*scale);ctx.strokeStyle='#4cc9f0';ctx.setLineDash([3,2]);ctx.strokeRect(mapX(cam.x)-vw/2,mapY(cam.y)-vh/2,vw,vh);ctx.setLineDash([]);}
+  ctx.restore();ctx.fillStyle='#fff';ctx.font=`800 ${portrait?8:9}px sans-serif`;ctx.textAlign='left';ctx.fillText(RS<=80?(radarMode===0?'双星 · 点按':'全局 · 点按'):(radarMode===0?'双星雷达 · 点击切换':'全局导航 · 点击切换'),cx+5,cy+11);
+  ctx.fillStyle='rgba(255,255,255,.65)';ctx.font=`700 ${portrait?7:8}px sans-serif`;ctx.fillText(RS<=80?'白船 · 青门':'白船 · 青门 · 绿站',cx+5,cy+RS-5);
+}
 function drawRadar(){
+  if(level===8){drawBinaryRadar();return;}
   const landscape=H<=520, portrait=W<760&&!landscape, desktop=!portrait&&!landscape;
   if(!portrait&&!landscape&&!desktop){ radarHitBox=null; return; }
   const shortPortrait=portrait&&H<720;
@@ -3197,7 +3505,11 @@ function draw(){
   }
 
   drawMissionZones();
-  for(const b of BODIES){ if(worldCircleVisible(b,120)){ drawGroundRing(b); drawBody(b); } }
+  for(const b of BODIES){
+    if(!worldCircleVisible(b,120))continue;
+    if(level===8){if(!b.isStar)drawGroundRing(b);drawBinaryBody(b);}
+    else{drawGroundRing(b);drawBody(b);}
+  }
   drawAsteroid();
   drawStation();
   drawGuideGhost();
@@ -3213,6 +3525,7 @@ function draw(){
   drawRocket();
   ctx.restore();
   drawLagrangeScreenCue();
+  drawBinaryScreenCue();
 
   // ---- HUD 仪表 ----
   const speed = Math.hypot(rocket.vx, rocket.vy);
@@ -3261,14 +3574,16 @@ function draw(){
   }
   // 速度显示：绝对速度 + 关键相对速度（靠近哪个显示哪个）
   const earthAlt = Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y) - EARTH.r;
-  const lunarM=level>=4?moonMetrics():null, nearMoon=!!(lunarM&&lunarM.distance<2600);
-  const alt = nearMoon?lunarM.distance-MOON.r:earthAlt;
+  const binaryM=level===8?binaryMetrics():null;
+  const lunarM=level>=4&&level!==8?moonMetrics():null, nearMoon=!!(lunarM&&lunarM.distance<2600);
+  const nearDeparture=level===8&&earthAlt<600;
+  const alt=level===8?(nearDeparture?earthAlt:binaryM.distB-MOON.r):(nearMoon?lunarM.distance-MOON.r:earthAlt);
   // 相对地球表面（扣自转）
   const dxE=rocket.x-EARTH.x, dyE=rocket.y-EARTH.y, dE=Math.hypot(dxE,dyE);
   const saE=Math.atan2(dyE,dxE);
-  const relEvx=rocket.vx-(-Math.sin(saE)*EARTH_OMEGA*dE), relEvy=rocket.vy-(Math.cos(saE)*EARTH_OMEGA*dE);
+  const relEvx=rocket.vx-((EARTH.vx||0)-Math.sin(saE)*EARTH_OMEGA*dE), relEvy=rocket.vy-((EARTH.vy||0)+Math.cos(saE)*EARTH_OMEGA*dE);
   const vRelEarth=Math.hypot(relEvx,relEvy);
-  const landscapeHUD=H<=520, teleCompact=W<760||landscapeHUD, teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?70:teleCompact?278:14, teleW=teleCompact?174:206, teleH=((level===5||level===7)?126:level===1?86:(level===3||level===4||level===6)?106:66);
+  const landscapeHUD=H<=520, teleCompact=W<760||landscapeHUD, teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?70:teleCompact?278:14, teleW=teleCompact?174:206, teleH=((level===5||level===7||level===8)?126:level===1?86:(level===3||level===4||level===6)?106:66);
   ctx.fillStyle='rgba(8,14,38,.68)'; roundRect(teleX,teleY,teleW,teleH,14); ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1; roundRect(teleX,teleY,teleW,teleH,14); ctx.stroke();
   ctx.textAlign='right';
@@ -3279,6 +3594,8 @@ function draw(){
   ctx.fillStyle='#4cc9f0';
   if(level===7&&asteroid){
     const am=asteroidMetrics();ctx.fillText(`小行星相对 ${am.relSpeed.toFixed(1)} u/s`,W-20,teleY+36);
+  }else if(level===8){
+    const sm=stationMetrics();ctx.fillText(mission.stage>=2?`暮光站相对 ${sm.relSpeed.toFixed(1)} u/s`:`目标星相对 ${binaryM.targetRel.toFixed(1)} u/s`,W-20,teleY+36);
   }else if(nearMoon){
     ctx.fillText(`月球相对 ${lunarM.relSpeed.toFixed(1)} u/s`, W-20, teleY+36);
   }else if(alt < 1200){ // 近地/着陆：显示相对地表
@@ -3287,7 +3604,7 @@ function draw(){
     ctx.fillText(`轨道速度 ${speed.toFixed(1)} u/s`, W-20, teleY+36);
   }
   ctx.fillStyle='rgba(255,255,255,.85)';
-  ctx.fillText(`${nearMoon?'月面':'高度'} ${alt.toFixed(0)} u`, W-20, teleY+56);
+  ctx.fillText(`${level===8?(nearDeparture?'离晨曦星':'离暮光星'):nearMoon?'月面':'高度'} ${alt.toFixed(0)} u`, W-20, teleY+56);
   ctx.fillStyle='rgba(255,209,102,.9)';
   if(level===1) ctx.fillText(`同步带高度 ${(R_GEO-EARTH.r-GEO_BAND).toFixed(0)}~${(R_GEO-EARTH.r+GEO_BAND).toFixed(0)}`, W-20, teleY+76);
   if(level===3&&station){
@@ -3321,6 +3638,12 @@ function draw(){
     ctx.fillStyle=f.safe?'#5fd068':'#ef476f';ctx.fillText(f.safe?'预测：地月均安全':`预测：${f.impact?'将撞'+f.impact.body:'距离仍危险'}`,W-20,teleY+96);
     const asteroidG=asteroid.mu/Math.max(asteroid.r*asteroid.r,am.distance*am.distance);
     ctx.fillStyle='#ffd166';ctx.fillText(mission.asteroidAnchored?`铰链 ${(mission.hingeAngle*180/Math.PI).toFixed(0)}° · 小行星 g ${asteroidG.toFixed(2)}`:`小行星 g ${asteroidG.toFixed(2)} · 自转 ${(asteroid.av*180/Math.PI).toFixed(1)}°/s`,W-20,teleY+116);
+  }
+  if(level===8&&binaryM){
+    const sm=stationMetrics();
+    ctx.fillStyle=mission.binaryGateCrossed?'#5fd068':'#4cf0dd';ctx.fillText(`引力通道 ${binaryM.gateDistance.toFixed(0)} u`,W-20,teleY+76);
+    ctx.fillStyle=binaryM.targetEnergy<0?'#5fd068':'#ffd166';ctx.fillText(binaryM.targetEnergy<0?'已被暮光星捕获':`捕获能量 +${binaryM.targetEnergy.toFixed(0)}`,W-20,teleY+96);
+    ctx.fillStyle=mission.binaryHeatViolated?'#ef476f':'#9fe7ff';ctx.fillText(`空间站 ${sm.distance.toFixed(0)} u · ${mission.binaryHeatViolated?'曾进高温区':'热区安全'}`,W-20,teleY+116);
   }
   ctx.fillStyle='#fff';
   ctx.textAlign='left';
