@@ -166,6 +166,7 @@
     <article class="level-card" data-level-card="4" tabindex="0"><div class="level-number">MISSION 04</div><div class="level-icon">🌘</div><h2>月背动力着陆</h2><p>飞到月球背面，不用降落伞，只靠发动机安全落地。</p><div class="level-meta"><div class="level-stars" data-level-stars="4">☆☆☆</div><div class="level-score"><strong data-level-score="4">—</strong>最高分</div></div><button class="level-play" data-start-level="4">开始任务</button></article>
     <article class="level-card" data-level-card="5" tabindex="0"><div class="level-number">MISSION 05</div><div class="level-icon">🪃</div><h2>月球引力弹弓</h2><p>燃料不够直接逃走；借月球甩出去，飞出绿色大圈且不再掉回来。</p><div class="level-meta"><div class="level-stars" data-level-stars="5">☆☆☆</div><div class="level-score"><strong data-level-score="5">—</strong>最高分</div></div><button class="level-play" data-start-level="5">开始任务</button></article>
     <article class="level-card" data-level-card="6" tabindex="0"><div class="level-number">MISSION 06</div><div class="level-icon">⚖️</div><h2>地月引力平衡点</h2><p>任选一个地月引力平衡点，把卫星送到那里并停稳。</p><div class="level-meta"><div class="level-stars" data-level-stars="6">☆☆☆</div><div class="level-score"><strong data-level-score="6">—</strong>最高分</div></div><button class="level-play" data-start-level="6">开始任务</button></article>
+    <article class="level-card" data-level-card="7" tabindex="0"><div class="level-number">MISSION 07</div><div class="level-icon">☄️</div><h2>小行星拦截</h2><p>追上会撞向地球的小行星；软着陆持续推离，或直接撞击改变轨道。</p><div class="level-meta"><div class="level-stars" data-level-stars="7">☆☆☆</div><div class="level-score"><strong data-level-score="7">—</strong>最高分</div></div><button class="level-play" data-start-level="7">开始任务</button></article>
   </div>
   <div class="level-footer"><button id="continueLevel" onclick="closeLevelSelect()">继续当前任务</button></div>
 </div></div>
@@ -218,7 +219,8 @@ const CHALLENGE_CONFIG={
   3:{fuel:100,fuelStar:20,parTime:300,life:300,mass:1.2},
   4:{fuel:95,fuelStar:18,parTime:390,life:0,mass:1},
   5:{fuel:31,parTime:300,life:0,mass:1,vInfStar:55,exitAngleStar:18},
-  6:{fuel:100,parTime:480,life:0,mass:1}
+  6:{fuel:100,parTime:480,life:0,mass:1},
+  7:{fuel:100,fuelStar:18,parTime:220,life:0,mass:1}
 };
 const STAR_RULES={
   1:['完成同步轨道部署：★','在绿色目标经度内释放：+★','挑战燃料剩余至少 15%：+★'],
@@ -226,7 +228,8 @@ const STAR_RULES={
   3:['完成重载货运对接：★★','挑战燃料剩余至少 20%：+★'],
   4:['安全着陆月球背面：★','精确落入绿色月背中央区：+★','挑战燃料剩余至少 18%：+★'],
   5:['飞出绿圈且不会返回：★','逃逸余速 v∞ 至少 55 u/s：+★','穿越绿圈时方向偏差不超过 18°：+★'],
-  6:['抵达 L1：★','抵达 L4 或 L5：★★','抵达 L2 或 L3：★★★']
+  6:['抵达 L1：★','抵达 L4 或 L5：★★','抵达 L2 或 L3：★★★'],
+  7:['让小行星同时避开地球和月球：★','飞船没有在撞击中损毁：+★','挑战燃料剩余至少 18%：+★']
 };
 
 // ---------- 关卡框架 ----------
@@ -275,6 +278,10 @@ const SLING_DEPART_R = 1700;           // 离开月球后结算弹弓效果
 const SLING_EXIT_R = 12000;            // 地心逃逸门半径
 const LAUNCH_LOCK_ALT = 90;            // 地球发射初段保持当地垂直，之后交还转向
 const ROT_ACC = 3.0;                   // 转动惯量：角加速度
+const ASTEROID_R=85, ASTEROID_SOFT_SPEED=22, ASTEROID_IMPACT_SPEED=58;
+const ASTEROID_PUSH_FORCE=80.5, ASTEROID_CONTACT_FORCE=29.4, ASTEROID_HINGE_LIMIT=Math.PI/3;
+const ASTEROID_MU_PER_MASS=220;         // 缩比引力参数与质量绑定；表面重力约为地球的 1/26。
+const ASTEROID_SAFE_EARTH=EARTH.r+ASTEROID_R+120, ASTEROID_SAFE_MOON=MOON.r+ASTEROID_R+80;
 // 姿态控制模式（C 切换）：0=随速偏转 1=手动转向 2=纯惯性
 const ATT_MODES = ['随速偏转','手动转向','纯惯性'];
 let attMode = 1, velOffset = 0;
@@ -311,7 +318,8 @@ const LEVELS = {
   3: { title:'🧩 第三关 · 空间站交会对接', sub:'追上空间站，速度一致后慢慢对接' },
   4: { title:'🌘 第四关 · 月背动力着陆', sub:'飞到月球背面，只靠发动机安全落地' },
   5: { title:'🪃 第五关 · 月球引力弹弓', sub:'借月球甩出去，飞出绿圈且不再掉回来' },
-  6: { title:'⚖️ 第六关 · 地月引力平衡点', sub:'任选一个引力平衡点，把卫星送过去停稳' }
+  6: { title:'⚖️ 第六关 · 地月引力平衡点', sub:'任选一个引力平衡点，把卫星送过去停稳' },
+  7: { title:'☄️ 第七关 · 小行星拦截', sub:'追上危险小行星，改变它的轨道，保护地球和月球' }
 };
 let level = 1;
 const stageInfoL1 = [
@@ -418,9 +426,27 @@ const stageInfoL6 = [
     science:'L1 常用于持续观测太阳或地球—月球之间的区域；L2 适合背向地球的深空观测；L3 很难直接利用；L4、L5 适合研究共轨天体和长期稳定区域。现实中太阳、其他行星和非球形引力都会扰动航天器，所以仍需定期修正轨道。',
     success:'成功标志：在任意一个圆环内匹配该点速度并稳定保持，系统自动部署。'}
 ];
+const stageInfoL7 = [
+  {name:'① 发射追上小行星', hint:'红线就是小行星的撞击路线，先飞出去拦住它',
+    steps:['按推进发射，点击小地图切到全局视角寻找红色小行星。','别只瞄准它现在的位置，要朝它前方飞，尽早完成拦截。','红色预测线末端的叉号表示导航电脑预计会撞上哪个天体。'],
+    science:'行星防御最重要的是尽早发现。提前很多年只需极小速度变化，日积月累就能让小行星错过地球；发现得越晚，所需推力越大。',
+    success:'成功标志：接近小行星。可以低速着陆，也可以用飞船直接撞击改变它的速度。'},
+  {name:'② 选择拦截方式', hint:'着陆姿态不限；小行星有微弱引力，慢慢贴近就会落下',
+    steps:['机头朝上、朝下或侧着都能着陆；系统只检查相对小行星的接触速度。','标准方案：把相对速度降到 22 u/s 以下，再轻轻接触小行星表面。','自由方案：高速正面撞上去会牺牲飞船，但撞击动量仍会传给小行星。','只看最终轨道是否安全，不要求照着教学顺序操作。'],
+    science:'小行星质量小，但并非没有引力。本关的缩比表面重力约 2.1 u/s²、逃逸速度约 19 u/s，能帮助低速贴近，却不会像地球那样强行吸住飞船。动能撞击器则依靠动量交换改变它的轨道。',
+    success:'成功标志：火箭在小行星表面软着陆，或撞击后红色危险轨迹明显偏转。'},
+  {name:'③ 锚定并翻转', hint:'软着陆后点“锚定并翻转”，让发动机朝外、机头抵住地面',
+    steps:['点击发光的“锚定并翻转”按钮，火箭会自动把头转向小行星并锁紧。','锚定后左右键不再旋转整艘火箭，而是调节铰链喷射角。','也可以不锚定，贴在表面直接推进，但传力效率会较低。'],
+    science:'直接把发动机固定在小行星上持续推力，属于慢推力偏转思路。松散碎石堆天体未必适合打孔锚定，真实方案还可能使用离子束、引力拖船或表面质量抛射。',
+    success:'成功标志：界面显示“已锚定”，左右控制显示为铰链角度。'},
+  {name:'④ 把红线推离地月', hint:'调铰链再推进，直到预测线变绿并稳定',
+    steps:['观察红色小行星预测线和预计撞击叉号。','用左右键调喷射角，按推进持续改变小行星速度；别只让它错过地球又撞上月球。','预测线变绿并稳定几秒后自动通关。'],
+    science:'一次成功偏转不只看“错过地球”，还要复核月球和未来回归轨道。现实任务会用长期精密测轨不断更新撞击走廊，而不是只看一次瞬时预测。',
+    success:'成功标志：未来预测同时避开地球和月球，并保持安全状态 2.5 秒。'}
+];
 let mission;
 
-let rocket, station, trail, ghostShip, ghostTrail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
+let rocket, station, asteroid, asteroidTrail, trail, ghostShip, ghostTrail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
 let challengeMode=false;
 let paused = false, retryTimer = null;
 let rewindClickAt = 0, rewindHistoryIndex = -1;
@@ -481,6 +507,11 @@ function updateMoon(dt){
   MOON.x=EARTH.x+c*MOON_ORBIT_R; MOON.y=EARTH.y+s*MOON_ORBIT_R;
   MOON.vx=-s*v; MOON.vy=c*v;
 }
+function createAsteroid(){
+  const mass=70;
+  return {x:9000,y:-2600,vx:-55,vy:0,r:ASTEROID_R,mass,mu:mass*ASTEROID_MU_PER_MASS,angle:.35,av:.018,
+    inertia:.5*70*ASTEROID_R*ASTEROID_R,name:'小行星 2026-Q7',col:'#a97850',alive:true};
+}
 function lagrangePoints(){
   const dx=MOON.x-EARTH.x,dy=MOON.y-EARTH.y,d=Math.max(1,Math.hypot(dx,dy));
   const ux=dx/d,uy=dy/d,px=-uy,py=ux;
@@ -518,6 +549,65 @@ function moonMetrics(ship=rocket){
   const rvx=ship.vx-MOON.vx, rvy=ship.vy-MOON.vy, relSpeed=Math.hypot(rvx,rvy);
   const outwardAngle=Math.atan2(ship.y-MOON.y,ship.x-MOON.x);
   return {dx,dy,distance,rvx,rvy,relSpeed,outwardAngle,farDelta:normalizeAngle(outwardAngle-moonAngle)};
+}
+function asteroidMetrics(ship=rocket){
+  if(!asteroid) return {distance:Infinity,relSpeed:Infinity,closing:0};
+  const dx=asteroid.x-ship.x,dy=asteroid.y-ship.y,distance=Math.hypot(dx,dy);
+  const rvx=ship.vx-asteroid.vx,rvy=ship.vy-asteroid.vy,relSpeed=Math.hypot(rvx,rvy);
+  return {dx,dy,distance,rvx,rvy,relSpeed,closing:distance>0?(rvx*dx+rvy*dy)/distance:0};
+}
+function asteroidGravityAt(x,y,t=0){
+  let ax=0,ay=0;
+  for(const b of BODIES){
+    let bx=b.x,by=b.y;
+    if(b===MOON){const a=moonAngle+MOON_OMEGA*t;bx=EARTH.x+Math.cos(a)*MOON_ORBIT_R;by=EARTH.y+Math.sin(a)*MOON_ORBIT_R;}
+    const dx=bx-x,dy=by-y,d2=Math.max(1,dx*dx+dy*dy),d=Math.sqrt(d2),g=b.mu/d2;
+    ax+=dx/d*g;ay+=dy/d*g;
+  }
+  return {ax,ay};
+}
+function updateAsteroid(dt){
+  if(level!==7||!asteroid||!asteroid.alive||mission.done) return;
+  const g=asteroidGravityAt(asteroid.x,asteroid.y);
+  asteroid.vx+=g.ax*dt;asteroid.vy+=g.ay*dt;
+  asteroid.x+=asteroid.vx*dt;asteroid.y+=asteroid.vy*dt;
+  asteroid.angle=normalizeAngle(asteroid.angle+asteroid.av*dt);
+  if(!lowPowerMode||asteroidTrail.length===0||flightT%0.14<dt){
+    asteroidTrail.push({x:asteroid.x,y:asteroid.y});
+    if(asteroidTrail.length>(lowPowerMode?180:500)) asteroidTrail.shift();
+  }
+  for(const b of [EARTH,MOON]){
+    if(Math.hypot(asteroid.x-b.x,asteroid.y-b.y)<=asteroid.r+b.r){
+      asteroid.alive=false;state='dead';
+      showMsg('☄️',`${b.name}遭到撞击！`,`偏转量还不够，小行星撞上了${b.name}。<br><span style="color:#888">按 R 回到拦截阶段，或从暂停菜单重新开始整关。</span>`);
+      return;
+    }
+  }
+}
+function predictAsteroidPath(){
+  if(!asteroid) return {pts:[],safe:false,minEarth:Infinity,minMoon:Infinity,impact:null};
+  let x=asteroid.x,y=asteroid.y,vx=asteroid.vx,vy=asteroid.vy,minEarth=Infinity,minMoon=Infinity,impact=null;
+  const horizon=190,steps=lowPowerMode?150:300,dt=horizon/steps,pts=[];
+  for(let i=0;i<steps;i++){
+    const t=i*dt,g=asteroidGravityAt(x,y,t);
+    vx+=g.ax*dt;vy+=g.ay*dt;x+=vx*dt;y+=vy*dt;
+    if(i%2===0)pts.push({x,y});
+    const ma=moonAngle+MOON_OMEGA*t,mx=EARTH.x+Math.cos(ma)*MOON_ORBIT_R,my=EARTH.y+Math.sin(ma)*MOON_ORBIT_R;
+    const de=Math.hypot(x-EARTH.x,y-EARTH.y),dm=Math.hypot(x-mx,y-my);
+    minEarth=Math.min(minEarth,de);minMoon=Math.min(minMoon,dm);
+    if(!impact&&de<=EARTH.r+asteroid.r)impact={x,y,body:'地球',time:t};
+    if(!impact&&dm<=MOON.r+asteroid.r)impact={x,y,body:'月球',time:t};
+  }
+  const safe=!impact&&minEarth>ASTEROID_SAFE_EARTH&&minMoon>ASTEROID_SAFE_MOON;
+  return {pts,safe,minEarth,minMoon,impact,horizon};
+}
+function getAsteroidForecast(force=false){
+  if(!mission||!asteroid)return predictAsteroidPath();
+  const now=performance.now(),c=mission.asteroidForecast,cacheMs=lowPowerMode?650:220;
+  if(!force&&c&&now-c._t<cacheMs&&Math.hypot(asteroid.vx-c._vx,asteroid.vy-c._vy)<.7)return c;
+  const result=predictAsteroidPath();
+  result._t=now;result._vx=asteroid.vx;result._vy=asteroid.vy;
+  mission.asteroidForecast=result;return result;
 }
 function earthSpecificEnergy(ship=rocket){
   const dx=ship.x-EARTH.x,dy=ship.y-EARTH.y,r=Math.hypot(dx,dy);
@@ -576,7 +666,7 @@ function applyLagrangeAssist(dt){
   rocket.vx+=(m.point.vx-rocket.vx)*blend; rocket.vy+=(m.point.vy-rocket.vy)*blend;
 }
 // 当前关卡的教学步骤
-function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:level===4?stageInfoL4:level===5?stageInfoL5:stageInfoL6; }
+function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:level===4?stageInfoL4:level===5?stageInfoL5:level===6?stageInfoL6:stageInfoL7; }
 
 const SAVE_KEY='spacegame-progress-v2';
 function loadProgress(){
@@ -598,7 +688,7 @@ function saveLevelResult(levelId,score,earnedStars=1){
 }
 function updateLevelCards(){
   const progress=loadProgress();
-  for(let i=1;i<=6;i++){
+  for(let i=1;i<=7;i++){
     const result=progress[i]||{score:0,stars:0};
     const scoreEl=document.querySelector(`[data-level-score="${i}"]`), starsEl=document.querySelector(`[data-level-stars="${i}"]`);
     if(scoreEl) scoreEl.textContent=result.score||'—';
@@ -655,14 +745,14 @@ function closeLevelSelect(){
   syncUI();
 }
 function startLevel(levelId){
-  level=Math.max(1,Math.min(6,Number(levelId)||1));
+  level=Math.max(1,Math.min(7,Number(levelId)||1));
   challengeMode=false;
   gameStarted=true; levelSelectOpen=false; paused=false; lastBriefedLevel=0;
   document.getElementById('levelSelect').classList.remove('is-visible');
   resetGame();
 }
 function nextLevel(){
-  if(level<6) startLevel(level+1);
+  if(level<7) startLevel(level+1);
   else openLevelSelect();
 }
 function restartCurrent(full=false){
@@ -691,9 +781,10 @@ function resetGame(){
   paused = false;
   clearFlightInputs(); velOffset=0;
   earthAngle = 0;
-  moonAngle = level===5 ? 2.07 : MOON_ANG0; updateMoon(0);
+  moonAngle = level===5 ? 2.07 : level===7 ? -2.7 : MOON_ANG0; updateMoon(0);
   station = level===3 ? {angle:.55,x:0,y:0,vx:0,vy:0,a:0,docked:false} : null;
   if(station) updateStation(0);
+  asteroid=level===7?createAsteroid():null; asteroidTrail=[];
   const challengeCfg=CHALLENGE_CONFIG[level],lifeLimit=challengeMode&&challengeCfg.life?challengeCfg.life:LIFE_MAX;
   const initialFuel=level===5?SLING_LAUNCH_FUEL:challengeCfg.fuel;
   const rocketMass=challengeMode?challengeCfg.mass:1;
@@ -738,7 +829,9 @@ function resetGame(){
     fuelBudget:challengeCfg.fuel,fuelUsed:0,lifeLimit,lifeExpired:false,usedChute:false,
     slingInitialEnergy:0,slingEntryEnergy:0,slingClosestDistance:Infinity,slingClosestTrailing:Infinity,
     slingWasInside:false,slingFlybyValid:false,slingGain:0,slingVInf:0,slingFailed:false,
-    lagrangeTarget:1,lagrangeDistance:Infinity,lagrangeRelSpeed:Infinity};
+    lagrangeTarget:1,lagrangeDistance:Infinity,lagrangeRelSpeed:Infinity,
+    asteroidContact:false,asteroidAnchored:false,asteroidMountAngle:0,hingeAngle:0,
+    asteroidChanged:false,asteroidImpact:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null};
   if(level===5){
     mission.slingInitialEnergy=earthSpecificEnergy(rocket);
     mission.slingEntryEnergy=mission.slingInitialEnergy;
@@ -749,6 +842,7 @@ function resetGame(){
     mode:'physics',fuel:SLING_LAUNCH_FUEL,active:true,started:false,burnedOut:false,thrusting:false,complete:false,time:0,trailT:0,energy:earthSpecificEnergy(rocket)
   }:createRecordedGuide(level);
   if(level===6) mission.dynHint='五个目标任选｜按推进后整个世界同步开始';
+  if(level===7) mission.dynHint='红线会撞地球｜按推进后世界同步开始';
   saveCheckpoint();
   camInit = true;
   hideMsg();
@@ -765,7 +859,7 @@ function showMsg(emoji,title,text){
   document.getElementById('mText').innerHTML = text;
   const next = document.getElementById('mNext');
   next.style.display = mission && mission.done ? 'inline-block' : 'none';
-  next.textContent = level<6 ? '下一关 (L)' : '返回目录 (L)';
+  next.textContent = level<7 ? '下一关 (L)' : '返回目录 (L)';
   document.getElementById('msg').style.display = 'flex';
 }
 function openBriefing(){
@@ -835,7 +929,13 @@ function toggleAssist(){
 }
 function togglePause(){ paused=!paused; clearFlightInputs(); syncUI(); }
 function missionActionState(){
-  if(!mission||mission.done||state!=='fly'||rocket.landed) return {visible:false};
+  if(!mission||mission.done||state!=='fly') return {visible:false};
+  if(level===7&&mission.asteroidContact){
+    return mission.asteroidAnchored
+      ?{visible:true,icon:'🔓',label:'解除锚定',aria:'解除小行星锚定并离开表面'}
+      :{visible:true,icon:'⚓',label:'锚定并翻转',aria:'锚定小行星并把火箭机头翻向表面'};
+  }
+  if(rocket.landed) return {visible:false};
   if(level===1&&mission.deployReady&&directSyncStatus(rocket,1).ok) return {visible:true,icon:'🛰',label:'释放卫星',aria:'释放同步卫星'};
   if(level===2&&!rocket.chute){
     const dx=rocket.x-EARTH.x,dy=rocket.y-EARTH.y,d=Math.hypot(dx,dy),alt=d-EARTH.r;
@@ -912,7 +1012,7 @@ function setActionCue(cues){
 function updateActionCue(){
   syncMissionAction();
   if(!mission||mission.done||state!=='fly'||paused){ setActionCue([]); return; }
-  if(missionActionState().visible){ setActionCue(['mission']); return; }
+  if(missionActionState().visible&&!(level===7&&mission.asteroidAnchored)){ setActionCue(['mission']); return; }
   const dx=rocket.x-EARTH.x, dy=rocket.y-EARTH.y, r=Math.hypot(dx,dy), alt=r-EARTH.r;
   const vAng=Math.atan2(rocket.vy,rocket.vx), localUp=Math.atan2(dy,dx);
   const radial=(rocket.vx*dx+rocket.vy*dy)/r;
@@ -976,6 +1076,15 @@ function updateActionCue(){
       const m=lagrangeMetrics(),cancelAngle=Math.atan2(-m.rvy,-m.rvx),approachAngle=Math.atan2(m.dy,m.dx);
       const target=m.relSpeed>(mission.stage>=2?18:45)?cancelAngle:approachAngle;
       const turn=cueTurnTo(target,mission.stage===3?.16:.25); cues=turn?[turn]:['thrust'];
+    }
+  }else if(level===7){
+    if(mission.asteroidContact){
+      cues=mission.asteroidAnchored?['thrust']:['mission'];
+    }else if(rocket.landed)cues=['thrust'];
+    else{
+      const m=asteroidMetrics(),cancelAngle=Math.atan2(-m.rvy,-m.rvx),approachAngle=Math.atan2(m.dy,m.dx);
+      const target=m.relSpeed>ASTEROID_SOFT_SPEED*.8?cancelAngle:approachAngle;
+      const turn=cueTurnTo(target,.24);cues=turn?[turn]:['thrust'];
     }
   }
   setActionCue(cues);
@@ -1224,6 +1333,74 @@ function boom(x,y){
   }
   shake = 14;
 }
+function asteroidContactCheck(){
+  if(level!==7||!asteroid||!asteroid.alive||mission.asteroidContact||rocket.asteroidGrace>0)return false;
+  const dx=rocket.x-asteroid.x,dy=rocket.y-asteroid.y,d=Math.max(1,Math.hypot(dx,dy));
+  if(d>asteroid.r+RING_OUT)return false;
+  const ux=dx/d,uy=dy/d,rvx=rocket.vx-asteroid.vx,rvy=rocket.vy-asteroid.vy;
+  const relSpeed=Math.hypot(rvx,rvy),approach=rvx*ux+rvy*uy;
+  if(approach>=0&&d>asteroid.r+4)return false;
+  mission.asteroidChanged=true;
+  mission.asteroidMountAngle=Math.atan2(dy,dx);
+  mission.asteroidMountLocal=normalizeAngle(mission.asteroidMountAngle-asteroid.angle);
+  if(relSpeed<=ASTEROID_SOFT_SPEED){
+    mission.asteroidContact=true;mission.asteroidAnchored=false;mission.hingeAngle=0;
+    rocket.landed=true;rocket.body=asteroid;rocket.vx=asteroid.vx;rocket.vy=asteroid.vy;rocket.av=0;
+    rocket.x=asteroid.x+ux*(asteroid.r+17);rocket.y=asteroid.y+uy*(asteroid.r+17);
+    if(mission.stage<2)unlockFinalStage(2,'✅ 已在小行星表面软着陆！可以锚定，也可以直接推');
+    else{mission.toast='✅ 软着陆成功｜点击“锚定并翻转”提高传力效率';mission.toastT=4;}
+    return true;
+  }
+  // 高速接触按动能撞击处理：质心获得冲量，偏心撞击同时改变自转。
+  const impactMass=6*Math.max(1,rocket.mass||1),impulseRatio=impactMass/(asteroid.mass+impactMass);
+  const dvx=rvx*impulseRatio,dvy=rvy*impulseRatio;
+  asteroid.vx+=dvx;asteroid.vy+=dvy;
+  asteroid.av+=2*(ux*dvy-uy*dvx)/asteroid.r;
+  mission.asteroidImpact=true;mission.asteroidSafeT=0;mission.stage=3;mission.asteroidForecast=null;
+  rocket.alive=false;rocket.thrusting=false;boom(rocket.x,rocket.y);
+  mission.toast=`💥 动能撞击完成｜速度传递 ${Math.hypot(dvx,dvy).toFixed(1)} u/s，正在评估新轨道`;
+  mission.toastT=6;
+  return true;
+}
+function updateMountedAsteroidRocket(dt,dtReal){
+  if(!asteroid||!mission.asteroidContact)return;
+  const left=keys['ArrowLeft']||keys['KeyA'],right=keys['ArrowRight']||keys['KeyD'];
+  if(mission.asteroidAnchored){
+    if(left)mission.hingeAngle-=ROT*Math.min(dtReal,.02);
+    if(right)mission.hingeAngle+=ROT*Math.min(dtReal,.02);
+    mission.hingeAngle=Math.max(-ASTEROID_HINGE_LIMIT,Math.min(ASTEROID_HINGE_LIMIT,mission.hingeAngle));
+  }else{
+    if(left)rocket.a-=ROT*Math.min(dtReal,.02);
+    if(right)rocket.a+=ROT*Math.min(dtReal,.02);
+  }
+  const mount=asteroid.angle+(mission.asteroidMountLocal||0);
+  mission.asteroidMountAngle=mount;
+  if(mission.asteroidAnchored)rocket.a=mount+Math.PI+mission.hingeAngle;
+  const fx=Math.cos(rocket.a),fy=Math.sin(rocket.a),infiniteFuel=mission.assistMode&&!mission.done;
+  rocket.thrusting=(keys['ArrowUp']||keys['KeyW'])&&(infiniteFuel||rocket.fuel>0);
+  rocket.thrustPower=rocket.thrusting?1:0;
+  if(rocket.thrusting){
+    const poweredDt=infiniteFuel?Math.min(dt,.02):Math.min(dt,.02,rocket.fuel/9);
+    const accel=(mission.asteroidAnchored?ASTEROID_PUSH_FORCE:ASTEROID_CONTACT_FORCE)/asteroid.mass;
+    const dvx=fx*accel*poweredDt,dvy=fy*accel*poweredDt;
+    asteroid.vx+=dvx;asteroid.vy+=dvy;
+    const ux=Math.cos(mount),uy=Math.sin(mount);
+    asteroid.av+=2*(ux*dvy-uy*dvx)/asteroid.r;
+    mission.asteroidChanged=true;mission.asteroidSafeT=0;
+    if(!infiniteFuel){const spent=9*poweredDt;rocket.fuel=Math.max(0,rocket.fuel-spent);mission.fuelUsed+=spent;}
+    exhaustAccumulator=Math.min(3,exhaustAccumulator+dtReal*(lowPowerMode?32:58));
+    const count=Math.floor(exhaustAccumulator);exhaustAccumulator-=count;
+    for(let i=0;i<count&&particles.length<(lowPowerMode?70:150);i++)particles.push({
+      x:rocket.x-fx*14,y:rocket.y-fy*14,vx:asteroid.vx-fx*(55+Math.random()*30),vy:asteroid.vy-fy*(55+Math.random()*30),
+      life:.2+Math.random()*.25,c:i%2?'#ff7043':'#ffd166'});
+    if(mission.assistMode)bulletT=.24;
+  }else exhaustAccumulator=0;
+  const ux=Math.cos(mount),uy=Math.sin(mount);
+  rocket.x=asteroid.x+ux*(asteroid.r+17);rocket.y=asteroid.y+uy*(asteroid.r+17);
+  rocket.vx=asteroid.vx-uy*asteroid.av*(asteroid.r+17);
+  rocket.vy=asteroid.vy+ux*asteroid.av*(asteroid.r+17);
+  if(bulletT>0)bulletT=Math.max(0,bulletT-dtReal);
+}
 
 // 保存阶段检查点（达成小目标时）
 function saveCheckpoint(){
@@ -1242,6 +1419,12 @@ function saveCheckpoint(){
       slingClosestDistance:mission.slingClosestDistance,slingClosestTrailing:mission.slingClosestTrailing,
       slingWasInside:mission.slingWasInside,slingFlybyValid:mission.slingFlybyValid,
       slingGain:mission.slingGain,slingVInf:mission.slingVInf,slingFailed:false
+    }:null,
+    asteroid:asteroid?{x:asteroid.x,y:asteroid.y,vx:asteroid.vx,vy:asteroid.vy,angle:asteroid.angle,av:asteroid.av,alive:asteroid.alive}:null,
+    asteroidMission:level===7?{
+      asteroidContact:mission.asteroidContact,asteroidAnchored:mission.asteroidAnchored,
+      asteroidMountAngle:mission.asteroidMountAngle,asteroidMountLocal:mission.asteroidMountLocal,
+      hingeAngle:mission.hingeAngle,asteroidChanged:mission.asteroidChanged,asteroidImpact:mission.asteroidImpact
     }:null,
     ghost:ghostShip?{...ghostShip}:null
   };
@@ -1267,9 +1450,11 @@ function retryFromStage(reason){
     rocket._launchAssistActive=!!cp.launchAssistActive; rocket._launchCompleted=!!cp.launchCompleted;
     if(station&&Number.isFinite(cp.stationAngle)){ station.angle=cp.stationAngle; updateStation(0); }
     if(cp.slingshot) Object.assign(mission,cp.slingshot);
+    if(cp.asteroid&&asteroid)Object.assign(asteroid,cp.asteroid);
+    if(cp.asteroidMission)Object.assign(mission,cp.asteroidMission);
     ghostShip=cp.ghost?{...cp.ghost}:null; ghostTrail=[];
     rocket.landed=!!cp.landed;
-    rocket.body=cp.bodyName===EARTH.name?EARTH:cp.bodyName===MOON.name?MOON:cp.bodyName===MARS.name?MARS:null;
+    rocket.body=cp.bodyName===EARTH.name?EARTH:cp.bodyName===MOON.name?MOON:cp.bodyName===MARS.name?MARS:asteroid&&cp.bodyName===asteroid.name?asteroid:null;
     launched=!!cp.launched; rocket._clearedPad=!!cp.clearedPad; rocket.landLocalAngle=cp.landLocalAngle;
   }else if(level===5){
     resetGame();
@@ -1308,6 +1493,7 @@ function retryFromStage(reason){
   camInit = true;
   mission.holdT = 0; mission.finalHoldT=0; mission.deployReady=false; mission.dockReady=false; mission.done=false; mission.satReleased=false; mission.satellite=null;
   mission.slingFailed=false;
+  mission.asteroidSafeT=0;mission.asteroidForecast=null;
   mission.toast = '💥 ' + reason + ' —— 回到「' + stageInfo()[mission.stage].name + '」';
   mission.toastT = 4;
   hideMsg();
@@ -1358,6 +1544,24 @@ function tryDock(){
   if(level!==3||!mission||mission.done||state!=='fly'||!mission.dockReady) return;
   finishDocking();
 }
+function toggleAsteroidAnchor(){
+  if(level!==7||!asteroid||!mission.asteroidContact||mission.done||state!=='fly')return;
+  const ux=Math.cos(mission.asteroidMountAngle),uy=Math.sin(mission.asteroidMountAngle);
+  if(mission.asteroidAnchored){
+    mission.asteroidAnchored=false;mission.asteroidContact=false;
+    rocket.landed=false;rocket.body=null;rocket.asteroidGrace=.8;
+    rocket.x=asteroid.x+ux*(asteroid.r+36);rocket.y=asteroid.y+uy*(asteroid.r+36);
+    const releaseSpeed=Math.sqrt(2*asteroid.mu/asteroid.r)+4;
+    rocket.vx=asteroid.vx+ux*releaseSpeed;rocket.vy=asteroid.vy+uy*releaseSpeed;rocket.av=0;
+    mission.toast='🔓 已解除锚定｜左右键恢复飞船转向，可换位置再次靠近';mission.toastT=4;
+  }else{
+    mission.asteroidAnchored=true;mission.hingeAngle=0;rocket.av=0;
+    rocket.a=mission.asteroidMountAngle+Math.PI;
+    if(mission.stage<3)unlockFinalStage(3,'⚓ 已锚定并翻转！左右调铰链，推进改变小行星轨道');
+    else{mission.toast='⚓ 已锚定｜机头向下，发动机向外';mission.toastT=3;}
+  }
+  syncUI();
+}
 function finishLagrange(m=nearestLagrangeMetrics()){
   if(level!==6||!mission||mission.done||state!=='fly'||rocket.landed) return;
   const distanceLimit=mission.assistMode?220:140,speedLimit=mission.assistMode?16:10;
@@ -1379,6 +1583,7 @@ function tryMissionAction(){
   if(level===1) tryDeploy();
   else if(level===2) tryOpenChute();
   else if(level===3) tryDock();
+  else if(level===7) toggleAsteroidAnchor();
 }
 
 // 任务阶段推进（每帧调用）
@@ -1389,6 +1594,7 @@ function updateMission(dt){
   if(level===4){ updateMissionL4(dt); return; }
   if(level===5){ updateMissionL5(dt); return; }
   if(level===6){ updateMissionL6(dt); return; }
+  if(level===7){ updateMissionL7(dt); return; }
   if(rocket.landed) return;
   const direct=directSyncStatus(rocket,1);
   if(mission.stage<3){
@@ -1672,6 +1878,42 @@ function updateMissionL6(dt){
   if(ok){ mission.holdT+=dt; if(mission.holdT>=need) advanceStage(); }
   else mission.holdT=0;
 }
+function finishAsteroidDefense(forecast=getAsteroidForecast(true)){
+  if(level!==7||mission.done)return;
+  mission.done=true;state='complete';rocket.thrusting=false;
+  const survived=rocket.alive,remaining=challengeRemainingFuel(),starResult=evaluateStars([
+    {ok:survived,label:'飞船没有在撞击中损毁'},
+    {ok:remaining>=CHALLENGE_CONFIG[7].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[7].fuelStar}%`}
+  ]);
+  const result=saveLevelResult(7,performanceScore(),starResult.stars);
+  syncUI();
+  showMsg(survived?'🛡️':'💥','行星防御成功！',
+    resultLine(result)+`${mission.asteroidImpact?'动能撞击':'持续推力'}已改变小行星轨道<br>`+
+    `预计最近地球表面 ${Math.max(0,forecast.minEarth-EARTH.r-asteroid.r).toFixed(0)} u · 月球表面 ${Math.max(0,forecast.minMoon-MOON.r-asteroid.r).toFixed(0)} u<br>`+
+    `小行星自转 ${(asteroid.av*180/Math.PI).toFixed(2)}°/s · ${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
+    `<span style="color:#888">无论软着陆、持续推离还是牺牲飞船撞击，只要最终轨道同时避开地球和月球就算成功。</span>`);
+}
+function updateMissionL7(dt){
+  if(!asteroid||!asteroid.alive)return;
+  const m=asteroidMetrics(),forecast=getAsteroidForecast();
+  mission.asteroidMinEarth=forecast.minEarth;mission.asteroidMinMoon=forecast.minMoon;
+  if(mission.asteroidChanged&&forecast.safe){
+    mission.asteroidSafeT+=dt;
+    if(mission.asteroidSafeT>=2.5){finishAsteroidDefense(forecast);return;}
+  }else mission.asteroidSafeT=0;
+  if(mission.asteroidContact){
+    if(mission.asteroidAnchored)mission.dynHint=`铰链 ${(mission.hingeAngle*180/Math.PI).toFixed(0)}°｜${forecast.safe?'轨道安全，保持':'继续推开红线'}`;
+    else mission.dynHint=`已贴住表面｜直接推进效率较低，或点击锚定`;
+    return;
+  }
+  if(!rocket.alive){mission.dynHint=forecast.safe?'撞击有效｜等待轨道确认':'撞击偏转不足｜小行星仍有危险';return;}
+  if(mission.stage===0){
+    mission.dynHint=`距小行星 ${m.distance.toFixed(0)}｜相对 ${m.relSpeed.toFixed(1)} u/s`;
+    if(m.distance<1700){advanceStage();return;}
+  }else if(mission.stage===1){
+    mission.dynHint=`姿态不限｜相对 ≤${ASTEROID_SOFT_SPEED} 软着陆｜高速=撞击`;
+  }else mission.dynHint=`距小行星 ${m.distance.toFixed(0)}｜慢速接触表面`;
+}
 function advanceStage(){
   mission.stage++;
   mission.holdT = 0;
@@ -1703,6 +1945,9 @@ function advanceStage(){
   if(level===6 && mission.stage===1){ mission.toast='✅ 停泊轨道稳定！任选一个平衡点前往'; mission.toastT=3.5; }
   if(level===6 && mission.stage===2){ mission.toast=`✅ 已接近 L${mission.lagrangeTarget}！先消除相对速度`; mission.toastT=3.5; }
   if(level===6 && mission.stage===3){ mission.toast='✅ 进入任意亮环并停稳即可自动完成'; mission.toastT=3.5; }
+  if(level===7 && mission.stage===1){ mission.toast='✅ 已进入拦截区｜着陆姿态不限，只需降低相对速度；也可直接撞击'; mission.toastT=5; }
+  if(level===7 && mission.stage===2){ mission.toast='✅ 已贴住小行星｜锚定翻转，或直接低效率推进'; mission.toastT=4; }
+  if(level===7 && mission.stage===3){ mission.toast='⚓ 左右调铰链，推进直到危险红线变绿'; mission.toastT=4; }
   syncUI();
 }
 function unlockFinalStage(targetStage,message){
@@ -1862,6 +2107,7 @@ function update(dt, dtReal){
   earthAngle += EARTH_OMEGA*dt;
   updateMoon(dt);
   updateStation(dt);
+  updateAsteroid(dt);
   updateRecordedGuide(dt);
   updateSlingshotGhost(dt,dtReal);
   if(rocket.landed && rocket.body===EARTH && !rocket._clearedPad){
@@ -1896,6 +2142,11 @@ function update(dt, dtReal){
   shake = Math.max(0, shake - dt*30);
 
   if(state!=='fly') return;
+  if(level===7&&!rocket.alive){if(bulletT>0)bulletT=Math.max(0,bulletT-dtReal);return;} // 动能撞击后继续模拟并评估小行星，飞船不再参与物理。
+  if(level===7&&mission.asteroidContact){
+    updateMountedAsteroidRocket(dt,dtReal);
+    return;
+  }
 
   const earthDx=rocket.x-EARTH.x,earthDy=rocket.y-EARTH.y,earthDistance=Math.hypot(earthDx,earthDy);
   const earthLocalUp=Math.atan2(earthDy,earthDx),launchAlt=earthDistance-EARTH.r;
@@ -2003,6 +2254,10 @@ function update(dt, dtReal){
     const g=b.mu/(d2);
     ax+=dx/d*g; ay+=dy/d*g;
   }
+  if(level===7&&asteroid&&asteroid.alive&&!mission.asteroidContact){
+    const dx=asteroid.x-rocket.x,dy=asteroid.y-rocket.y,d2=Math.max(1,dx*dx+dy*dy),d=Math.sqrt(d2),g=asteroid.mu/d2;
+    ax+=dx/d*g;ay+=dy/d*g;
+  }
   rocket.vx += ax*dt; rocket.vy += ay*dt;
   applyDockingAssist(dt);
   applyLagrangeAssist(dt);
@@ -2044,6 +2299,7 @@ function update(dt, dtReal){
     return;
   }
   if(rocket.launchGrace>0) rocket.launchGrace -= dt;
+  if(rocket.asteroidGrace>0)rocket.asteroidGrace-=dt;
   rocket.x += rocket.vx*dt; rocket.y += rocket.vy*dt;
   trailSampleT+=dt;
   const trailInterval=lowPowerMode?.075:.032;
@@ -2055,6 +2311,9 @@ function update(dt, dtReal){
   }
   if(bulletT>0) bulletT=Math.max(0,bulletT-dtReal);
   if(trail.length>(lowPowerMode?180:600)) trail.shift();
+
+  // 第七关小行星接触：软着陆进入表面操作；高速接触则按动能撞击传递线动量与角动量。
+  if(asteroidContactCheck())return;
 
   // 碰撞检测（起飞宽限期内跳过，避免点火瞬间误判）
   for(const b of BODIES){
@@ -2248,12 +2507,33 @@ function drawLagrangeScreenCue(){
   ctx.fillStyle=p.color;ctx.font='900 13px "Microsoft YaHei",sans-serif';ctx.textAlign='center';ctx.fillText(`L${p.id} · ${lagrangeMetrics().distance.toFixed(0)} u`,rx,ry+25);ctx.textAlign='left';
 }
 // 任务区域渲染：第一关=同步带；第二关=着陆区；第三关=空间站；第四关=月背；第五关=弹弓；第六关=五个平衡点
+function drawAsteroidDefenseZones(){
+  if(!asteroid)return;
+  const f=getAsteroidForecast();
+  if(asteroidTrail.length>1){
+    ctx.strokeStyle='rgba(206,151,103,.34)';ctx.lineWidth=2/cam.zoom;ctx.setLineDash([5/cam.zoom,8/cam.zoom]);
+    ctx.beginPath();ctx.moveTo(asteroidTrail[0].x,asteroidTrail[0].y);
+    for(let i=1;i<asteroidTrail.length;i+=lowPowerMode?2:1)ctx.lineTo(asteroidTrail[i].x,asteroidTrail[i].y);
+    ctx.stroke();ctx.setLineDash([]);
+  }
+  if(showPred&&f.pts.length>1){
+    ctx.strokeStyle=f.safe?'rgba(95,208,104,.92)':'rgba(239,71,111,.9)';ctx.lineWidth=4/cam.zoom;ctx.setLineDash([15/cam.zoom,11/cam.zoom]);
+    ctx.beginPath();ctx.moveTo(asteroid.x,asteroid.y);for(const p of f.pts)ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);
+    if(f.impact){
+      const p=f.impact,s=18/cam.zoom;ctx.strokeStyle='#ff5d7d';ctx.lineWidth=4/cam.zoom;
+      ctx.beginPath();ctx.moveTo(p.x-s,p.y-s);ctx.lineTo(p.x+s,p.y+s);ctx.moveTo(p.x+s,p.y-s);ctx.lineTo(p.x-s,p.y+s);ctx.stroke();
+      ctx.fillStyle='#ff8aa4';ctx.font=`900 ${14/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';
+      ctx.fillText(`预计撞击${p.body} · 概率 99.9999%`,p.x,p.y-26/cam.zoom);ctx.textAlign='left';
+    }
+  }
+}
 function drawMissionZones(){
   if(level===2){ drawLandingZone(); return; }
   if(level===3){ drawStationOrbitZone(); return; }
   if(level===4){ drawLunarFarSideZone(); return; }
   if(level===5){ drawSlingshotZones(); return; }
   if(level===6){ drawLagrangeZones(); return; }
+  if(level===7){ drawAsteroidDefenseZones(); return; }
   const slot = padAngle();
   // 同步轨道环形带（金色）
   ctx.strokeStyle='rgba(255,209,102,.35)'; ctx.lineWidth=GEO_BAND*2;
@@ -2461,6 +2741,26 @@ function drawBody(b){
   }
 }
 
+function drawAsteroid(){
+  if(!asteroid||!asteroid.alive||!worldCircleVisible(asteroid,160))return;
+  ctx.save();ctx.translate(asteroid.x,asteroid.y);ctx.rotate(asteroid.angle);
+  ctx.shadowColor='rgba(255,157,92,.35)';ctx.shadowBlur=lowPowerMode?0:16/cam.zoom;
+  const grad=ctx.createRadialGradient(-25,-30,5,0,0,asteroid.r);
+  grad.addColorStop(0,'#d8a16f');grad.addColorStop(.55,'#996644');grad.addColorStop(1,'#4e3428');
+  ctx.fillStyle=grad;ctx.strokeStyle='#2d211d';ctx.lineWidth=3/cam.zoom;
+  ctx.beginPath();
+  const bumps=[1,.91,1.06,.88,1.03,.93,1.08,.9,1.02,.94,1.05,.89];
+  for(let i=0;i<bumps.length;i++){const a=i/bumps.length*TAU,r=asteroid.r*bumps[i],x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.shadowBlur=0;
+  for(const [x,y,r] of [[-.32,-.28,.18],[.3,.18,.22],[-.05,.48,.12],[.48,-.35,.1],[-.52,.25,.09]]){
+    ctx.fillStyle='rgba(45,28,22,.38)';ctx.beginPath();ctx.ellipse(x*asteroid.r,y*asteroid.r,r*asteroid.r,r*asteroid.r*.68,.3,0,TAU);ctx.fill();
+    ctx.strokeStyle='rgba(255,213,170,.23)';ctx.lineWidth=1.5/cam.zoom;ctx.stroke();
+  }
+  ctx.restore();
+  ctx.fillStyle='#ffd1a8';ctx.font=`900 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';
+  ctx.fillText(asteroid.name,asteroid.x,asteroid.y-(asteroid.r+18/cam.zoom));ctx.textAlign='left';
+}
+
 function drawGuideRocket(ship,label){
   if(!ship||!worldCircleVisible({x:ship.x,y:ship.y,r:42},90)) return;
   ctx.save(); ctx.translate(ship.x,ship.y);
@@ -2499,6 +2799,10 @@ function drawGuideGhost(){
 
 function drawRocket(){
   if(!rocket.alive) return;
+  if(level===7&&mission.asteroidContact&&asteroid){
+    ctx.strokeStyle=mission.asteroidAnchored?'#7de3ff':'rgba(255,209,102,.75)';ctx.lineWidth=(mission.asteroidAnchored?4:2)/cam.zoom;
+    ctx.beginPath();ctx.moveTo(asteroid.x+Math.cos(mission.asteroidMountAngle)*asteroid.r,asteroid.y+Math.sin(mission.asteroidMountAngle)*asteroid.r);ctx.lineTo(rocket.x,rocket.y);ctx.stroke();
+  }
   ctx.save();
   ctx.translate(rocket.x, rocket.y);
   // 降落伞使用独立世界朝向：伞面随气流平滑变化，不再粘在机头上一起翻转。
@@ -2580,6 +2884,12 @@ function predictPath(ship=rocket){
       const dx=bx-px, dy=by-py, d2=dx*dx+dy*dy, d=Math.sqrt(d2);
       const g=b.mu/d2; ax+=dx/d*g; ay+=dy/d*g;
     }
+    if(level===7&&asteroid&&asteroid.alive){
+      // 接近预测中，小行星按当前惯性前进；微弱引力会把黄色航线自然弯向表面。
+      const bx=asteroid.x+asteroid.vx*i*dt,by=asteroid.y+asteroid.vy*i*dt;
+      const adx=bx-px,ady=by-py,ad2=Math.max(1,adx*adx+ady*ady),ad=Math.sqrt(ad2),ag=asteroid.mu/ad2;
+      ax+=adx/ad*ag;ay+=ady/ad*ag;
+    }
     pvx+=ax*dt; pvy+=ay*dt; px+=pvx*dt; py+=pvy*dt;
     if(i%2===0) pts.push({x:px,y:py});
     // 近/远地点检测（相对地球的径向速度过零点）
@@ -2599,6 +2909,13 @@ function predictPath(ship=rocket){
       }
       if(bodyDistance<b.r){
         impact={x:px,y:py,body:b.name};
+        return {pts,markers,horizon,steps,impact,moonApproach};
+      }
+    }
+    if(level===7&&asteroid){
+      const bx=asteroid.x+asteroid.vx*i*dt,by=asteroid.y+asteroid.vy*i*dt;
+      if(Math.hypot(px-bx,py-by)<asteroid.r){
+        impact={x:px,y:py,body:'小行星'};
         return {pts,markers,horizon,steps,impact,moonApproach};
       }
     }
@@ -2657,7 +2974,7 @@ function drawRadar(){
   if(radarMode===0){
     const ap=orbitApsis();
     const outer=ap.bound&&Number.isFinite(ap.ra)?Math.max(R_GEO+GEO_BAND,Math.min(ap.ra,12000)):R_GEO*1.6;
-    const range=Math.max(level>=4?MOON_ORBIT_R*(level===6?1.42:1.18):R_GEO*1.25,level===5?SLING_EXIT_R*1.08:0,outer*1.12), scale=RS*0.39/range;
+    const range=Math.max(level>=4?MOON_ORBIT_R*(level===6?1.42:1.18):R_GEO*1.25,level===5?SLING_EXIT_R*1.08:0,level===7?10500:0,outer*1.12), scale=RS*0.39/range;
     const mapX=wx=>mx+(wx-EARTH.x)*scale, mapY=wy=>my+(wy-EARTH.y)*scale;
     const er=Math.max(4,EARTH.r*scale), geoR=R_GEO*scale;
     ctx.fillStyle=EARTH.col; ctx.beginPath(); ctx.arc(mx,my,er,0,TAU); ctx.fill();
@@ -2688,6 +3005,12 @@ function drawRadar(){
       ctx.strokeStyle='#5fd068'; ctx.lineWidth=2.5;
       if(level===4){ ctx.beginPath(); ctx.arc(mqx,mqy,mr,moonAngle-MOON_TARGET_HALF,moonAngle+MOON_TARGET_HALF); ctx.stroke(); }
       else{ ctx.strokeStyle='rgba(207,216,220,.55)'; ctx.beginPath(); ctx.arc(mqx,mqy,mr+3,0,TAU); ctx.stroke(); }
+    }
+
+    if(level===7&&asteroid){
+      const f=getAsteroidForecast(),ax=mapX(asteroid.x),ay=mapY(asteroid.y);
+      if(showPred&&f.pts.length>1){ctx.strokeStyle=f.safe?'rgba(95,208,104,.78)':'rgba(239,71,111,.82)';ctx.lineWidth=1.4;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(ax,ay);for(const p of f.pts){ctx.lineTo(mapX(p.x),mapY(p.y));}ctx.stroke();ctx.setLineDash([]);}
+      ctx.fillStyle='#c98f61';ctx.beginPath();ctx.arc(ax,ay,Math.max(3,asteroid.r*scale),0,TAU);ctx.fill();
     }
 
     if(showPred&&state==='fly'&&!rocket.landed){
@@ -2756,6 +3079,9 @@ function drawRadar(){
       }
       ctx.globalAlpha=1;
     }
+    if(level===7&&asteroid){
+      const qx=mapX(asteroid.x),qy=mapY(asteroid.y);ctx.fillStyle='#c98f61';ctx.beginPath();ctx.arc(qx,qy,3.5,0,TAU);ctx.fill();ctx.fillStyle='#ffd1a8';ctx.fillText('小行星',qx,qy-7);
+    }
     // 全局导航专属视角框：显示主画面当前观察区域；轨道雷达保持简洁，不绘制此框。
     const viewCenterX=mapX(cam.x), viewCenterY=mapY(cam.y), minViewBox=portrait?9:12;
     const viewW=Math.max(minViewBox,W/cam.zoom*scale), viewH=Math.max(minViewBox,H/cam.zoom*scale);
@@ -2769,7 +3095,7 @@ function drawRadar(){
   const radarTitle=RS<=80?(radarMode===0?'轨道 · 点按':'全局 · 点按'):(radarMode===0?'轨道雷达 · 点击切换':'全局导航 · 点击切换');
   ctx.fillText(radarTitle,cx+5,cy+11);
   ctx.fillStyle='rgba(255,255,255,.65)'; ctx.font=`700 ${portrait?7:8}px sans-serif`;
-  const radarLegend=RS<=80?(radarMode===0?'白船 · 目标':'青框 = 视野'):(radarMode===0?(level===3?'白船 · 绿站 · 青轨道':level===4?'白船 · 灰月 · 绿月背':level===5?'白船 · 黄预测 · 绿逃逸门':level===6?'彩色点 = L1～L5':'蓝近 · 橙远 · 绿目标'):'青框 = 当前视野');
+  const radarLegend=RS<=80?(radarMode===0?'白船 · 目标':'青框 = 视野'):(radarMode===0?(level===3?'白船 · 绿站 · 青轨道':level===4?'白船 · 灰月 · 绿月背':level===5?'白船 · 黄预测 · 绿逃逸门':level===6?'彩色点 = L1～L5':level===7?'棕目标 · 红危险 / 绿安全':'蓝近 · 橙远 · 绿目标'):'青框 = 当前视野');
   ctx.fillText(radarLegend,cx+5,cy+RS-5);
   ctx.textAlign='left';
 }
@@ -2785,7 +3111,8 @@ function draw(){
   }
   const sx = shake? (Math.random()-0.5)*shake : 0, sy = shake? (Math.random()-0.5)*shake : 0;
   if(cameraMode===0 && !cam.dragging){
-    cam.x += (rocket.x - cam.x)*0.12; cam.y += (rocket.y - cam.y)*0.12;
+    const focus=level===7&&!rocket.alive&&asteroid?asteroid:rocket;
+    cam.x += (focus.x - cam.x)*0.12; cam.y += (focus.y - cam.y)*0.12;
   }
   const cameraNow=performance.now();
   if(!lowPowerMode&&cameraNow-cameraDebugAt>500){
@@ -2871,6 +3198,7 @@ function draw(){
 
   drawMissionZones();
   for(const b of BODIES){ if(worldCircleVisible(b,120)){ drawGroundRing(b); drawBody(b); } }
+  drawAsteroid();
   drawStation();
   drawGuideGhost();
 
@@ -2904,7 +3232,7 @@ function draw(){
   const showSurvival=challengeLifeEnabled();
   ctx.fillStyle='rgba(255,255,255,.6)'; ctx.font='700 11px "Baloo 2",sans-serif';
   const attitudeModeY=portraitHUD ? fuelBarY+38 : H-(showSurvival?94:54);
-  ctx.fillText('🎛 姿态：' + ATT_MODES[attMode], 26, attitudeModeY);
+  ctx.fillText(level===7&&mission.asteroidAnchored?'🔩 控制：喷口铰链':'🎛 姿态：' + ATT_MODES[attMode], 26, attitudeModeY);
   // 生命维持倒计时条（燃料条上方）
   const lifePct = rocket.life/Math.max(1,mission.lifeLimit);
   const lm = Math.floor(rocket.life/60), ls = Math.floor(rocket.life%60);
@@ -2940,7 +3268,7 @@ function draw(){
   const saE=Math.atan2(dyE,dxE);
   const relEvx=rocket.vx-(-Math.sin(saE)*EARTH_OMEGA*dE), relEvy=rocket.vy-(Math.cos(saE)*EARTH_OMEGA*dE);
   const vRelEarth=Math.hypot(relEvx,relEvy);
-  const landscapeHUD=H<=520, teleCompact=W<760||landscapeHUD, teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?70:teleCompact?278:14, teleW=teleCompact?174:206, teleH=(level===5?126:level===1?86:(level===3||level===4||level===6)?106:66);
+  const landscapeHUD=H<=520, teleCompact=W<760||landscapeHUD, teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?70:teleCompact?278:14, teleW=teleCompact?174:206, teleH=((level===5||level===7)?126:level===1?86:(level===3||level===4||level===6)?106:66);
   ctx.fillStyle='rgba(8,14,38,.68)'; roundRect(teleX,teleY,teleW,teleH,14); ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1; roundRect(teleX,teleY,teleW,teleH,14); ctx.stroke();
   ctx.textAlign='right';
@@ -2949,7 +3277,9 @@ function draw(){
   ctx.fillText(`绝对速度 ${speed.toFixed(1)} u/s`, W-20, teleY+16);
   // 相对速度：靠近谁显示谁（地表附近/着陆区 → 相对地表；同步轨道附近 → 相对同步速度）
   ctx.fillStyle='#4cc9f0';
-  if(nearMoon){
+  if(level===7&&asteroid){
+    const am=asteroidMetrics();ctx.fillText(`小行星相对 ${am.relSpeed.toFixed(1)} u/s`,W-20,teleY+36);
+  }else if(nearMoon){
     ctx.fillText(`月球相对 ${lunarM.relSpeed.toFixed(1)} u/s`, W-20, teleY+36);
   }else if(alt < 1200){ // 近地/着陆：显示相对地表
     ctx.fillText(`相对地面 ${vRelEarth.toFixed(1)} u/s`, W-20, teleY+36);
@@ -2984,6 +3314,13 @@ function draw(){
     const lm=nearestLagrangeMetrics();
     ctx.fillStyle=lm.point.color;ctx.fillText(`距 L${lm.point.id} ${lm.distance.toFixed(0)} u`,W-20,teleY+76);
     ctx.fillStyle=lm.relSpeed<(mission.assistMode?16:10)?'#5fd068':'#ffd166';ctx.fillText(`相对目标 ${lm.relSpeed.toFixed(1)} u/s`,W-20,teleY+96);
+  }
+  if(level===7&&asteroid){
+    const am=asteroidMetrics(),f=getAsteroidForecast();
+    ctx.fillStyle='#d8a16f';ctx.fillText(`距小行星 ${am.distance.toFixed(0)} u`,W-20,teleY+76);
+    ctx.fillStyle=f.safe?'#5fd068':'#ef476f';ctx.fillText(f.safe?'预测：地月均安全':`预测：${f.impact?'将撞'+f.impact.body:'距离仍危险'}`,W-20,teleY+96);
+    const asteroidG=asteroid.mu/Math.max(asteroid.r*asteroid.r,am.distance*am.distance);
+    ctx.fillStyle='#ffd166';ctx.fillText(mission.asteroidAnchored?`铰链 ${(mission.hingeAngle*180/Math.PI).toFixed(0)}° · 小行星 g ${asteroidG.toFixed(2)}`:`小行星 g ${asteroidG.toFixed(2)} · 自转 ${(asteroid.av*180/Math.PI).toFixed(1)}°/s`,W-20,teleY+116);
   }
   ctx.fillStyle='#fff';
   ctx.textAlign='left';
