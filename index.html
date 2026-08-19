@@ -96,7 +96,9 @@
     #levelSelect{align-items:flex-start;padding:max(16px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}.level-head{margin-bottom:14px}.level-head p{font-size:13px}.level-grid{gap:11px;padding-bottom:16px}.level-card{flex-basis:min(84vw,310px);min-height:255px;padding:14px 15px}.level-icon{margin:5px 0;font-size:31px}.level-card h2{font-size:18px}.level-card p{font-size:12px}.level-meta{padding-top:10px}.level-play{min-height:48px;margin-top:10px}
   }
   @media (pointer:coarse) and (min-width:761px){
-    .tool-rail{grid-template-columns:repeat(4,54px)}.icon-btn{width:54px;height:54px}.flight-controls .icon-btn{width:64px;height:64px}.flight-controls .thrust{width:76px;height:86px}
+    .tool-rail{grid-template-columns:repeat(4,54px)}.icon-btn{width:54px;height:54px}
+    .flight-controls{left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));justify-content:space-between;gap:0}
+    .turn-controls{gap:16px}.flight-controls .icon-btn{width:70px;height:70px}.flight-controls .thrust{width:86px;height:94px}
   }
   @media (max-height:520px){
     .hud{top:8px;left:8px;right:auto;max-width:max(190px,calc(100vw - 360px));padding:8px 10px}.hud .brand-mark{display:none}.hud .title{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hud .sub{display:none}.key-strip{display:none}
@@ -1007,6 +1009,7 @@ function rewindStage(){
 }
 
 function resetGame(){
+  SG_PERF.reset();
   if(retryTimer!==null){ clearTimeout(retryTimer); retryTimer=null; }
   rewindClickAt=0; rewindHistoryIndex=-1;
   paused = false;
@@ -4137,9 +4140,9 @@ function draw(){
   // ---- HUD 仪表 ----
   const speed = Math.hypot(rocket.vx, rocket.vy);
   const statW=W<760?140:200, statInner=statW-6;
-  const portraitHUD=W<760&&H>650;
-  // 竖屏底部留给左右转向和推进键，燃料/生命移到姿态表下方，避免被触控键遮住。
-  const fuelBarY=portraitHUD?282:H-40;
+  const portraitHUD=lowPowerMode&&H>650,touchLandscapeHUD=lowPowerMode&&H<=650;
+  // 触屏竖屏及 iPad 横屏把燃料/生命放到姿态表下方；矮横屏放在中部，避开底部左右分置的控制键。
+  const fuelBarY=portraitHUD?282:touchLandscapeHUD?224:H-40;
   // 燃料条
   ctx.fillStyle='rgba(255,255,255,.14)';
   roundRect(16, fuelBarY, statW, 22, 11); ctx.fill();
@@ -4400,12 +4403,22 @@ function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y);
   ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
   ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 function fitText(text,x,y,maxWidth,minSize=10){
-  let size=parseFloat(ctx.font)||12.5;
-  while(size>minSize && ctx.measureText(text).width>maxWidth){ size-=0.5; ctx.font=ctx.font.replace(/\d+(?:\.\d+)?px/,size+'px'); }
-  if(ctx.measureText(text).width<=maxWidth){ ctx.fillText(text,x,y); return; }
-  let shown=text;
-  while(shown.length>2 && ctx.measureText(shown+'…').width>maxWidth) shown=shown.slice(0,-1);
-  ctx.fillText(shown+'…',x,y);
+  const baseFont=ctx.font,sizeMatch=baseFont.match(/(\d+(?:\.\d+)?)px/);
+  let size=sizeMatch?Number(sizeMatch[1]):12.5,width=ctx.measureText(text).width;
+  // parseFloat('800 15px ...') 会把字重 800 当成字号，在 iOS 上造成每行上千次 measureText。
+  // 按宽度比例一次缩放，仍放不下时用二分截断，把每行测量压到 O(log n)。
+  if(width>maxWidth&&size>minSize){
+    size=Math.max(minSize,Math.floor(size*maxWidth/width*2)/2);
+    ctx.font=baseFont.replace(/\d+(?:\.\d+)?px/,size+'px');
+    width=ctx.measureText(text).width;
+  }
+  if(width<=maxWidth){ctx.fillText(text,x,y);return;}
+  let low=0,high=text.length;
+  while(low<high){
+    const mid=Math.ceil((low+high)/2),candidate=text.slice(0,mid)+'…';
+    if(ctx.measureText(candidate).width<=maxWidth)low=mid;else high=mid-1;
+  }
+  ctx.fillText(text.slice(0,low)+'…',x,y);
 }
 
 let last = performance.now(), renderInterval=1000/60, renderAccumulator=0, measuredFps=60, fpsWindowStart=last, fpsWindowFrames=0,lastPerfUiAt=0;

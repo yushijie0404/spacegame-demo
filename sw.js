@@ -1,4 +1,4 @@
-const CACHE_NAME='spacegame-v1.4.2';
+const CACHE_NAME='spacegame-v1.4.3';
 const APP_SHELL=['./','./index.html','./runtime-performance.js','./manifest.webmanifest','./icons/app-icon.svg','./icons/app-icon-180.png','./icons/app-icon-192.png','./icons/app-icon-512.png'];
 
 self.addEventListener('install',event=>{

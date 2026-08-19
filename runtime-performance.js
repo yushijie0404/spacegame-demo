@@ -39,9 +39,13 @@
       const item=metrics[name];
       return item?{average:item.average,peak:item.peak,count:item.count}:{average:0,peak:0,count:0};
     };
+    const liveRecent=frameCount?{
+      frames:frameCount,longFrames:longFrameCount,
+      longFrameRate:longFrameCount/frameCount,worstGap
+    }:recent;
     return {
       physics:read('physics'),world:read('world'),hud:read('hud'),prediction:read('prediction'),work:read('work'),gap:read('gap'),
-      recent:{...recent}
+      recent:{...liveRecent}
     };
   }
 
