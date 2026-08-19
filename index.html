@@ -59,6 +59,8 @@
   #pauseMenu.is-visible{display:flex}
   .pause-card{position:relative;width:min(620px,100%);max-height:calc(100vh - 36px);overflow:auto;padding:22px;color:#eef4ff;background:#111b42;border:2px solid rgba(255,255,255,.2);border-radius:24px;box-shadow:0 18px 60px rgba(0,0,0,.45)}
   .pause-card h2{margin:0 42px 4px 0;font-size:24px}.pause-card p{margin:0 0 16px;color:#aebde0;font-size:13px}.pause-close{position:absolute;top:12px;right:12px;width:40px;height:40px;padding:0;color:#eef4ff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;font-size:24px;font-weight:800;line-height:1;cursor:pointer}.pause-close:hover{background:rgba(255,255,255,.2)}.pause-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}.pause-actions button{min-height:52px;padding:10px;border:1px solid rgba(255,255,255,.28);border-radius:14px;font-size:16px;font-weight:900;cursor:pointer}.pause-resume{color:#17213c;background:#ffd166;border-color:#fff1b2}.pause-restart{color:#281704;background:#ff9f43;border-color:#ffd0a3}.pause-home{grid-column:1/-1;color:#10203c;background:#4cc9f0;border-color:#bff3ff}.pause-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pause-grid button{min-height:48px;padding:9px 10px;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:13px;font-weight:800;cursor:pointer}.pause-grid button.is-on{color:#14203b;background:#4cc9f0}.pause-grid #menuAssist{grid-column:1/-1}
+  #perfStatus{margin:8px 0 14px;padding:9px 11px;white-space:pre-line;color:#c8d7f3;background:rgba(5,10,30,.38);border:1px solid rgba(255,255,255,.12);border-radius:12px;font-size:12px;line-height:1.5;font-variant-numeric:tabular-nums}
+  .pause-grid #menuPerf{grid-column:1/-1;color:#17213c;background:#9fe8ff}
   .key-help{margin-top:15px;padding:13px 14px;background:rgba(5,10,30,.38);border:1px solid rgba(255,255,255,.12);border-radius:15px}.key-help h3{margin:0 0 9px;font-size:14px}.key-help-grid{display:flex;flex-wrap:wrap;gap:7px}.key-help .pill{font-size:11px;background:rgba(255,255,255,.09)}.touch-help{display:none;margin-top:8px;color:#aebde0;font-size:12px;line-height:1.45}
   .pause-star-help{margin-top:12px;padding:12px 14px;color:#dce7ff;background:rgba(5,10,30,.38);border:1px solid rgba(255,255,255,.12);border-radius:15px}.pause-star-help h3{margin:0 0 7px;font-size:14px}.pause-star-help p{margin:3px 0;font-size:12px;color:#c7d4ef}
   #briefing{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9;padding:18px;background:rgba(5,9,27,.66);backdrop-filter:blur(5px)}
@@ -141,6 +143,7 @@
     <button id="menuGuide" data-menu-action="guide">任务提示</button>
     <button data-menu-action="briefing">📖 本阶段科普</button>
     <button id="menuAssist" data-menu-action="assist">模式：教学（无限燃料）</button>
+    <button id="menuPerf" data-menu-action="copyperf">📋 复制手机性能报告</button>
   </div>
   <section class="pause-star-help"><h3>⭐ 本关星级条件</h3><div id="pauseStarRules"></div></section>
   <section class="key-help" aria-label="操作说明">
@@ -180,10 +183,12 @@
   <p id="mText">任务完成</p>
   <button onclick="resetGame()">再玩一次 (R)</button><button id="mNext" onclick="nextLevel()" style="display:none;background:#5fd068">下一关 (L)</button><button onclick="openLevelSelect()" style="background:#4cc9f0">任务目录</button>
 </div></div>
+<script src="./runtime-performance.js"></script>
 <script>
 "use strict";
 const cv = document.getElementById('cv'), hudCv=document.getElementById('hudCv');
 const worldCtx=cv.getContext('2d'),hudCtx=hudCv.getContext('2d');
+const SG_PERF=globalThis.SpaceGamePerformance||{sample(){},frameGap(){},snapshot(){return {physics:{average:0,peak:0},world:{average:0,peak:0},hud:{average:0,peak:0},prediction:{average:0,peak:0},work:{average:0,peak:0},recent:{longFrameRate:0,worstGap:0}};},reset(){}};
 let ctx=worldCtx;
 const IOS_DEVICE=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 document.documentElement.classList.toggle('ios-device',IOS_DEVICE);
@@ -1179,6 +1184,34 @@ function toggleAssist(){
   setChallengeMode(!challengeMode);
 }
 function togglePause(){ paused=!paused; clearFlightInputs(); syncUI(); }
+function performanceReport(){
+  const p=SG_PERF.snapshot(),fmt=item=>`${item.average.toFixed(1)}/${item.peak.toFixed(1)}ms`;
+  return [
+    `SpaceGame 性能报告｜关卡 ${level}｜${ATT_MODES[attMode]}`,
+    `设备：${navigator.userAgent}`,
+    `画面：${W}×${H} CSS｜设备像素比 ${Number(devicePixelRatio||1).toFixed(2)}｜世界 ${DPR.toFixed(2)}×｜HUD ${HUD_DPR.toFixed(2)}×`,
+    `档位：${lowPowerMode?(mobileEconomy?'自动省电':'手机均衡'):'桌面画质'}｜实际 ${measuredFps}fps｜轨迹 ${showPred?'开':'关'}｜指引 ${mission&&!mission.hintsHidden?'开':'关'}`,
+    `物理 平均/峰值 ${fmt(p.physics)}｜世界绘制 ${fmt(p.world)}｜HUD ${fmt(p.hud)}`,
+    `轨迹重算 ${fmt(p.prediction)}｜整帧工作 ${fmt(p.work)}`,
+    `近5秒长帧率 ${(p.recent.longFrameRate*100).toFixed(1)}%｜最慢间隔 ${p.recent.worstGap.toFixed(1)}ms`
+  ].join('\n');
+}
+function updatePerformanceStatus(){
+  const node=document.getElementById('perfStatus');if(!node)return;
+  const p=SG_PERF.snapshot(),fmt=item=>`${item.average.toFixed(1)}/${item.peak.toFixed(1)}ms`;
+  node.textContent=(lowPowerMode?(mobileEconomy?'性能：自动省电档':'性能：手机均衡档'):'性能：桌面画质')+` · 世界 ${DPR.toFixed(2)}× / 高清HUD ${HUD_DPR.toFixed(2)}× · 目标 ${mobileEconomy?50:60} 帧 · 实际约 ${measuredFps} 帧\n`+
+    `物理 ${fmt(p.physics)} · 世界 ${fmt(p.world)} · HUD ${fmt(p.hud)} · 轨迹 ${fmt(p.prediction)} · 长帧 ${(p.recent.longFrameRate*100).toFixed(1)}%`;
+}
+async function copyPerformanceReport(){
+  const report=performanceReport();
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText)await navigator.clipboard.writeText(report);
+    else throw new Error('clipboard unavailable');
+    mission.toast='✅ 性能报告已复制，可以直接发给我';mission.toastT=3;
+  }catch(_){
+    window.prompt('长按复制下面的性能报告',report);
+  }
+}
 function missionActionState(){
   if(!mission||mission.done||state!=='fly') return {visible:false};
   if(level===7&&mission.asteroidContact){
@@ -1244,8 +1277,7 @@ function syncUI(){
     modeBadge.classList.toggle('challenge',challengeMode);
   }
   updateModePanel();
-  const perfStatus=document.getElementById('perfStatus');
-  if(perfStatus) perfStatus.textContent=(lowPowerMode?(mobileEconomy?'性能：自动省电档':'性能：手机均衡档'):'性能：桌面画质')+` · 世界 ${DPR.toFixed(2)}× / 高清HUD ${HUD_DPR.toFixed(2)}× · 目标 ${mobileEconomy?50:60} 帧 · 实际约 ${measuredFps} 帧`;
+  updatePerformanceStatus();
 }
 
 function cueTurnTo(target,tolerance=0.24){
@@ -1489,8 +1521,9 @@ document.querySelectorAll('[data-menu-action]').forEach(btn=>btn.addEventListene
   else if(action==='guide') toggleGuide();
   else if(action==='briefing') openBriefing();
   else if(action==='assist') toggleAssist();
-  else if(action==='restart'){ paused=false; resetGame(); }
-  else if(action==='level'){ openLevelSelect(); }
+    else if(action==='restart'){ paused=false; resetGame(); }
+    else if(action==='level'){ openLevelSelect(); }
+    else if(action==='copyperf'){ copyPerformanceReport(); }
   syncUI();
 }));
 document.getElementById('pauseMenu').addEventListener('click',e=>{
@@ -3699,7 +3732,8 @@ function getPredictedPath(){
     const worldMoved=level===8?Math.abs(normalizeAngle((binary?.angle||0)-(predictionCache.binaryAngle||0))):Math.abs(moonAngle-predictionCache.moonAngle);
     if((lowPowerMode&&age<cacheMs)||(!lowPowerMode&&age<cacheMs&&moved<30&&dv<15&&worldMoved<.004)) return predictionCache.result;
   }
-  const result=predictPath();
+  const predictionStarted=performance.now(),result=predictPath();
+  SG_PERF.sample('prediction',performance.now()-predictionStarted);
   predictionCache={t:now,x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,moonAngle,binaryAngle:binary?.angle||0,result};
   return result;
 }
@@ -3946,6 +3980,7 @@ function drawBlackHoleStarfield(t){
 }
 
 function draw(){
+  const worldDrawStarted=performance.now();
   ctx=worldCtx;
   ctx.setTransform(DPR,0,0,DPR,0,0);
   updateActionCue();
@@ -4077,7 +4112,9 @@ function draw(){
   drawRocket();
   ctx.restore();
   const hudNow=performance.now(),hudInterval=lowPowerMode?(mobileEconomy?1000/24:1000/30):0;
+  SG_PERF.sample('world',hudNow-worldDrawStarted);
   if(hudInterval&&hudNow-lastHudDrawAt<hudInterval)return;
+  const hudDrawStarted=performance.now();
   lastHudDrawAt=hudNow;ctx=hudCtx;ctx.setTransform(HUD_DPR,0,0,HUD_DPR,0,0);ctx.clearRect(0,0,W,H);
   drawLagrangeScreenCue();
   drawBinaryScreenCue();
@@ -4357,6 +4394,7 @@ function draw(){
     }
     ctx.textAlign='left'; ctx.globalAlpha = 1;
   }
+  SG_PERF.sample('hud',performance.now()-hudDrawStarted);
 }
 function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y);
   ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
@@ -4370,7 +4408,7 @@ function fitText(text,x,y,maxWidth,minSize=10){
   ctx.fillText(shown+'…',x,y);
 }
 
-let last = performance.now(), renderInterval=1000/60, renderAccumulator=0, measuredFps=60, fpsWindowStart=last, fpsWindowFrames=0;
+let last = performance.now(), renderInterval=1000/60, renderAccumulator=0, measuredFps=60, fpsWindowStart=last, fpsWindowFrames=0,lastPerfUiAt=0;
 function updateAdaptiveQuality(fps){
   if(!lowPowerMode||document.hidden||!gameStarted||paused||state!=='fly')return;
   if(fps<44){lowFpsWindows++;stableFpsWindows=0;}
@@ -4382,16 +4420,20 @@ function updateAdaptiveQuality(fps){
   if(changed){renderInterval=1000/(mobileEconomy?50:60);renderAccumulator=0;timelineCache=null;predictionCache=null;document.documentElement.classList.toggle('economy-render',mobileEconomy);syncUI();}
 }
 function loop(now){
+  const frameWorkStarted=performance.now();
   const rawFrameMs=now-last, dt = Math.min(0.05, rawFrameMs/1000); last = now;
+  SG_PERF.frameGap(rawFrameMs,now);
   if(now-fpsWindowStart>=1000){ measuredFps=Math.round(fpsWindowFrames*1000/(now-fpsWindowStart));updateAdaptiveQuality(measuredFps);fpsWindowFrames=0; fpsWindowStart=now; }
   // 子弹时间：平移物理慢速(slow)，旋转保持实时但灵敏度降低（方案1）
   const slow = bulletT>0 ? 0.48 : 1;
   const steps = keys['Space'] ? 8 : 1;
   if(!paused && state==='fly'){
+    const physicsStarted=performance.now();
     for(let i=0;i<steps;i++){
       if(paused || state!=='fly') break;
       update(dt*slow, dt/steps); // 8倍速只加速物理，转向仍保持真实时间灵敏度
     }
+    SG_PERF.sample('physics',performance.now()-physicsStarted);
   }
   // 60/63Hz 屏每次回调都绘制；75/90/120Hz 用累加器稳定抽到约 60 帧，不能简单“隔帧”。
   renderAccumulator=Math.min(renderInterval*2,renderAccumulator+rawFrameMs);
@@ -4400,6 +4442,8 @@ function loop(now){
     draw(); fpsWindowFrames++;
     renderAccumulator=nativeSixty?0:Math.max(0,renderAccumulator-renderInterval);
   }
+  SG_PERF.sample('work',performance.now()-frameWorkStarted);
+  if(paused&&now-lastPerfUiAt>750){lastPerfUiAt=now;updatePerformanceStatus();}
   requestAnimationFrame(loop);
 }
 window.__SPACEGAME_SELF_CHECKS__=runPhysicsSelfChecks();
