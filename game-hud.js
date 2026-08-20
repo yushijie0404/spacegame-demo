@@ -68,8 +68,8 @@ function drawObjectiveScreenCue(){
 
 function radarLayout(){
   const landscape=H<=520,portrait=W<760&&!landscape,shortPortrait=portrait&&H<720;
-  const RS=landscape?82:portrait?(shortPortrait?92:116):130;
-  const cx=landscape?W-RS-14:(portrait&&shortPortrait&&telemetryExpanded?12:W-RS-(portrait?12:14)),cy=landscape?Math.max(92,(H-RS)/2):portrait?Math.max(176,H-220-RS-12):H-RS-14;
+  const ultraShort=landscape&&H<360,RS=landscape?(ultraShort?70:82):portrait?(shortPortrait?92:116):130;
+  const cx=landscape?W-RS-14:(portrait&&shortPortrait&&telemetryExpanded?12:W-RS-(portrait?12:14)),cy=landscape?(ultraShort?Math.max(98,(H-RS)/2):Math.max(156,(H-RS)/2)):portrait?Math.max(176,H-220-RS-12):H-RS-14;
   return {landscape,portrait,shortPortrait,RS,cx,cy};
 }
 function drawBinaryRadar(){
@@ -317,7 +317,7 @@ function drawHUDOverlay(worldDrawStarted){
   const statW=W<760?140:200, statInner=statW-6;
   const portraitHUD=lowPowerMode&&H>650,touchLandscapeHUD=lowPowerMode&&H<=650;
   // 触屏竖屏及 iPad 横屏把燃料/生命放到姿态表下方；矮横屏放在中部，避开底部左右分置的控制键。
-  const fuelBarY=portraitHUD?282:touchLandscapeHUD?224:H-40;
+  const fuelBarY=portraitHUD?282:touchLandscapeHUD?Math.max(172,Math.min(224,H-96)):H-40;
   // 燃料条
   ctx.fillStyle='rgba(255,255,255,.14)';
   roundRect(16, fuelBarY, statW, 22, 11); ctx.fill();
@@ -370,7 +370,7 @@ function drawHUDOverlay(worldDrawStarted){
   const saE=Math.atan2(dyE,dxE);
   const relEvx=rocket.vx-((EARTH.vx||0)-Math.sin(saE)*EARTH_OMEGA*dE), relEvy=rocket.vy-((EARTH.vy||0)+Math.cos(saE)*EARTH_OMEGA*dE);
   const vRelEarth=Math.hypot(relEvx,relEvy);
-  const landscapeHUD=H<=520, teleCompact=W<760||landscapeHUD, mobileTele=W<760&&!landscapeHUD,teleDetailed=!mobileTele||telemetryExpanded;
+  const landscapeHUD=H<=520,ultraShortHUD=landscapeHUD&&H<360,teleCompact=W<760||landscapeHUD,mobileTele=W<760&&!landscapeHUD,teleDetailed=(!mobileTele||telemetryExpanded)&&!ultraShortHUD;
   const teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?8:teleCompact?278:14, teleW=teleCompact?174:206;
   const teleH=teleDetailed?((level===9||level===10)?146:(level===5||level===7||level===8)?126:level===1?86:(level===3||level===4||level===6)?106:66):86;
   telemetryHitBox=mobileTele?{x:teleX-5,y:teleY-5,w:teleW+10,h:teleH+10}:null;
@@ -473,7 +473,7 @@ function drawHUDOverlay(worldDrawStarted){
 
   // 姿态指示器（左上）：三种显示模式（V 切换）
   // dialMode: 0=世界固定（机头随 rocket.a 转） 1=速度向上（表盘转到速度朝上） 2=机头向上（表盘转到机头朝上）
-  const attCompact=W<760||H<520, attX=attCompact?62:90, attY=attCompact?156:160, attR=attCompact?44:54;
+  const attCompact=W<760||H<520, attX=attCompact?62:90, attY=attCompact?(H<360?132:156):160, attR=attCompact?44:54;
   attitudeHitBox={x:attX-attR-8,y:attY-attR-8,w:(attR+8)*2,h:(attR+8)*2+22};
   const attitudeV=attitudeVelocity(), speed2=Math.hypot(attitudeV.vx,attitudeV.vy);
   const vAng=Math.atan2(attitudeV.vy,attitudeV.vx);
@@ -551,16 +551,16 @@ function drawHUDOverlay(worldDrawStarted){
 
   // 教学指引面板（顶部居中）
   if(mission && !mission.hintsHidden && !mission.done){
-    const landscapeCompact=H<=520, compact=W<760||landscapeCompact;
-    const bw=landscapeCompact?Math.min(360,Math.max(260,W-330)):Math.min(560,W-24), bx=W/2-bw/2, bh=landscapeCompact?60:(compact?80:76), by=landscapeCompact?H-72:H-(compact?204:140);
+    const landscapeCompact=H<=520,ultraShort=landscapeCompact&&H<360,compact=W<760||landscapeCompact;
+    const bw=landscapeCompact?Math.min(360,Math.max(250,W-330)):Math.min(560,W-24), bx=W/2-bw/2, bh=ultraShort?54:(landscapeCompact?60:(compact?80:76)), by=landscapeCompact?H-(ultraShort?62:72):H-(compact?204:140);
     ctx.fillStyle='rgba(10,14,35,.72)';
     roundRect(bx, by, bw, bh, 14); ctx.fill();
     ctx.strokeStyle='rgba(255,209,102,.6)'; ctx.lineWidth=2; roundRect(bx, by, bw, bh, 14); ctx.stroke();
     ctx.textAlign='left';
     ctx.fillStyle='#ffd166'; ctx.font='800 15px "Baloo 2",sans-serif';
-    ctx.fillText('任务 ' + stageInfo()[mission.stage].name, bx+16, by+(landscapeCompact?20:23));
+    ctx.fillText('任务 ' + stageInfo()[mission.stage].name, bx+16, by+(ultraShort?18:landscapeCompact?20:23));
     ctx.fillStyle='rgba(255,255,255,.85)'; ctx.font='600 12.5px "Baloo 2",sans-serif';
-    fitText(landscapeCompact&&mission.dynHint?'▸ '+mission.dynHint:stageInfo()[mission.stage].hint, bx+16, by+(landscapeCompact?42:44), bw-32, landscapeCompact?9:(compact?10:11));
+    fitText(landscapeCompact&&mission.dynHint?'▸ '+mission.dynHint:stageInfo()[mission.stage].hint, bx+16, by+(ultraShort?38:landscapeCompact?42:44), bw-32, landscapeCompact?9:(compact?10:11));
     // 动态实时反馈（必成功线路）
     if(mission.dynHint&&!landscapeCompact){
       ctx.fillStyle='#4cc9f0'; ctx.font='700 12.5px "Baloo 2",sans-serif';

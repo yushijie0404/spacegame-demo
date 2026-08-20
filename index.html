@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#0b1026">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,10 +15,10 @@
 <style>
   :root{--ink:#f8fbff;--muted:#a9b7d8;--panel:rgba(8,14,38,.76);--line:rgba(255,255,255,.16);--cyan:#4cc9f0;--gold:#ffd166;--green:#5fd068;--red:#ef476f}
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;overflow:hidden;background:#0b1026;font-family:'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden;background:#0b1026;font-family:'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   button{font:inherit}
-  #cv{display:block;width:100vw;height:100vh;touch-action:none;cursor:grab}
-  #hudCv{position:fixed;inset:0;z-index:3;display:block;width:100vw;height:100vh;pointer-events:none}
+  #cv{position:fixed;inset:0;display:block;width:var(--app-width,100vw);height:var(--app-height,100dvh);touch-action:none;cursor:grab}
+  #hudCv{position:fixed;inset:0;z-index:3;display:block;width:var(--app-width,100vw);height:var(--app-height,100dvh);pointer-events:none}
   #cv.is-panning{cursor:grabbing}
   #orientationHint{position:fixed;z-index:16;left:50%;top:max(78px,calc(env(safe-area-inset-top) + 64px));display:flex;align-items:center;gap:9px;max-width:calc(100vw - 24px);padding:9px 13px;color:#eaf3ff;background:rgba(10,17,45,.94);border:1px solid rgba(159,232,255,.52);border-radius:999px;box-shadow:0 10px 28px rgba(0,0,0,.35);opacity:0;transform:translate(-50%,-12px);pointer-events:none;transition:opacity .2s,transform .2s}#orientationHint.is-visible{opacity:1;transform:translate(-50%,0)}#orientationHint .rotate-icon{font-size:22px;color:#ffd166}#orientationHint strong{font-size:12px;white-space:nowrap}#orientationHint .orientation-copy{font-size:10px;color:#b7c6e5;white-space:nowrap}
   .hud{position:fixed;top:14px;left:16px;max-width:min(660px,calc(100vw - 245px));padding:11px 14px 10px;color:var(--ink);z-index:5;text-shadow:0 2px 0 rgba(0,0,0,.35);background:linear-gradient(135deg,rgba(13,23,60,.86),rgba(10,16,43,.68));border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 30px rgba(0,0,0,.2);backdrop-filter:blur(8px)}
@@ -140,6 +140,21 @@
     #briefing .brief-card{width:min(900px,calc(100vw - 22px));max-height:calc(100vh - 16px);padding:14px 17px}.brief-title{font-size:20px}.brief-goal{margin-bottom:9px}.brief-grid{grid-template-columns:1fr 1fr;gap:9px}.brief-box{padding:10px 12px}.mode-panel{margin-top:9px;padding:9px}.brief-actions{margin-top:9px}
     #orientationHint{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 94px)}
   }
+  @media (pointer:coarse) and (orientation:landscape) and (max-height:360px){
+    .hud{width:176px;max-width:25vw}.hud .title{font-size:12px}.mode-badge{font-size:8px}
+    .tool-rail{grid-template-columns:repeat(4,44px);gap:5px;padding:6px}.tool-rail .icon-btn{width:44px;height:44px;border-radius:12px}.tool-rail .ico{font-size:17px}.tool-rail .lbl{font-size:7px}
+    .flight-controls .icon-btn{width:58px;height:58px}.flight-controls .thrust{width:72px;height:76px;border-radius:19px}.flight-controls .thrust .ico{font-size:27px}
+    .mission-action{bottom:calc(max(7px,env(safe-area-inset-bottom)) + 82px);width:88px;height:48px}
+    .pause-card{max-height:calc(100dvh - 10px);padding:12px 14px}.pause-actions button{min-height:40px}.pause-grid button{min-height:36px}.pause-star-help,.key-help{padding:6px 9px}
+    #orientationHint{bottom:calc(max(7px,env(safe-area-inset-bottom)) + 84px)}
+  }
+  @media (orientation:landscape) and (max-height:520px){
+    #levelSelect{align-items:stretch;overflow:hidden;padding:max(6px,env(safe-area-inset-top)) max(9px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(9px,env(safe-area-inset-left))}
+    .level-shell{height:100%;min-height:0;display:flex;flex-direction:column;margin:0 auto}.level-head{flex:0 0 auto;margin-bottom:6px}.level-head h1{margin:1px 0;font-size:clamp(23px,7vh,32px)}.level-head p{font-size:11px}.level-kicker{font-size:9px}
+    .level-grid{flex:1;min-height:0;gap:9px;padding:2px 3px 4px;overflow-x:auto;overflow-y:hidden;touch-action:pan-x}.level-card{height:100%;min-height:0;flex:0 0 min(42vw,270px);padding:9px 12px;border-radius:17px}.level-number{font-size:9px}.level-icon{margin:2px 0;font-size:24px}.level-card h2{margin:0 0 3px;font-size:16px}.level-card p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:11px;line-height:1.35}.level-meta{padding-top:3px}.level-stars{font-size:16px}.level-score{font-size:9px}.level-score strong{font-size:15px}.level-play{min-height:34px;margin-top:4px;border-radius:9px;font-size:12px}
+    .level-footer{flex:0 0 auto;margin-top:5px}.level-footer button{min-height:36px;padding:6px 14px;font-size:11px}
+  }
+  @media (orientation:landscape) and (max-height:360px){.level-head p{display:none}.level-head{margin-bottom:3px}.level-footer{margin-top:3px}.level-footer button{min-height:32px;padding:4px 12px}}
   @media (pointer:fine) and (min-width:1100px){.flight-controls{opacity:.64}.flight-controls:hover{opacity:1}}
 </style>
 </head>
@@ -255,16 +270,22 @@ SG_DISPLAY.install();
 let W = 0, H = 0, DPR = 1, HUD_DPR=1, lowPowerMode=false, mobileEconomy=false, bgGradient=null, bulletGradient=null, farGradient=null;
 let lowFpsWindows=0,stableFpsWindows=0,lastHudDrawAt=0;
 function resize(){
+  const visual=window.visualViewport;
+  const viewportWidth=Math.max(1,Math.round(visual?.width||document.documentElement.clientWidth||innerWidth));
+  const viewportHeight=Math.max(1,Math.round(visual?.height||document.documentElement.clientHeight||innerHeight));
   const coarsePointer=typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches;
   // 横屏旗舰手机常超过 900 CSS px；不能只按宽度判断，否则会误开桌面级 DPR、星空和轨道预测。
-  lowPowerMode=IOS_DEVICE||coarsePointer||innerWidth<760;
+  lowPowerMode=IOS_DEVICE||coarsePointer||viewportWidth<760;
   document.documentElement.classList.toggle('low-power',lowPowerMode);
   // 世界层负责天体与轨迹，手机保持 1×；HUD 单独使用高清倍率并以较低频率重绘。
   // 这样不会让每一颗行星都承担 Retina 像素成本，文字、雷达和表盘仍保持清楚。
   DPR=Math.min(devicePixelRatio||1,lowPowerMode?1:1.25);
-  const hudPixelScale=Math.max(1,Math.min(lowPowerMode?1.5:1.6,Math.sqrt(1200000/Math.max(1,innerWidth*innerHeight))));
+  const hudPixelScale=Math.max(1,Math.min(lowPowerMode?1.5:1.6,Math.sqrt(1200000/Math.max(1,viewportWidth*viewportHeight))));
   HUD_DPR=Math.min(devicePixelRatio||1,hudPixelScale);
-  W = innerWidth; H = innerHeight;
+  W=viewportWidth;H=viewportHeight;
+  document.documentElement.style.setProperty('--app-width',W+'px');
+  document.documentElement.style.setProperty('--app-height',H+'px');
+  cv.style.width=hudCv.style.width=W+'px';cv.style.height=hudCv.style.height=H+'px';
   cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);hudCv.width=Math.round(W*HUD_DPR);hudCv.height=Math.round(H*HUD_DPR);
   worldCtx.setTransform(DPR,0,0,DPR,0,0);hudCtx.setTransform(HUD_DPR,0,0,HUD_DPR,0,0);ctx=worldCtx;
   bgGradient=worldCtx.createLinearGradient(0,0,0,H); bgGradient.addColorStop(0,'#0b1026'); bgGradient.addColorStop(1,'#1b2350');
@@ -272,7 +293,17 @@ function resize(){
   farGradient=hudCtx.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.7); farGradient.addColorStop(0,'rgba(0,0,0,0)'); farGradient.addColorStop(1,'rgba(0,0,0,.72)');
   lastHudDrawAt=0;
 }
-addEventListener('resize', resize); resize();
+let viewportSettleTimers=[];
+function settleViewportResize(){
+  resize();
+  for(const timer of viewportSettleTimers)clearTimeout(timer);
+  viewportSettleTimers=[60,180,420].map(delay=>setTimeout(resize,delay));
+}
+addEventListener('resize',settleViewportResize,{passive:true});
+addEventListener('orientationchange',settleViewportResize,{passive:true});
+addEventListener('spacegameorientationchange',settleViewportResize,{passive:true});
+if(window.visualViewport)visualViewport.addEventListener('resize',settleViewportResize,{passive:true});
+settleViewportResize();
 
 // ---------- 物理世界 ----------
 const TAU = Math.PI*2;

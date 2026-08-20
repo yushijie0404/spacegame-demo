@@ -26,6 +26,7 @@
     const root=document.documentElement,info=status(),hint=document.getElementById('orientationHint');
     root.dataset.orientationPreference=mode;
     root.dataset.viewportOrientation=info.actual;
+    if(typeof global.dispatchEvent==='function'&&typeof global.Event==='function')global.dispatchEvent(new Event('spacegameorientationchange'));
     if(!hint)return info;
     const visible=isCoarse()&&info.mismatch;
     hint.classList.toggle('is-visible',visible);
