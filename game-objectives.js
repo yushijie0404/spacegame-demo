@@ -241,19 +241,19 @@ function updateMissionL9(dt){
   if(crossedOut&&m.energy>0){finishBlackHoleEscape(m);return;}
   if(crossedOut){
     mission.blackHoleInvalidExitT+=dt;
-    mission.dynHint=`已穿救援圈，但能量 ${m.energy.toFixed(0)} 仍为负｜还会掉回来`;
+    mission.dynHint=`还会掉回来｜逃逸能量 ${m.energy.toFixed(0)}`;
     if(mission.blackHoleInvalidExitT>=1)failBlackHoleEscape(m);
     return;
   }
   mission.blackHoleInvalidExitT=0;
   if(mission.stage===0){
-    mission.dynHint=`距视界 ${m.alt.toFixed(0)}｜运动倍率 ×${m.coordinateFactor.toFixed(2)}｜燃料只够近点一烧`;
+    mission.dynHint=`停火下潜｜距视界 ${m.alt.toFixed(0)}`;
     if(m.r<BH_BURN_R+90){advanceStage();return;}
   }else if(mission.stage===1){
     const burnCue=m.r<=270?'现在顺向点火':'继续关机下潜';
-    mission.dynHint=`半径 ${m.r.toFixed(0)}｜逃逸能量 ${m.energy.toFixed(0)}｜${burnCue}`;
+    mission.dynHint=`${burnCue}｜逃逸能量 ${m.energy.toFixed(0)}`;
     if(m.energy>0){mission.blackHoleEscaping=true;advanceStage();return;}
-  }else mission.dynHint=`向外 ${m.radial.toFixed(1)} u/s｜距救援门 ${Math.max(0,BH_ESCAPE_R-m.r).toFixed(0)}`;
+  }else mission.dynHint=`飞向绿色救援圈｜还差 ${Math.max(0,BH_ESCAPE_R-m.r).toFixed(0)}`;
 }
 function finishThreeBodyCrossing(m=threeBodyMetrics()){
   if(level!==10||mission.done)return;
@@ -264,7 +264,7 @@ function finishThreeBodyCrossing(m=threeBodyMetrics()){
     {ok:remaining>=CHALLENGE_CONFIG[10].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[10].fuelStar}%`}
   ]);
   const result=saveLevelResult(10,performanceScore(),starResult.stars),seed=mission.threeSeed.toString(16).toUpperCase().padStart(8,'0');
-  syncUI();showMsg('🌀','混沌穿越完成！',
+  syncUI();showMsg('🆘','三体救援成功！',
     resultLine(result)+`本局种子 <b>${seed}</b> · 最近恒星净空 ${mission.threeMinClearance.toFixed(0)} u<br>`+
     `${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
     `<span style="color:#888">这条路线只属于这一局。重新开始会扰动三颗恒星的初始条件，时间线影子也会产生新的分叉。</span>`);
@@ -276,19 +276,21 @@ function updateMissionL10(dt){
   if(m.clearance<THREE_DANGER_PAD)mission.threeDangerViolated=true;
   if(mission.stage<2){
     const targetIndex=mission.stage,gate=threeBodyGate(targetIndex),distance=Math.hypot(rocket.x-gate.x,rocket.y-gate.y);
-    const split=timelineCache?.result?.divergence||0;
-    mission.dynHint=`时间锚 ${targetIndex+1}/2 · 距离 ${distance.toFixed(0)}｜时间线分岔 ${split.toFixed(0)} u`;
-    if(distance<=THREE_GATE_R){
+    const relSpeed=Math.hypot(rocket.vx-gate.vx,rocket.vy-gate.vy),shipName=targetIndex===0?'A':'B';
+    mission.dynHint=distance<=THREE_GATE_R&&relSpeed>THREE_RESCUE_SPEED
+      ? `已靠近求救飞船 ${shipName}｜轻点反推，速度差 ${relSpeed.toFixed(0)}/${THREE_RESCUE_SPEED}`
+      : `靠近求救飞船 ${shipName}｜距离 ${distance.toFixed(0)}｜速度差 ${relSpeed.toFixed(0)}`;
+    if(distance<=THREE_GATE_R&&relSpeed<=THREE_RESCUE_SPEED){
       mission.threeGateIndex=targetIndex+1;
       advanceStage();
-      mission.toast=targetIndex===0?'✅ 时间锚 I 已记录｜目标切换到时间锚 II':'✅ 两个时间锚已记录｜寻找向外逃逸的时间线';
+      mission.toast=targetIndex===0?'✅ 第一批船员获救｜前往求救飞船 B':'✅ 两批船员都已获救｜现在带他们逃出去';
       mission.toastT=4;
     }
     return;
   }
   const outward=m.r>=THREE_ESCAPE_R&&m.radial>12;
   mission.threeEscapeT=outward?mission.threeEscapeT+dt:0;
-  mission.dynHint=`距逃逸圈 ${Math.max(0,THREE_ESCAPE_R-m.r).toFixed(0)}｜径向速度 ${m.radial.toFixed(1)}｜稳定 ${mission.threeEscapeT.toFixed(1)}/1.2s`;
+  mission.dynHint=`飞出绿色圈｜还差 ${Math.max(0,THREE_ESCAPE_R-m.r).toFixed(0)}｜稳定 ${mission.threeEscapeT.toFixed(1)}/1.2s`;
   if(mission.threeEscapeT>=1.2)finishThreeBodyCrossing(m);
 }
 
@@ -328,13 +330,13 @@ function updateMission(dt){
     else if(speed>0.85*escapeSpeed) dyn='太快｜松开推进，向右转';
     else if(alt<35) dyn='按住发光的推进键';
     else if(omega<=0) dyn='方向反了｜向右转';
-    else if(vRad>35) dyn='向右压平';
-    else if((ap.ra-ap.rp)/ap.rp >= 0.40) dyn = '黄线太扁｜沿青线点火';
-    else if(!ok) dyn = '停火滑行｜等待黄线闭合';
+    else if(vRad>35) dyn='起飞后逐渐向右转';
+    else if((ap.ra-ap.rp)/ap.rp >= 0.40) dyn='机头朝飞行方向，轻点推进';
+    else if(!ok) dyn='先停火滑行｜等待完整绕地球一圈';
   }else if(mission.stage===1){
     ok = ap.bound && orbitalAngularRate()>0 && ap.ra > R_GEO - GEO_BAND*(mission.assistMode?1.4:1);
     if(ok){ advanceStage(); return; }
-    dyn = ap.bound ? '橙点 '+(ap.ra-EARTH.r).toFixed(0)+'｜继续抬高' : '黄线未闭合｜掉头反推';
+    dyn=ap.bound?'预计最高点 '+(ap.ra-EARTH.r).toFixed(0)+'｜继续朝前加速':'速度过高｜掉头点火减速';
   }else if(mission.stage===2){
     const direct=directSyncStatus(rocket,1),sync=direct.sync;
     ok=direct.ok;
@@ -376,7 +378,7 @@ function updateMissionL2(dt){
 
   if(mission.stage===0){ // ① 反推降轨：近地点压到地表附近（轨迹扎进地球）
     const ok = ap.rp < EARTH.r + 250; // 近地点足够低，会再入
-    dyn = '蓝点 '+Math.max(0,(ap.rp-EARTH.r)).toFixed(0)+'｜目标 <250';
+    dyn='掉头点火减速｜预计最低高度 '+Math.max(0,(ap.rp-EARTH.r)).toFixed(0)+' / 250';
     if(ok){ advanceStage(); return; }
     mission.dynHint = dyn;
     return;
@@ -390,7 +392,7 @@ function updateMissionL2(dt){
   }
   // stage===2 垂直着陆：由碰撞检测里的软着陆判定通关
   const vRad = (rocket.vx*(rocket.x-EARTH.x)+rocket.vy*(rocket.y-EARTH.y))/ap.r;
-  mission.dynHint = '高度 '+Math.max(0,alt).toFixed(0)+'｜下降 '+Math.max(0,-vRad).toFixed(1);
+  mission.dynHint = '机头朝上，轻点推进｜高度 '+Math.max(0,alt).toFixed(0)+'｜下降 '+Math.max(0,-vRad).toFixed(1);
 }
 // 第三关：发射入轨 → 轨道交会 → 匹配速度 → 低速自动捕获
 function updateMissionL3(dt){
@@ -415,18 +417,18 @@ function updateMissionL3(dt){
     ok=ap.bound&&orbitalAngularRate()>0&&ap.rp>EARTH.r+90&&ap.ra>STATION_R-260&&ap.ra<STATION_R+520;
     need=1.2;
     if(rocket._launchAssistActive&&attMode===0) mission.dynHint=`随速垂直锁定｜${Math.max(0,alt).toFixed(0)} / ${LAUNCH_LOCK_ALT} u`;
-    else if(!ap.bound) mission.dynHint='速度过高｜停火并沿青线调整';
+    else if(!ap.bound) mission.dynHint='速度过高｜停火后掉头减速';
     else if(orbitalAngularRate()<=0) mission.dynHint='方向反了｜向右进入顺行轨道';
-    else mission.dynHint=`高度 ${alt.toFixed(0)}｜远点 ${(ap.ra-EARTH.r).toFixed(0)}｜目标约 ${STATION_R-EARTH.r}`;
+    else mission.dynHint=`先绕地球飞行｜预计最高点 ${(ap.ra-EARTH.r).toFixed(0)}`;
   }else if(mission.stage===1){
     ok=m.distance<(mission.assistMode?440:350); need=.45;
-    mission.dynHint=`距离 ${m.distance.toFixed(0)}｜${m.closing>0?'正在接近':'正在远离｜试试较低轨道'}`;
+    mission.dynHint=`从后方追近｜距离 ${m.distance.toFixed(0)}｜${m.closing>0?'正在接近':'改用较低轨道'}`;
   }else if(mission.stage===2){
     ok=m.distance<(mission.assistMode?145:120)&&m.relSpeed<(mission.assistMode?28:22); need=.65;
-    mission.dynHint=`距离 ${m.distance.toFixed(0)}｜相对速度 ${m.relSpeed.toFixed(1)}`;
+    mission.dynHint=`先减小速度差｜距离 ${m.distance.toFixed(0)}｜速度差 ${m.relSpeed.toFixed(1)}`;
   }else{
     ok=m.distance<(mission.assistMode?42:30)&&m.relSpeed<(mission.assistMode?12:8); need=.8;
-    mission.dynHint=`对接距离 ${m.distance.toFixed(1)}｜相对 ${m.relSpeed.toFixed(1)}｜稳定后点按钮`;
+    mission.dynHint=`慢慢靠近｜距离 ${m.distance.toFixed(1)}｜速度差 ${m.relSpeed.toFixed(1)}`;
     return;
   }
   if(ok){
@@ -447,18 +449,18 @@ function updateMissionL4(dt){
   if(mission.stage===0){
     ok=earthAp.bound&&orbitalAngularRate()>0&&earthAp.rp>EARTH.r+70&&earthAp.ra<3000;
     need=1.1;
-    mission.dynHint=rocket._launchAssistActive&&attMode===0?`随速垂直锁定｜${Math.max(0,earthAp.r-EARTH.r).toFixed(0)} / ${LAUNCH_LOCK_ALT} u`:`近点 ${(earthAp.rp-EARTH.r).toFixed(0)}｜黄线闭合后停火`;
+    mission.dynHint=rocket._launchAssistActive&&attMode===0?`起飞辅助｜高度 ${Math.max(0,earthAp.r-EARTH.r).toFixed(0)} / ${LAUNCH_LOCK_ALT} u`:`先完整绕地球一圈｜最低高度 ${(earthAp.rp-EARTH.r).toFixed(0)}`;
   }else if(mission.stage===1){
     ok=earthAp.bound&&earthAp.ra>MOON_ORBIT_R-900&&earthAp.ra<MOON_ORBIT_R+3500;
     need=.4;
-    mission.dynHint=earthAp.bound?`橙点 ${(earthAp.ra-EARTH.r).toFixed(0)}｜目标约 ${(MOON_ORBIT_R-EARTH.r).toFixed(0)}`:'速度过高｜掉头反推避免逃逸';
+    mission.dynHint=earthAp.bound?`预计最高点 ${(earthAp.ra-EARTH.r).toFixed(0)}｜月球轨道 ${(MOON_ORBIT_R-EARTH.r).toFixed(0)}`:'速度过高｜掉头点火减速';
   }else if(mission.stage===2){
     // 必须形成真实的月心束缚轨道，不能像空间站对接那样只靠接近和匹配速度过关。
     ok=moonAp.bound&&moonAp.rp>MOON.r+(mission.assistMode?8:20)&&moonAp.ra<MOON.r+(mission.assistMode?1900:1400);
     need=.8;
     const moonG=MOON.mu/(m.distance*m.distance),earthD=Math.hypot(rocket.x-EARTH.x,rocket.y-EARTH.y),earthG=EARTH.mu/(earthD*earthD);
-    if(!moonAp.bound) mission.dynHint=`月g ${moonG.toFixed(2)} · 地g ${earthG.toFixed(2)}｜反推捕获`;
-    else mission.dynHint=`已被月球捕获｜近月 ${(moonAp.rp-MOON.r).toFixed(0)} · 远月 ${(moonAp.ra-MOON.r).toFixed(0)}`;
+    if(!moonAp.bound) mission.dynHint=`朝相对速度反方向点火｜月球引力 ${moonG.toFixed(2)}`;
+    else mission.dynHint=`继续反推，先绕月球飞行｜最低高度 ${(moonAp.rp-MOON.r).toFixed(0)}`;
   }else{
     const alt=m.distance-MOON.r;
     const side=Math.abs(m.farDelta)<Math.PI/2?'月背':'近侧｜绕到绿色一面';
@@ -521,14 +523,14 @@ function updateMissionL5(dt){
   if(mission.stage===0){
     const ap=orbitApsis(EARTH,rocket),alt=ap.r-EARTH.r;
     const transferReady=ap.bound&&orbitalAngularRate()>0&&ap.rp>EARTH.r&&ap.ra>MOON_ORBIT_R-700&&ap.ra<MOON_ORBIT_R+1100;
-    mission.dynHint=`一级燃料 ${rocket.fuel.toFixed(1)}%｜高度 ${Math.max(0,alt).toFixed(0)}｜橙点 ${Number.isFinite(ap.ra)?Math.max(0,ap.ra-EARTH.r).toFixed(0):'逃逸'}`;
+    mission.dynHint=`把预计最高点送到月球轨道｜燃料 ${rocket.fuel.toFixed(1)}%｜最高点 ${Number.isFinite(ap.ra)?Math.max(0,ap.ra-EARTH.r).toFixed(0):'逃逸'}`;
     if(transferReady){ mission.holdT+=dt; if(mission.holdT>=.25) advanceStage(); }
     else mission.holdT=0;
     return;
   }
 
   if(mission.stage===1){
-    mission.dynHint=`修正燃料 ${rocket.fuel.toFixed(1)}%｜距月 ${m.distance.toFixed(0)}｜看黄线“预计近月”标记`;
+    mission.dynHint=`看预计近月点｜距月 ${m.distance.toFixed(0)}｜修正燃料 ${rocket.fuel.toFixed(1)}%`;
     if(m.distance<SLING_APPROACH_R){ advanceStage(); return; }
     return;
   }
@@ -548,14 +550,14 @@ function updateMissionL5(dt){
   if(mission.stage===2){
     const closestAlt=Number.isFinite(mission.slingClosestDistance)?mission.slingClosestDistance-MOON.r:m.distance-MOON.r;
     mission.dynHint=m.distance<1200
-      ? `停火飞越｜最近高度 ${closestAlt.toFixed(0)}｜${trailing<0?'正在获得顺向借力':'继续观察黄线弯曲'}`
-      : `距月 ${m.distance.toFixed(0)}｜等待引力弯折｜不撞月就继续`;
+      ? `停火掠过月球｜最近高度 ${closestAlt.toFixed(0)}｜${trailing<0?'正在加速':'观察路线转弯'}`
+      : `靠近月球并停火｜距月 ${m.distance.toFixed(0)}`;
     return;
   }
 
   const vInf=energy>0?Math.sqrt(2*energy):0;
   mission.slingVInf=vInf;
-  mission.dynHint=`地心距离 ${earthR.toFixed(0)} / ${SLING_EXIT_R}｜v∞ ${vInf.toFixed(1)} u/s`;
+  mission.dynHint=`飞出绿色圈｜距离 ${earthR.toFixed(0)} / ${SLING_EXIT_R}｜v∞ ${vInf.toFixed(1)}`;
   if(earthR>=SLING_EXIT_R&&radial>0&&energy>0) finishSlingshot();
 }
 // 第六关：无需预选，实时采用最近的平衡点；进入任意目标环并匹配速度后自动部署。
@@ -573,7 +575,7 @@ function updateMissionL6(dt){
   let ok=false,need=0;
   if(mission.stage===0){
     ok=ap.bound&&orbitalAngularRate()>0&&ap.rp>EARTH.r+70&&ap.ra<3000; need=1.1;
-    mission.dynHint=`最近 L${m.point.id} ${'★'.repeat(m.point.stars)}｜${ap.bound?'先让黄线闭合':'速度过高，停火调整'}`;
+    mission.dynHint=`先完整绕地球一圈｜最近 L${m.point.id} ${'★'.repeat(m.point.stars)}｜${ap.bound?'轨道已形成':'停火减速'}`;
   }else if(mission.stage===1){
     ok=m.distance<3000; need=.35;
     mission.dynHint=`距 L${mission.lagrangeTarget} ${m.distance.toFixed(0)}｜目标 <3000`;
@@ -581,7 +583,7 @@ function updateMissionL6(dt){
     ok=m.distance<800&&m.relSpeed<45; need=.55;
     mission.dynHint=`距 L${mission.lagrangeTarget} ${m.distance.toFixed(0)}｜速度差 ${m.relSpeed.toFixed(1)}`;
   }else{
-    mission.dynHint=`任意点都可｜最近 L${m.point.id}｜距离 ${m.distance.toFixed(0)} / ${distanceLimit}｜速度差 ${m.relSpeed.toFixed(1)} / ${speedLimit}`;
+    mission.dynHint=`进入 L${m.point.id} 并停稳｜距离 ${m.distance.toFixed(0)}/${distanceLimit}｜速度差 ${m.relSpeed.toFixed(1)}/${speedLimit}`;
     return;
   }
   if(ok){ mission.holdT+=dt; if(mission.holdT>=need) advanceStage(); }
@@ -611,8 +613,8 @@ function updateMissionL7(dt){
     if(mission.asteroidSafeT>=2.5){finishAsteroidDefense(forecast);return;}
   }else mission.asteroidSafeT=0;
   if(mission.asteroidContact){
-    if(mission.asteroidAnchored)mission.dynHint=`铰链 ${(mission.hingeAngle*180/Math.PI).toFixed(0)}°｜${forecast.safe?'轨道安全，保持':'继续推开红线'}`;
-    else mission.dynHint=`已贴住表面｜直接推进效率较低，或点击锚定`;
+    if(mission.asteroidAnchored)mission.dynHint=`${forecast.safe?'保持安全轨道':'继续把红线推开'}｜喷射角 ${(mission.hingeAngle*180/Math.PI).toFixed(0)}°`;
+    else mission.dynHint=`点“锚定并翻转”，或直接推进`;
     return;
   }
   if(!rocket.alive){mission.dynHint=forecast.safe?'撞击有效｜等待轨道确认':'撞击偏转不足｜小行星仍有危险';return;}
@@ -620,7 +622,7 @@ function updateMissionL7(dt){
     mission.dynHint=`距小行星 ${m.distance.toFixed(0)}｜相对 ${m.relSpeed.toFixed(1)} u/s`;
     if(m.distance<1700){advanceStage();return;}
   }else if(mission.stage===1){
-    mission.dynHint=`姿态不限｜相对 ≤${ASTEROID_SOFT_SPEED} 软着陆｜高速=撞击`;
+    mission.dynHint=`软着陆 ≤${ASTEROID_SOFT_SPEED} u/s｜高速接触会撞击`;
   }else mission.dynHint=`距小行星 ${m.distance.toFixed(0)}｜慢速接触表面`;
 }
 function updateMissionL8(dt){
@@ -642,7 +644,7 @@ function updateMissionL8(dt){
   if(rocket.landed)return;
 
   if(mission.stage===0){
-    mission.dynHint=`离晨曦星 ${Math.max(0,planetD-EARTH.r).toFixed(0)}｜朝青色通道飞`;
+    mission.dynHint=`朝青色通道飞｜离晨曦星 ${Math.max(0,planetD-EARTH.r).toFixed(0)}`;
     if(planetD>EARTH.r+300){mission.holdT+=dt;if(mission.holdT>.6)advanceStage();}
     else mission.holdT=0;
     return;
@@ -655,12 +657,12 @@ function updateMissionL8(dt){
   const captured=bm.targetEnergy<0&&bm.distB>MOON.r+75&&bm.distB<1550;
   mission.binaryCaptured=captured||mission.binaryCaptured;
   if(mission.stage===2){
-    mission.dynHint=`目标星能量 ${bm.targetEnergy.toFixed(0)}｜${captured?'已捕获':'反推至负数'}｜距站 ${sm.distance.toFixed(0)}`;
+    mission.dynHint=`${captured?'已捕获':'朝相对速度反方向点火'}｜能量 ${bm.targetEnergy.toFixed(0)}｜距站 ${sm.distance.toFixed(0)}`;
     if(captured){mission.holdT+=dt;if(mission.holdT>.7)advanceStage();}
     else mission.holdT=0;
     return;
   }
-  mission.dynHint=`暮光站 ${sm.distance.toFixed(0)}｜相对 ${sm.relSpeed.toFixed(1)}｜低速靠近后点对接`;
+  mission.dynHint=`先减速再靠近｜距站 ${sm.distance.toFixed(0)}｜速度差 ${sm.relSpeed.toFixed(1)}`;
 }
 function advanceStage(){
   mission.stage++;
@@ -693,12 +695,12 @@ function advanceStage(){
   if(level===6 && mission.stage===1){ mission.toast='✅ 停泊轨道稳定！任选一个平衡点前往'; mission.toastT=3.5; }
   if(level===6 && mission.stage===2){ mission.toast=`✅ 已接近 L${mission.lagrangeTarget}！先消除相对速度`; mission.toastT=3.5; }
   if(level===6 && mission.stage===3){ mission.toast='✅ 进入任意亮环并停稳即可自动完成'; mission.toastT=3.5; }
-  if(level===7 && mission.stage===1){ mission.toast='✅ 已进入拦截区｜着陆姿态不限，只需降低相对速度；也可直接撞击'; mission.toastT=5; }
-  if(level===7 && mission.stage===2){ mission.toast='✅ 已贴住小行星｜锚定翻转，或直接低效率推进'; mission.toastT=4; }
+  if(level===7 && mission.stage===1){ mission.toast='✅ 已进入拦截区｜慢速着陆或直接撞击'; mission.toastT=4; }
+  if(level===7 && mission.stage===2){ mission.toast='✅ 已接触小行星｜可以锚定翻转'; mission.toastT=3.5; }
   if(level===7 && mission.stage===3){ mission.toast='⚓ 左右调铰链，推进直到危险红线变绿'; mission.toastT=4; }
-  if(level===8 && mission.stage===1){ mission.toast='✅ 已离开晨曦星｜瞄准两颗太阳之间移动的青色通道'; mission.toastT=4; }
-  if(level===8 && mission.stage===2){ mission.toast='✅ 已穿过引力通道｜靠近暮光星 B 后反推捕获'; mission.toastT=4; }
-  if(level===8 && mission.stage===3){ mission.toast='✅ 已被目标恒星捕获｜追上暮光站，消除相对速度'; mission.toastT=4; }
+  if(level===8 && mission.stage===1){ mission.toast='✅ 已离开晨曦星｜飞向青色通道'; mission.toastT=3.5; }
+  if(level===8 && mission.stage===2){ mission.toast='✅ 已过通道｜靠近目标星后反推'; mission.toastT=3.5; }
+  if(level===8 && mission.stage===3){ mission.toast='✅ 已被目标星捕获｜追上暮光站'; mission.toastT=3.5; }
   if(level===9 && mission.stage===1){ mission.toast='⌛ 已进入深渊点火区｜对准速度方向，短促推进'; mission.toastT=4; }
   if(level===9 && mission.stage===2){ mission.toast='✅ 逃逸能量已为正｜关机向外穿过绿色救援门'; mission.toastT=4; }
   syncUI();
@@ -711,4 +713,3 @@ function unlockFinalStage(targetStage,message){
   }
   saveCheckpoint(); mission.toast=message; mission.toastT=4; syncUI();
 }
-

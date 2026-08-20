@@ -73,15 +73,18 @@
   .pause-grid #menuPerf{grid-column:1/-1;color:#17213c;background:#9fe8ff}
   .key-help{margin-top:15px;padding:13px 14px;background:rgba(5,10,30,.38);border:1px solid rgba(255,255,255,.12);border-radius:15px}.key-help h3{margin:0 0 9px;font-size:14px}.key-help-grid{display:flex;flex-wrap:wrap;gap:7px}.key-help .pill{font-size:11px;background:rgba(255,255,255,.09)}.touch-help{display:none;margin-top:8px;color:#aebde0;font-size:12px;line-height:1.45}
   .pause-star-help{margin-top:12px;padding:12px 14px;color:#dce7ff;background:rgba(5,10,30,.38);border:1px solid rgba(255,255,255,.12);border-radius:15px}.pause-star-help h3{margin:0 0 7px;font-size:14px}.pause-star-help p{margin:3px 0;font-size:12px;color:#c7d4ef}
-  #briefing{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9;padding:18px;background:rgba(5,9,27,.66);backdrop-filter:blur(5px)}
+  #briefing,#sciencePage{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9;padding:18px;background:rgba(5,9,27,.66);backdrop-filter:blur(5px)}
   #briefing.is-visible{display:flex}
-  #briefing .brief-card{width:min(760px,100%);max-height:min(720px,calc(100vh - 36px));overflow:auto;color:#17213c;background:#f8fbff;border:3px solid #17213c;border-radius:24px;box-shadow:0 14px 0 rgba(0,0,0,.3);padding:24px}
+  #sciencePage.is-visible{display:flex}
+  #briefing .brief-card{width:min(780px,100%);max-height:min(720px,calc(100vh - 36px));overflow:auto;color:#17213c;background:#f8fbff;border:3px solid #17213c;border-radius:24px;box-shadow:0 14px 0 rgba(0,0,0,.3);padding:24px}
   .brief-kicker{font-size:12px;font-weight:800;color:#5570ad;letter-spacing:1.5px}.brief-title{margin:4px 0 5px;font-size:26px}.brief-goal{margin:0 0 18px;color:#57647f}
-  .brief-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}.brief-box{padding:15px 16px;border-radius:16px;background:#eaf2ff;border:1px solid #c8daf7}.brief-box.science{background:#fff5d7;border-color:#f2d88c}.brief-box h3{margin:0 0 8px;font-size:15px}.brief-box ol{margin:0;padding-left:20px}.brief-box li{margin:6px 0;line-height:1.45}.brief-box p{margin:0;line-height:1.55}
+  .brief-story{margin:14px 0;padding:17px 18px;color:#17335d;background:linear-gradient(135deg,#e7f5ff,#dce9ff);border:2px solid #86bff2;border-radius:17px}.brief-story h3{margin:0 0 8px;color:#17689d;font-size:15px}.brief-story p{margin:0;font-size:16px;font-weight:750;line-height:1.65}
+  .brief-key-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:12px}.brief-key{padding:14px 15px;border-radius:15px}.brief-key>span{display:block;margin-bottom:6px;font-size:11px;font-weight:950;letter-spacing:1.2px}.brief-key strong{display:block;font-size:16px;line-height:1.5}.brief-key.goal{color:#15532a;background:#ddf7e4;border:2px solid #7dce91}.brief-key.goal>span{color:#328348}.brief-key.action{color:#633d00;background:#fff1c8;border:2px solid #edc65c}.brief-key.action>span{color:#9a6b00}.brief-key.action ol{margin:8px 0 0;padding-left:21px;color:#614d25;font-size:13px}.brief-key.action li{margin:4px 0;line-height:1.45}
   .brief-success{margin:14px 0 0;padding:11px 14px;color:#174e28;background:#dcf6df;border:1px solid #9dddA5;border-radius:13px;font-weight:700}.brief-scale{margin:10px 0 0;color:#667085;font-size:12px}
   .mode-panel{margin:14px 0 0;padding:14px;background:#eef3ff;border:1px solid #b8c9ee;border-radius:16px}.mode-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.mode-panel h3{margin:0;font-size:15px}.mode-buttons{display:flex;gap:7px}.mode-buttons button{min-height:40px;padding:7px 13px;color:#243456;background:#fff;border:2px solid #9ab0d6;border-radius:11px;font-weight:900;cursor:pointer}.mode-buttons button.is-selected{color:#17213c;background:#ffd166;border-color:#17213c;box-shadow:0 3px 0 #17213c}.mode-summary{margin:10px 0 7px;color:#53617c;font-size:12px;line-height:1.5}.star-rules{display:grid;gap:5px;margin:0;padding:0;list-style:none}.star-rules li{padding:6px 9px;color:#243456;background:rgba(255,255,255,.72);border-radius:9px;font-size:12px;font-weight:700}.star-rules li.penalty{color:#8b2f38;background:#ffe4e5}
-  .lagrange-diagram{display:none;margin-top:11px;padding:8px;background:rgba(255,255,255,.72);border:1px solid #e0c56e;border-radius:13px}.lagrange-diagram.is-visible{display:block}.lagrange-diagram svg{display:block;width:100%;height:auto;max-height:210px}.lagrange-diagram .orbit{fill:none;stroke:#9aa9c5;stroke-width:1.5;stroke-dasharray:5 5}.lagrange-diagram .triangle{fill:none;stroke:#8eb7c9;stroke-width:1.2;stroke-dasharray:3 4}.lagrange-diagram .point{fill:#ffd166;stroke:#17213c;stroke-width:1.5}.lagrange-diagram text{font:700 11px "Microsoft YaHei",sans-serif;fill:#243456}
-  .brief-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}.brief-actions button{padding:9px 18px;border:2px solid #17213c;border-radius:12px;background:#fff;font-weight:800;cursor:pointer}.brief-actions .primary{background:#ffd166;box-shadow:0 4px 0 #17213c}
+  .lagrange-diagram{display:none;margin-top:14px;padding:8px;background:rgba(255,255,255,.72);border:1px solid #e0c56e;border-radius:13px}.lagrange-diagram.is-visible{display:block}.lagrange-diagram svg{display:block;width:100%;height:auto;max-height:240px}.lagrange-diagram .orbit{fill:none;stroke:#9aa9c5;stroke-width:1.5;stroke-dasharray:5 5}.lagrange-diagram .triangle{fill:none;stroke:#8eb7c9;stroke-width:1.2;stroke-dasharray:3 4}.lagrange-diagram .point{fill:#ffd166;stroke:#17213c;stroke-width:1.5}.lagrange-diagram text{font:700 11px "Microsoft YaHei",sans-serif;fill:#243456}
+  .brief-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:18px}.brief-actions button{padding:9px 18px;border:2px solid #17213c;border-radius:12px;background:#fff;font-weight:800;cursor:pointer}.brief-actions .primary{background:#ffd166;box-shadow:0 4px 0 #17213c}.brief-actions .science-link{color:#153c70;background:#dceeff;border-color:#5c91c9}
+  .science-card{position:relative;width:min(820px,100%);max-height:min(760px,calc(100vh - 36px));overflow:auto;padding:25px;color:#17213c;background:#f8fbff;border:3px solid #17213c;border-radius:24px;box-shadow:0 14px 0 rgba(0,0,0,.3)}.science-card h2{margin:5px 44px 7px 0;font-size:26px}.science-intro{margin:0 0 15px;color:#53617c;font-size:15px;line-height:1.6}.science-sections{display:grid;gap:10px}.science-section{padding:14px 16px;background:#fff6dc;border:1px solid #efd58d;border-radius:15px}.science-section h3{margin:0 0 6px;color:#755300;font-size:15px}.science-section p{margin:0;color:#4e4b43;font-size:14px;line-height:1.65}.science-close{position:absolute;top:12px;right:12px;width:40px;height:40px;padding:0;color:#17213c;background:#edf3ff;border:2px solid #17213c;border-radius:12px;font-size:24px;font-weight:900;cursor:pointer}.science-actions{display:flex;justify-content:flex-end;margin-top:16px}.science-actions button{min-height:44px;padding:9px 18px;color:#17213c;background:#ffd166;border:2px solid #17213c;border-radius:12px;font-weight:900;cursor:pointer}
   #levelSelect{position:fixed;inset:0;z-index:12;display:none;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 20%,rgba(44,72,145,.72),rgba(5,9,27,.96) 64%);color:#eef4ff;overflow:auto}
   #levelSelect.is-visible{display:flex}
   .level-shell{width:min(1100px,100%);margin:auto}.level-head{text-align:center;margin-bottom:20px}.level-kicker{color:var(--cyan);font-size:12px;font-weight:900;letter-spacing:2px}.level-head h1{margin:5px 0 5px;font-size:clamp(28px,5vw,44px)}.level-head p{margin:0;color:#aebde0}
@@ -109,7 +112,7 @@
     .mission-action{left:auto;right:max(14px,env(safe-area-inset-right));top:calc(158px + env(safe-area-inset-top));bottom:auto;transform:none;width:104px;height:58px}
     .pause-card{padding:19px 15px;border-radius:20px}.pause-close{top:9px;right:9px}.pause-actions{gap:8px}.pause-actions button{min-height:50px;font-size:15px}.pause-grid{gap:8px}.pause-grid button{font-size:13px}.key-help-grid{display:none}.touch-help{display:block}
     #msg .card{max-width:calc(100vw - 28px);padding:22px 14px}#msg h1{font-size:24px}#msg p{font-size:14px}#msg button{font-size:14px;padding:9px 14px}
-    #briefing{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}#briefing .brief-card{padding:18px 15px;border-radius:18px}.brief-title{font-size:21px}.brief-grid{grid-template-columns:1fr}.mode-panel-head{align-items:stretch;flex-direction:column}.mode-buttons{display:grid;grid-template-columns:1fr 1fr}.mode-buttons button{min-height:48px}.brief-actions{position:sticky;bottom:-18px;margin:16px -15px -18px;padding:12px 15px;background:#f8fbff}.brief-actions button{min-height:48px}
+    #briefing,#sciencePage{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}#briefing .brief-card,.science-card{padding:18px 15px;border-radius:18px}.brief-title,.science-card h2{font-size:21px}.brief-story{padding:14px}.brief-story p{font-size:14px}.brief-key-grid{grid-template-columns:1fr}.mode-panel-head{align-items:stretch;flex-direction:column}.mode-buttons{display:grid;grid-template-columns:1fr 1fr}.mode-buttons button{min-height:48px}.brief-actions{position:sticky;bottom:-18px;margin:16px -15px -18px;padding:12px 15px;background:#f8fbff}.brief-actions button{flex:1 1 120px;min-height:48px}.science-section{padding:12px 13px}.science-section p{font-size:13px}
     #levelSelect{align-items:flex-start;padding:max(16px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}.level-head{margin-bottom:14px}.level-head p{font-size:13px}.level-grid{gap:11px;padding-bottom:16px}.level-card{flex-basis:min(84vw,310px);min-height:255px;padding:14px 15px}.level-icon{margin:5px 0;font-size:31px}.level-card h2{font-size:18px}.level-card p{font-size:12px}.level-meta{padding-top:10px}.level-play{min-height:48px;margin-top:10px}
     #achievementCollection{padding:max(13px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(13px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}.achievement-head{margin-bottom:9px}.achievement-head h1{font-size:25px}.achievement-head p{font-size:11px}.achievement-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(238px,auto);gap:9px}.achievement-card{padding:12px 8px;border-radius:17px}.achievement-card h2{font-size:14px}.achievement-card p{font-size:10.5px}.medal{transform:scale(.84);margin:-7px 0 -4px}#achievementToast{right:12px;bottom:116px;min-height:76px}
   }
@@ -138,7 +141,7 @@
     .flight-controls{left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));justify-content:space-between;gap:0}.turn-controls{gap:10px}.flight-controls .icon-btn{width:62px;height:62px}.flight-controls .thrust{width:78px;height:84px}.flight-controls .thrust .ico{font-size:30px}
     .mission-action{left:auto;right:max(12px,env(safe-area-inset-right));top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 92px);width:94px;height:52px}
     .pause-card{width:min(760px,calc(100vw - 26px));max-height:calc(100vh - 18px);padding:15px 17px}.pause-card h2{font-size:20px}.pause-card>p{margin-bottom:8px}.pause-actions{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:8px}.pause-home{grid-column:auto}.pause-actions button{min-height:44px}.pause-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.pause-grid button{min-height:40px;padding:6px;font-size:11px}.pause-grid #menuAssist{grid-column:span 2}.pause-grid #menuPerf{grid-column:span 2}.pause-star-help{margin-top:8px;padding:8px 10px}.key-help{margin-top:8px;padding:8px 10px}
-    #briefing .brief-card{width:min(900px,calc(100vw - 22px));max-height:calc(100vh - 16px);padding:14px 17px}.brief-title{font-size:20px}.brief-goal{margin-bottom:9px}.brief-grid{grid-template-columns:1fr 1fr;gap:9px}.brief-box{padding:10px 12px}.mode-panel{margin-top:9px;padding:9px}.brief-actions{margin-top:9px}
+    #briefing .brief-card,.science-card{width:min(900px,calc(100vw - 22px));max-height:calc(100vh - 16px);padding:12px 15px}.brief-title,.science-card h2{font-size:19px}.brief-story{margin:8px 0;padding:10px 12px}.brief-story h3{margin-bottom:4px}.brief-story p{font-size:13px;line-height:1.45}.brief-key-grid{grid-template-columns:.82fr 1.18fr;gap:8px}.brief-key{padding:9px 11px}.brief-key strong{font-size:13px}.brief-key.action ol{margin-top:4px;font-size:11px}.mode-panel{margin-top:8px;padding:8px}.brief-actions{margin-top:8px}.science-intro{margin-bottom:8px;font-size:12px}.science-sections{grid-template-columns:repeat(3,1fr);gap:7px}.science-section{padding:8px 10px}.science-section h3{font-size:12px}.science-section p{font-size:10.5px;line-height:1.42}.science-actions{margin-top:8px}
     #orientationHint{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 94px)}
   }
   @media (pointer:coarse) and (orientation:landscape) and (max-height:360px){
@@ -163,7 +166,7 @@
 <canvas id="cv"></canvas><canvas id="hudCv" aria-hidden="true"></canvas>
 <div id="orientationHint" role="status" aria-live="polite" aria-hidden="true"><span class="rotate-icon" aria-hidden="true">↻</span><strong>建议横屏游玩</strong><span class="orientation-copy">请转动设备以使用所选布局</span></div>
 <div class="hud">
-  <div class="brand-row"><div class="brand-mark" aria-hidden="true">🚀</div><div><div class="title">🛰️ 第一关 · 地球同步卫星</div><div class="sub">跟着底部指引完成轨道机动，绿色区域是额外挑战目标</div><div id="modeBadge" class="mode-badge">教学模式 · 无限燃料 · 完成得 1 星</div></div></div>
+  <div class="brand-row"><div class="brand-mark" aria-hidden="true">🚀</div><div><div class="title">🛰️ 第一关 · 地球同步卫星</div><div class="sub">目标：进入黄色同步轨道，再释放卫星</div><div id="modeBadge" class="mode-badge">教学模式 · 无限燃料 · 完成得 1 星</div></div></div>
 </div>
 <nav class="tool-rail" aria-label="飞船工具栏">
   <button class="icon-btn" data-action="camera" aria-label="切换视角模式" aria-pressed="false" title="视角：跟随飞船 (K)"><span class="ico">⌖</span><span class="lbl">跟随</span></button>
@@ -194,7 +197,8 @@
     <button id="menuAttitude" data-menu-action="attitude">姿态模式</button>
     <button id="menuDial" data-menu-action="dial">表盘模式</button>
     <button id="menuGuide" data-menu-action="guide">任务提示</button>
-    <button data-menu-action="briefing">📖 本阶段科普</button>
+    <button data-menu-action="briefing">📋 任务简报</button>
+    <button data-menu-action="science">📚 航天科普</button>
     <button id="menuOrientation" data-menu-action="orientation">📱 屏幕方向：自动旋转</button>
     <button id="menuSound" data-menu-action="sound">🔊 音效：开启</button>
     <button id="menuAssist" data-menu-action="assist">模式：教学（无限燃料）</button>
@@ -210,25 +214,33 @@
   </section>
 </div></div>
 <div id="briefing" role="dialog" aria-modal="true" aria-labelledby="briefTitle"><div class="brief-card">
-  <div class="brief-kicker" id="briefKicker">任务简报</div><h2 class="brief-title" id="briefTitle"></h2><p class="brief-goal" id="briefGoal"></p>
-  <div class="brief-grid"><section class="brief-box"><h3>🎮 这一步怎么做</h3><ol id="briefSteps"></ol></section><section class="brief-box science"><h3>💡 为什么这样做</h3><p id="briefScience"></p><div id="lagrangeDiagram" class="lagrange-diagram" aria-label="地月五个引力平衡点示意图"><svg viewBox="0 0 360 210" role="img" aria-labelledby="lagrangeDiagramTitle"><title id="lagrangeDiagramTitle">地球、月球和L1至L5位置示意图</title><ellipse class="orbit" cx="180" cy="105" rx="112" ry="72"/><path class="triangle" d="M180 105 L290 105 L235 22 Z M180 105 L290 105 L235 188 Z"/><circle cx="180" cy="105" r="18" fill="#3aa0ff" stroke="#17213c" stroke-width="2"/><text x="180" y="109" text-anchor="middle" fill="#fff">地球</text><circle cx="290" cy="105" r="9" fill="#cfd8dc" stroke="#17213c" stroke-width="2"/><text x="290" y="130" text-anchor="middle">月球</text><circle class="point" cx="252" cy="105" r="7"/><text x="252" y="93" text-anchor="middle">L1</text><circle class="point" cx="326" cy="105" r="7"/><text x="326" y="93" text-anchor="middle">L2</text><circle class="point" cx="67" cy="105" r="7"/><text x="67" y="93" text-anchor="middle">L3</text><circle class="point" cx="235" cy="22" r="7"/><text x="248" y="20">L4</text><circle class="point" cx="235" cy="188" r="7"/><text x="248" y="202">L5</text><path d="M272 67 Q298 72 309 88" fill="none" stroke="#5a789d" stroke-width="2" marker-end="url(#arrow)"/><defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#5a789d"/></marker></defs><text x="300" y="60" text-anchor="middle">月球运动方向</text></svg></div></section></div>
-  <section class="mode-panel" aria-label="游戏模式和星级条件"><div class="mode-panel-head"><h3>⭐ 本关模式与三星条件</h3><div class="mode-buttons"><button id="modeTeaching" type="button" onclick="setChallengeMode(false)">教学 · 无限燃料</button><button id="modeChallenge" type="button" onclick="setChallengeMode(true)">挑战 · 有限燃料</button></div></div><p id="modeSummary" class="mode-summary"></p><ul id="starRules" class="star-rules"></ul></section>
-  <div class="brief-success" id="briefSuccess"></div><p class="brief-scale">本作使用缩比轨道物理，HUD 的 u / u/s 是游戏单位；操作规律与真实轨道力学方向一致，但数值不代表真实地球。</p>
-  <div class="brief-actions"><button id="briefGuideToggle" onclick="toggleGuide()">关闭新手指引</button><button class="primary" onclick="closeBriefing()">明白，继续飞行</button></div>
+  <div class="brief-kicker" id="briefKicker">任务简报</div><h2 class="brief-title" id="briefTitle"></h2>
+  <section class="brief-story"><h3>📡 任务简报</h3><p id="briefStory"></p></section>
+  <div class="brief-key-grid"><section class="brief-key goal"><span>关键目标</span><strong id="briefGoal"></strong></section><section class="brief-key action"><span>当前操作</span><strong id="briefAction"></strong><ol id="briefSteps"></ol></section></div>
+  <section class="mode-panel" aria-label="游戏模式和星级条件"><div class="mode-panel-head"><h3>⭐ 模式与星级</h3><div class="mode-buttons"><button id="modeTeaching" type="button" onclick="setChallengeMode(false)">教学 · 无限燃料</button><button id="modeChallenge" type="button" onclick="setChallengeMode(true)">挑战 · 有限燃料</button></div></div><p id="modeSummary" class="mode-summary"></p><ul id="starRules" class="star-rules"></ul></section>
+  <div class="brief-success" id="briefSuccess"></div><p class="brief-scale">u / u/s 是本游戏的缩比单位。</p>
+  <div class="brief-actions"><button class="science-link" onclick="openSciencePage(true)">📚 本关科普</button><button id="briefGuideToggle" onclick="toggleGuide()">关闭新手指引</button><button class="primary" onclick="closeBriefing()">继续飞行</button></div>
+</div></div>
+<div id="sciencePage" role="dialog" aria-modal="true" aria-labelledby="scienceTitle"><div class="science-card">
+  <button class="science-close" onclick="closeSciencePage()" aria-label="关闭科普页面">×</button>
+  <div class="brief-kicker" id="scienceKicker">航天知识库</div><h2 id="scienceTitle"></h2><p class="science-intro" id="scienceIntro"></p>
+  <div class="science-sections" id="scienceSections"></div>
+  <div id="lagrangeDiagram" class="lagrange-diagram" aria-label="地月五个引力平衡点示意图"><svg viewBox="0 0 360 210" role="img" aria-labelledby="lagrangeDiagramTitle"><title id="lagrangeDiagramTitle">地球、月球和L1至L5位置示意图</title><ellipse class="orbit" cx="180" cy="105" rx="112" ry="72"/><path class="triangle" d="M180 105 L290 105 L235 22 Z M180 105 L290 105 L235 188 Z"/><circle cx="180" cy="105" r="18" fill="#3aa0ff" stroke="#17213c" stroke-width="2"/><text x="180" y="109" text-anchor="middle" fill="#fff">地球</text><circle cx="290" cy="105" r="9" fill="#cfd8dc" stroke="#17213c" stroke-width="2"/><text x="290" y="130" text-anchor="middle">月球</text><circle class="point" cx="252" cy="105" r="7"/><text x="252" y="93" text-anchor="middle">L1</text><circle class="point" cx="326" cy="105" r="7"/><text x="326" y="93" text-anchor="middle">L2</text><circle class="point" cx="67" cy="105" r="7"/><text x="67" y="93" text-anchor="middle">L3</text><circle class="point" cx="235" cy="22" r="7"/><text x="248" y="20">L4</text><circle class="point" cx="235" cy="188" r="7"/><text x="248" y="202">L5</text><path d="M272 67 Q298 72 309 88" fill="none" stroke="#5a789d" stroke-width="2" marker-end="url(#arrow)"/><defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#5a789d"/></marker></defs><text x="300" y="60" text-anchor="middle">月球运动方向</text></svg></div>
+  <div class="science-actions"><button onclick="closeSciencePage()" id="scienceBack">返回暂停菜单</button></div>
 </div></div>
 <div id="levelSelect" role="dialog" aria-modal="true" aria-labelledby="levelSelectTitle"><div class="level-shell">
-  <header class="level-head"><div class="level-kicker">MISSION CONTROL</div><h1 id="levelSelectTitle">🚀 任务目录</h1><p>滑动浏览关卡 · 最高得分与星级保存在本设备</p></header>
+  <header class="level-head"><div class="level-kicker">MISSION CONTROL</div><h1 id="levelSelectTitle">🚀 任务目录</h1><p>选择关卡 · 成绩保存在本设备</p></header>
   <div class="level-grid">
     <article class="level-card" data-level-card="1" tabindex="0"><div class="level-number">MISSION 01</div><div class="level-icon">🛰️</div><h2>地球同步卫星</h2><p>把火箭飞进黄色同步轨道，再按按钮释放卫星。</p><div class="level-meta"><div class="level-stars" data-level-stars="1">☆☆☆</div><div class="level-score"><strong data-level-score="1">—</strong>最高分</div></div><button class="level-play" data-start-level="1">开始任务</button></article>
     <article class="level-card" data-level-card="2" tabindex="0"><div class="level-number">MISSION 02</div><div class="level-icon">🪂</div><h2>载人航天返回</h2><p>反向点火降回地球，打开降落伞并安全落地。</p><div class="level-meta"><div class="level-stars" data-level-stars="2">☆☆☆</div><div class="level-score"><strong data-level-score="2">—</strong>最高分</div></div><button class="level-play" data-start-level="2">开始任务</button></article>
     <article class="level-card" data-level-card="3" tabindex="0"><div class="level-number">MISSION 03</div><div class="level-icon">🧩</div><h2>空间站交会对接</h2><p>追上空间站，先把速度调成一样，再慢慢靠近对接。</p><div class="level-meta"><div class="level-stars" data-level-stars="3">☆☆☆</div><div class="level-score"><strong data-level-score="3">—</strong>最高分</div></div><button class="level-play" data-start-level="3">开始任务</button></article>
     <article class="level-card" data-level-card="4" tabindex="0"><div class="level-number">MISSION 04</div><div class="level-icon">🌘</div><h2>月背动力着陆</h2><p>飞到月球背面，不用降落伞，只靠发动机安全落地。</p><div class="level-meta"><div class="level-stars" data-level-stars="4">☆☆☆</div><div class="level-score"><strong data-level-score="4">—</strong>最高分</div></div><button class="level-play" data-start-level="4">开始任务</button></article>
-    <article class="level-card" data-level-card="5" tabindex="0"><div class="level-number">MISSION 05</div><div class="level-icon">🪃</div><h2>月球引力弹弓</h2><p>燃料不够直接逃走；借月球甩出去，飞出绿色大圈且不再掉回来。</p><div class="level-meta"><div class="level-stars" data-level-stars="5">☆☆☆</div><div class="level-score"><strong data-level-score="5">—</strong>最高分</div></div><button class="level-play" data-start-level="5">开始任务</button></article>
+    <article class="level-card" data-level-card="5" tabindex="0"><div class="level-number">MISSION 05</div><div class="level-icon">🪃</div><h2>月球引力弹弓</h2><p>借月球加速，飞出绿圈且不再返回。</p><div class="level-meta"><div class="level-stars" data-level-stars="5">☆☆☆</div><div class="level-score"><strong data-level-score="5">—</strong>最高分</div></div><button class="level-play" data-start-level="5">开始任务</button></article>
     <article class="level-card" data-level-card="6" tabindex="0"><div class="level-number">MISSION 06</div><div class="level-icon">⚖️</div><h2>地月引力平衡点</h2><p>任选一个地月引力平衡点，把卫星送到那里并停稳。</p><div class="level-meta"><div class="level-stars" data-level-stars="6">☆☆☆</div><div class="level-score"><strong data-level-score="6">—</strong>最高分</div></div><button class="level-play" data-start-level="6">开始任务</button></article>
-    <article class="level-card" data-level-card="7" tabindex="0"><div class="level-number">MISSION 07</div><div class="level-icon">☄️</div><h2>小行星拦截</h2><p>追上会撞向地球的小行星；软着陆持续推离，或直接撞击改变轨道。</p><div class="level-meta"><div class="level-stars" data-level-stars="7">☆☆☆</div><div class="level-score"><strong data-level-score="7">—</strong>最高分</div></div><button class="level-play" data-start-level="7">开始任务</button></article>
-    <article class="level-card" data-level-card="8" tabindex="0"><div class="level-number">MISSION 08</div><div class="level-icon">☀️</div><h2>双星摆渡</h2><p>从一颗太阳的行星起飞，穿过移动引力通道，到另一颗太阳旁与空间站对接。</p><div class="level-meta"><div class="level-stars" data-level-stars="8">☆☆☆</div><div class="level-score"><strong data-level-score="8">—</strong>最高分</div></div><button class="level-play" data-start-level="8">开始任务</button></article>
-    <article class="level-card" data-level-card="9" tabindex="0"><div class="level-number">MISSION 09</div><div class="level-icon">🕳️</div><h2>黑洞深渊点火</h2><p>向时间变慢的深渊下潜，在最近点顺向点火，再逃回远方世界。</p><div class="level-meta"><div class="level-stars" data-level-stars="9">☆☆☆</div><div class="level-score"><strong data-level-score="9">—</strong>最高分</div></div><button class="level-play" data-start-level="9">开始任务</button></article>
-    <article class="level-card" data-level-card="10" tabindex="0"><div class="level-number">FINAL MISSION</div><div class="level-icon">🌀</div><h2>三体 · 混沌穿越</h2><p>每次重开都是新的三恒星局面；读取时间线影子，穿过两个移动时间锚后逃离。</p><div class="level-meta"><div class="level-stars" data-level-stars="10">☆☆☆</div><div class="level-score"><strong data-level-score="10">—</strong>最高分</div></div><button class="level-play" data-start-level="10">开始最终任务</button></article>
+    <article class="level-card" data-level-card="7" tabindex="0"><div class="level-number">MISSION 07</div><div class="level-icon">☄️</div><h2>小行星拦截</h2><p>改变小行星轨道，让它避开地球和月球。</p><div class="level-meta"><div class="level-stars" data-level-stars="7">☆☆☆</div><div class="level-score"><strong data-level-score="7">—</strong>最高分</div></div><button class="level-play" data-start-level="7">开始任务</button></article>
+    <article class="level-card" data-level-card="8" tabindex="0"><div class="level-number">MISSION 08</div><div class="level-icon">☀️</div><h2>双星摆渡</h2><p>穿过双星通道，与另一侧空间站对接。</p><div class="level-meta"><div class="level-stars" data-level-stars="8">☆☆☆</div><div class="level-score"><strong data-level-score="8">—</strong>最高分</div></div><button class="level-play" data-start-level="8">开始任务</button></article>
+    <article class="level-card" data-level-card="9" tabindex="0"><div class="level-number">MISSION 09</div><div class="level-icon">🕳️</div><h2>黑洞深渊点火</h2><p>在黑洞近点加速，再逃回绿色救援圈。</p><div class="level-meta"><div class="level-stars" data-level-stars="9">☆☆☆</div><div class="level-score"><strong data-level-score="9">—</strong>最高分</div></div><button class="level-play" data-start-level="9">开始任务</button></article>
+    <article class="level-card" data-level-card="10" tabindex="0"><div class="level-number">FINAL MISSION</div><div class="level-icon">🆘</div><h2>三体 · 紧急救援</h2><p>营救两艘失去动力的飞船，再带所有人逃离。</p><div class="level-meta"><div class="level-stars" data-level-stars="10">☆☆☆</div><div class="level-score"><strong data-level-score="10">—</strong>最高分</div></div><button class="level-play" data-start-level="10">开始最终任务</button></article>
   </div>
   <div class="level-footer"><button class="achievement-entry" onclick="openAchievementCollection()">🏅 勋章收藏 <span id="achievementCount" class="achievement-count">0/16</span></button><button id="continueLevel" onclick="closeLevelSelect()">继续当前任务</button></div>
 </div></div>
@@ -385,7 +397,7 @@ const BINARY_STATION_R=690,BINARY_STATION_OMEGA=Math.sqrt(BINARY_MU_B/Math.pow(B
 const BH_MU=2.2e6,BH_HORIZON=180,BH_PHOTON_RING=250,BH_BURN_IN=205,BH_BURN_R=275,BH_ESCAPE_R=2200;
 const BH_START_R=1100,BH_START_V=26.54,BH_FUEL_RATE=174,BH_BEACON_R=2550,BH_BEACON_OMEGA=.035;
 const THREE_MU=2.4e6,THREE_SCALE=1300,THREE_STAR_R=135,THREE_ENTRY_R=3500,THREE_ESCAPE_R=3900;
-const THREE_CHAOS_R=2450,THREE_GATE_R=235,THREE_GATE_OFFSET=390,THREE_DANGER_PAD=175;
+const THREE_CHAOS_R=2450,THREE_GATE_R=235,THREE_GATE_OFFSET=390,THREE_DANGER_PAD=175,THREE_RESCUE_SPEED=180;
 // 姿态控制模式（C 切换）：0=随速偏转 1=手动转向 2=纯惯性
 const ATT_MODES = ['随速偏转','手动转向','纯惯性'];
 let attMode = 1, velOffset = 0;
@@ -413,7 +425,7 @@ let threeBodyResetCounter=0;
 let challengeMode=false;
 let paused = false, retryTimer = null;
 let rewindClickAt = 0, rewindHistoryIndex = -1;
-let briefingWasPaused = false, lastBriefedLevel = 0;
+let briefingWasPaused=false,lastBriefedLevel=0,sciencePageOpen=false,scienceReturn='pause';
 let levelSelectOpen = false, gameStarted = false;
 let showPred = true; // T 开关：未来轨迹辅助线
 let cameraMode = 0;
@@ -540,20 +552,21 @@ function updateModePanel(){
   if(challenge) challenge.classList.toggle('is-selected',challengeMode);
   const summary=document.getElementById('modeSummary');
   if(summary){
-    const heavyNote=challengeMode&&level===3?' 本关装载更多物资，火箭质量提升到 1.2 倍，推力不变，加速与转向都会变慢。':'';
-    const chaosNote=level===10?' 整关重新开始会生成新的三体世界；阶段回退保留本局种子。三条时间线只是短期预测，不是标准答案。':'';
+    const heavyNote=challengeMode&&level===3?' 物资较重：质量 1.2 倍。':'';
+    const chaosNote=level===10?' 重开会生成新世界；阶段回退保留本局。':'';
     summary.textContent=(challengeMode
-      ? `挑战模式：有限燃料${challengeLifeEnabled()?'，并启用生命维持倒计时':''}。时间和燃料共同计算得分；星星只按下列目标计算。切换模式会从本关开头重来。${heavyNote}`
-      : '教学模式：无限燃料与飞行辅助，完成任务固定获得 1 星。想拿另外两颗星，请切换到挑战模式。')+chaosNote;
+      ? `挑战：有限燃料${challengeLifeEnabled()?'和生命倒计时':''}。按下方条件得星；切换会重开本关。${heavyNote}`
+      : '教学：无限燃料和辅助。完成得 1 星。')+chaosNote;
   }
   const list=document.getElementById('starRules');
-  if(list){ list.replaceChildren(); for(const rule of STAR_RULES[level]){const li=document.createElement('li');li.textContent=rule;list.appendChild(li);} if(level===2||level===3){const li=document.createElement('li');li.className='penalty';li.textContent='挑战模式生命维持耗尽：本次总星级 −1（最低仍保留完成星）';list.appendChild(li);} }
+  if(list){ list.replaceChildren(); for(const rule of STAR_RULES[level]){const li=document.createElement('li');li.textContent=rule;list.appendChild(li);} if(level===2||level===3){const li=document.createElement('li');li.className='penalty';li.textContent='生命倒计时归零：−1 星（最低 1 星）';list.appendChild(li);} }
   const pauseRules=document.getElementById('pauseStarRules');
   if(pauseRules){ pauseRules.replaceChildren(); for(const rule of STAR_RULES[level]){const p=document.createElement('p');p.textContent=rule;pauseRules.appendChild(p);} if(level===2||level===3){const p=document.createElement('p');p.textContent='⚠ 生命维持耗尽：结算 −1 星';pauseRules.appendChild(p);} }
 }
 function openLevelSelect(initial=false){
   levelSelectOpen=true; paused=true;
   document.getElementById('briefing').classList.remove('is-visible');
+  document.getElementById('sciencePage').classList.remove('is-visible');sciencePageOpen=false;
   document.getElementById('msg').style.display='none';
   document.getElementById('continueLevel').hidden=initial||!gameStarted;
   document.getElementById('levelSelect').classList.add('is-visible');
@@ -690,7 +703,7 @@ function resetGame(){
   if(level===7) mission.dynHint='红线会撞地球｜按推进后世界同步开始';
   if(level===8) mission.dynHint='两颗太阳都在运动｜按推进后双星世界同步开始';
   if(level===9) mission.dynHint='轻点推进只解除待机｜松手后关机滑向光子环内侧';
-  if(level===10) mission.dynHint=`本局种子 ${threeBody.seed.toString(16).toUpperCase().padStart(8,'0')}｜推进后时间线开始分叉`;
+  if(level===10) mission.dynHint='轻点推进后，恒星和求救飞船开始运动';
   saveCheckpoint();
   camInit = true;
   hideMsg();
@@ -714,13 +727,13 @@ function showMsg(emoji,title,text){
 function openBriefing(){
   if(!mission) return;
   const info=stageInfo()[Math.min(mission.stage,stageInfo().length-1)];
-  document.getElementById('briefKicker').textContent=LEVELS[level].title+' · 任务简报';
+  document.getElementById('briefKicker').textContent=LEVELS[level].title;
   document.getElementById('briefTitle').textContent=info.name;
-  document.getElementById('briefGoal').textContent=info.hint;
+  document.getElementById('briefStory').textContent=LEVELS[level].brief;
+  document.getElementById('briefGoal').textContent=LEVELS[level].sub.replace(/^目标：/,'');
+  document.getElementById('briefAction').textContent=info.hint;
   const list=document.getElementById('briefSteps'); list.replaceChildren();
   for(const step of info.steps){ const li=document.createElement('li'); li.textContent=step; list.appendChild(li); }
-  document.getElementById('briefScience').textContent=info.science;
-  document.getElementById('lagrangeDiagram').classList.toggle('is-visible',level===6);
   document.getElementById('briefSuccess').textContent='✅ '+info.success;
   document.getElementById('briefGuideToggle').textContent=mission.hintsHidden?'开启新手指引':'关闭新手指引';
   updateModePanel();
@@ -731,6 +744,25 @@ function openBriefing(){
 function closeBriefing(){
   document.getElementById('briefing').classList.remove('is-visible');
   paused=briefingWasPaused; syncUI();
+}
+function openSciencePage(fromBriefing=false){
+  if(!mission)return;
+  const page=SCIENCE_PAGES[level];
+  scienceReturn=fromBriefing?'briefing':'pause';sciencePageOpen=true;paused=true;
+  document.getElementById('briefing').classList.remove('is-visible');
+  document.getElementById('scienceKicker').textContent=LEVELS[level].title+' · 航天知识库';
+  document.getElementById('scienceTitle').textContent=page.title;
+  document.getElementById('scienceIntro').textContent=page.intro;
+  const sections=document.getElementById('scienceSections');sections.replaceChildren();
+  for(const section of page.sections){const box=document.createElement('section'),title=document.createElement('h3'),text=document.createElement('p');box.className='science-section';title.textContent=section.title;text.textContent=section.text;box.append(title,text);sections.appendChild(box);}
+  document.getElementById('lagrangeDiagram').classList.toggle('is-visible',level===6);
+  document.getElementById('scienceBack').textContent=fromBriefing?'返回任务简报':'返回暂停菜单';
+  document.getElementById('sciencePage').classList.add('is-visible');syncUI();
+}
+function closeSciencePage(){
+  document.getElementById('sciencePage').classList.remove('is-visible');sciencePageOpen=false;
+  if(scienceReturn==='briefing')document.getElementById('briefing').classList.add('is-visible');
+  syncUI();
 }
 
 function setPrediction(){ showPred=!showPred; syncUI(); }
@@ -837,7 +869,7 @@ function syncUI(){
   if(pause){ pause.classList.toggle('is-active',paused); pause.setAttribute('aria-pressed',String(paused)); pause.querySelector('.ico').textContent=paused?'▶':'Ⅱ'; pause.querySelector('.lbl').textContent=paused?'继续':'暂停'; }
   syncMissionAction();
   const briefingOpen=document.getElementById('briefing').classList.contains('is-visible');
-  document.getElementById('pauseMenu').classList.toggle('is-visible',paused&&!levelSelectOpen&&!briefingOpen);
+  document.getElementById('pauseMenu').classList.toggle('is-visible',paused&&!levelSelectOpen&&!briefingOpen&&!sciencePageOpen);
   const menuPrediction=document.getElementById('menuPrediction'), menuAttitude=document.getElementById('menuAttitude');
   const menuRadar=document.getElementById('menuRadar'), menuDial=document.getElementById('menuDial'), menuGuide=document.getElementById('menuGuide'), menuAssist=document.getElementById('menuAssist'),menuSound=document.getElementById('menuSound'),menuOrientation=document.getElementById('menuOrientation');
   if(menuPrediction){ menuPrediction.textContent='轨迹预测：'+(showPred?'开启':'关闭'); menuPrediction.classList.toggle('is-on',showPred); }

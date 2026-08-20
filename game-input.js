@@ -40,7 +40,7 @@
 
   const ACTION_HANDLERS={
     prediction:()=>setPrediction(),camera:()=>toggleCameraMode(),radar:()=>cycleRadar(),attitude:()=>cycleAttitude(),
-    dial:()=>cycleDial(),guide:()=>toggleGuide(),briefing:()=>openBriefing(),assist:()=>toggleAssist(),sound:()=>toggleSound(),orientation:()=>cycleScreenOrientation(),
+    dial:()=>cycleDial(),guide:()=>toggleGuide(),briefing:()=>openBriefing(),science:()=>openSciencePage(false),assist:()=>toggleAssist(),sound:()=>toggleSound(),orientation:()=>cycleScreenOrientation(),
     level:()=>openLevelSelect(),rewind:()=>rewindStage(),restart:()=>resetGame(),pause:()=>togglePause(),
     mission:()=>tryMissionAction(),copyperf:()=>copyPerformanceReport()
   };
@@ -54,6 +54,9 @@
   document.querySelectorAll('[data-menu-action]').forEach(btn=>btn.addEventListener('click',()=>dispatchAction(btn.dataset.menuAction,true)));
   document.getElementById('pauseMenu').addEventListener('click',e=>{
     if(e.target===e.currentTarget&&paused) togglePause();
+  });
+  document.getElementById('sciencePage').addEventListener('click',e=>{
+    if(e.target===e.currentTarget)closeSciencePage();
   });
   document.querySelectorAll('[data-level-card]').forEach(card=>{
     const launch=()=>startLevel(card.dataset.levelCard);

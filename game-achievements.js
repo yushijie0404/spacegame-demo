@@ -14,7 +14,7 @@ const ACHIEVEMENTS=[
   {id:'asteroid_whisperer',title:'小行星劝退员',icon:'asteroid',accent:'#d8a16f',accent2:'#ef6f4b',method:'完成第七关，让小行星预测轨迹同时避开地球和月球。',joke:'拯救世界完成。飞船刮蹭赔偿单稍后寄到。'},
   {id:'binary_commuter',title:'双日通勤',icon:'binary',accent:'#ffb142',accent2:'#9fdcff',method:'完成第八关，穿越双星引力通道并与暮光站对接。',joke:'一颗太阳嫌通勤不够难，于是又加了一颗。'},
   {id:'abyss_return',title:'深渊回信',icon:'abyss',accent:'#f4f7ff',accent2:'#a66cff',method:'完成第九关，从黑洞深渊点火并逃回救援圈外。',joke:'你赢过了黑洞，但任务中心的钟先老了。'},
-  {id:'chaos_surfer',title:'混沌冲浪手',icon:'chaos',accent:'#ff8fba',accent2:'#6fdcff',method:'完成最终关，穿过两个时间锚并逃离三体系统。',joke:'三颗太阳都不知道下一步，你居然知道。'},
+  {id:'chaos_surfer',title:'混沌救援队长',icon:'chaos',accent:'#ff8fba',accent2:'#6fdcff',method:'完成最终关，营救两艘求救飞船并逃离三体系统。',joke:'三颗太阳都不知道下一步，你还顺手救了两船人。'},
   {id:'five_g_club',title:'5G 俱乐部',icon:'bolt',accent:'#ef476f',accent2:'#ffb142',method:'飞行中承受至少 5G，并保持飞船与船员完好。',joke:'脸留在了座椅上，灵魂勉强跟了上来。'},
   {id:'challenge_ace',title:'挑战王牌',icon:'star',accent:'#fff0a8',accent2:'#f0a500',method:'在任意一关的挑战模式中获得三星。',joke:'无限燃料是教学。你显然没在听课。'},
   {id:'tenfold_voyager',title:'十界远航者',icon:'crown',accent:'#7de3ff',accent2:'#ffd166',method:'完成全部十个关卡。星级不限，活着回来就算。',joke:'十关之后，你已具备把任何问题解释成轨道力学的资格。'}

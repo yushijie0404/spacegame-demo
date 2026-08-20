@@ -27,7 +27,7 @@ function createRecordedGuide(levelId){
 function guideDemoPosition(g,t){
   const a0=g.startAngle;
   if(g.level===1){
-    if(t<8){ const u=smooth01(t/8),a=a0+1.2*u,r=EARTH.r+1+249*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:true,label:'起飞并向右压平'}; }
+    if(t<8){ const u=smooth01(t/8),a=a0+1.2*u,r=EARTH.r+1+249*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:true,label:'起飞后逐渐向右转'}; }
     if(t<26){ const u=smooth01((t-8)/18),a=a0+1.2+Math.PI*u,r=850+(R_GEO-850)*u; return {x:EARTH.x+Math.cos(a)*r,y:EARTH.y+Math.sin(a)*r,thrust:t<11,label:'滑向远地点'}; }
     const a=a0+1.2+Math.PI+(t-26)*.08; return {x:EARTH.x+Math.cos(a)*R_GEO,y:EARTH.y+Math.sin(a)*R_GEO,thrust:t<30,label:t<30?'远地点加速':'同步轨道完成'};
   }
@@ -162,4 +162,3 @@ function updateSlingshotGhost(dt,dtReal=dt){
   for(const b of BODIES){ if(Math.hypot(ghostShip.x-b.x,ghostShip.y-b.y)<b.r){ ghostShip.active=false; break; } }
   if(earthR>14500) ghostShip.active=false;
 }
-

@@ -29,7 +29,7 @@ function drawThreeBodyScreenCue(){
   const cx=W/2,cy=H/2,ang=Math.atan2(sy-cy,sx-cx),rx=Math.max(42,Math.min(W-42,cx+Math.cos(ang)*(W/2-56))),ry=Math.max(98,Math.min(H-188,cy+Math.sin(ang)*(H/2-116)));
   const color=mission.stage===0?'#4cf0dd':'#ffd166';
   ctx.save();ctx.translate(rx,ry);ctx.rotate(ang);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(-9,-9);ctx.lineTo(-5,0);ctx.lineTo(-9,9);ctx.closePath();ctx.fill();ctx.restore();
-  ctx.fillStyle=color;ctx.font='900 13px "Microsoft YaHei",sans-serif';ctx.textAlign='center';ctx.fillText(`时间锚 ${mission.stage?'II':'I'} · ${Math.hypot(target.x-rocket.x,target.y-rocket.y).toFixed(0)} u`,rx,ry+25);ctx.textAlign='left';
+  ctx.fillStyle=color;ctx.font='900 13px "Microsoft YaHei",sans-serif';ctx.textAlign='center';ctx.fillText(`求救飞船 ${mission.stage?'B':'A'} · ${Math.hypot(target.x-rocket.x,target.y-rocket.y).toFixed(0)} u`,rx,ry+25);ctx.textAlign='left';
 }
 function objectiveVisualTarget(){
   if(!mission||mission.done)return null;
@@ -43,7 +43,7 @@ function objectiveVisualTarget(){
   if(level===7&&asteroid)return{x:asteroid.x,y:asteroid.y,r:asteroid.r,label:'目标小行星',color:'#d8a16f'};
   if(level===8&&binary){if(mission.stage===0)return{x:0,y:0,r:60,label:'双星通道',color:'#4cf0dd'};const p=mission.stage===1?binaryGatePoint():station;return{x:p.x,y:p.y,r:mission.stage===1?30:38,label:mission.stage===1?'引力通道':'暮光站',color:mission.stage===1?'#4cf0dd':'#5fd068'};}
   if(level===9&&blackHole){if(mission.stage<2)return{x:0,y:0,r:BH_PHOTON_RING,label:'黑洞近点',color:'#d9a6ff'};const p=outwardPoint(0,0,BH_ESCAPE_R);return{...p,label:'远方救援门',color:'#5fd068'};}
-  if(level===10&&threeBody){if(mission.stage<2){const p=threeBodyGate(mission.stage);return{x:p.x,y:p.y,r:THREE_GATE_R,label:`时间锚 ${mission.stage?'II':'I'}`,color:mission.stage?'#ffd166':'#4cf0dd'};}const c=threeBodyBarycenter(),p=outwardPoint(c.x,c.y,THREE_ESCAPE_R);return{...p,label:'混沌逃逸门',color:'#5fd068'};}
+  if(level===10&&threeBody){if(mission.stage<2){const p=threeBodyGate(mission.stage);return{x:p.x,y:p.y,r:THREE_GATE_R,label:`求救飞船 ${mission.stage?'B':'A'}`,color:mission.stage?'#ffd166':'#4cf0dd'};}const c=threeBodyBarycenter(),p=outwardPoint(c.x,c.y,THREE_ESCAPE_R);return{...p,label:'安全边界',color:'#5fd068'};}
   return null;
 }
 function drawObjectiveScreenCue(){
@@ -121,12 +121,12 @@ function drawThreeBodyRadar(){
     for(const branch of timelines.branches){ctx.strokeStyle=branch.color;ctx.lineWidth=1;ctx.setLineDash(branch.id==='coast'?[2,2]:[4,2]);ctx.beginPath();for(let i=0;i<branch.pts.length;i+=2){const p=branch.pts[i];i?ctx.lineTo(mapX(p.x),mapY(p.y)):ctx.moveTo(mapX(p.x),mapY(p.y));}ctx.stroke();}
     ctx.setLineDash([]);
   }
-  for(let i=0;i<2;i++){const gate=threeBodyGate(i);ctx.strokeStyle=i===mission.threeGateIndex?'#4cf0dd':'rgba(76,240,221,.38)';ctx.lineWidth=i===mission.threeGateIndex?1.8:1;ctx.beginPath();ctx.arc(mapX(gate.x),mapY(gate.y),Math.max(3,THREE_GATE_R*scale),0,TAU);ctx.stroke();}
+  for(let i=0;i<2;i++){const gate=threeBodyGate(i),gx=mapX(gate.x),gy=mapY(gate.y),active=mission.stage===i,visited=mission.stage>i;ctx.strokeStyle=active?(i?'#ffd166':'#4cf0dd'):visited?'rgba(95,208,104,.45)':'rgba(76,240,221,.38)';ctx.lineWidth=active?1.8:1;ctx.beginPath();ctx.arc(gx,gy,Math.max(3,THREE_GATE_R*scale),0,TAU);ctx.stroke();ctx.fillStyle=active?'#ef476f':visited?'#5fd068':'#d9edf7';ctx.fillRect(gx-3,gy-2,6,4);ctx.beginPath();ctx.arc(gx+4,gy-4,1.8,0,TAU);ctx.fill();}
   for(const b of BODIES){const qx=mapX(b.x),qy=mapY(b.y),danger=(b.r+THREE_DANGER_PAD)*scale;ctx.fillStyle='rgba(239,71,111,.12)';ctx.beginPath();ctx.arc(qx,qy,Math.max(4,danger),0,TAU);ctx.fill();ctx.fillStyle=b.col;ctx.beginPath();ctx.arc(qx,qy,Math.max(3,b.r*scale),0,TAU);ctx.fill();}
   ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mapX(rocket.x),mapY(rocket.y),3.5,0,TAU);ctx.fill();
   if(radarMode===1){const vw=Math.max(8,W/cam.zoom*scale),vh=Math.max(8,H/cam.zoom*scale);ctx.strokeStyle='#4cc9f0';ctx.setLineDash([3,2]);ctx.strokeRect(mapX(cam.x)-vw/2,mapY(cam.y)-vh/2,vw,vh);ctx.setLineDash([]);}
   ctx.restore();ctx.fillStyle='#fff';ctx.font=`800 ${portrait?8:9}px sans-serif`;ctx.textAlign='left';ctx.fillText(RS<100?(radarMode===0?'混沌 · 点按':'全局 · 点按'):(radarMode===0?'混沌雷达 · 点击切换':'全局导航 · 点击切换'),cx+5,cy+11);
-  ctx.fillStyle='rgba(255,255,255,.65)';ctx.font=`700 ${portrait?7:8}px sans-serif`;ctx.fillText(RS<100?'三色时间线':'三色时间线 · 青色锚点',cx+5,cy+RS-5);
+  ctx.fillStyle='rgba(255,255,255,.65)';ctx.font=`700 ${portrait?7:8}px sans-serif`;ctx.fillText(RS<100?'预测线 · 求救':'三色预测线 · 求救飞船',cx+5,cy+RS-5);
 }
 function drawRadar(){
   if(level===10){drawThreeBodyRadar();return;}
@@ -383,7 +383,7 @@ function drawHUDOverlay(worldDrawStarted){
   // 相对速度：靠近谁显示谁（地表附近/着陆区 → 相对地表；同步轨道附近 → 相对同步速度）
   ctx.fillStyle='#4cc9f0';
   if(level===10){
-    ctx.fillText(`最近 ${threeM.nearest.name.slice(-1)} · 净空 ${threeM.clearance.toFixed(0)} u`,W-20,teleY+36);
+    ctx.fillText(`最近恒星 ${threeM.nearest.name.slice(-1)} · 净空 ${threeM.clearance.toFixed(0)} u`,W-20,teleY+36);
   }else if(level===7&&asteroid){
     const am=asteroidMetrics();ctx.fillText(`小行星相对 ${am.relSpeed.toFixed(1)} u/s`,W-20,teleY+36);
   }else if(level===9){
@@ -448,7 +448,7 @@ function drawHUDOverlay(worldDrawStarted){
   }
   if(level===10&&threeBody){
     const target=mission.stage<2?threeBodyGate(mission.stage):threeM.center,targetDist=Math.hypot(rocket.x-target.x,rocket.y-target.y),split=timelineCache?.result?.divergence;
-    ctx.fillStyle='#4cf0dd';ctx.fillText(mission.stage<2?`距时间锚 ${targetDist.toFixed(0)} u`:`距逃逸圈 ${Math.max(0,THREE_ESCAPE_R-threeM.r).toFixed(0)} u`,W-20,teleY+76);
+    ctx.fillStyle='#4cf0dd';ctx.fillText(mission.stage<2?`距求救飞船 ${targetDist.toFixed(0)} u`:`距安全边界 ${Math.max(0,THREE_ESCAPE_R-threeM.r).toFixed(0)} u`,W-20,teleY+76);
     ctx.fillStyle=mission.threeDangerViolated?'#ef476f':'#ffd166';ctx.fillText(`混沌指数 ${threeM.chaos.toFixed(2)} · ${mission.threeDangerViolated?'已闯红区':'净空安全'}`,W-20,teleY+96);
     ctx.fillStyle='#d9c6ff';ctx.fillText(`时间线分岔 ${Number.isFinite(split)?split.toFixed(0):'等待观测'} u`,W-20,teleY+116);
     ctx.fillStyle='rgba(255,255,255,.72)';ctx.fillText(`宇宙种子 #${threeBody.seed.toString(16).toUpperCase().padStart(8,'0')}`,W-20,teleY+136);
@@ -464,7 +464,7 @@ function drawHUDOverlay(worldDrawStarted){
     else if(level===7&&asteroid){const f=getAsteroidForecast();critical=f.safe?'预测：地月均安全':'预测：仍有撞击危险';criticalColor=f.safe?'#5fd068':'#ef476f';}
     else if(level===8&&binaryM){const sm=stationMetrics();critical=mission.stage>=2?`暮光站 ${sm.distance.toFixed(0)} u`:`引力通道 ${binaryM.gateDistance.toFixed(0)} u`;criticalColor=mission.stage>=2?'#5fd068':'#4cf0dd';}
     else if(level===9&&blackM){critical=`逃逸能量 ${blackM.energy>0?'+':''}${blackM.energy.toFixed(0)}`;criticalColor=blackM.energy>0?'#5fd068':'#ffd166';}
-    else if(level===10&&threeBody){const target=mission.stage<2?threeBodyGate(mission.stage):threeM.center;critical=mission.stage<2?`时间锚 ${Math.hypot(rocket.x-target.x,rocket.y-target.y).toFixed(0)} u`:`逃逸圈 ${Math.max(0,THREE_ESCAPE_R-threeM.r).toFixed(0)} u`;criticalColor='#4cf0dd';}
+    else if(level===10&&threeBody){const target=mission.stage<2?threeBodyGate(mission.stage):threeM.center;critical=mission.stage<2?`求救飞船 ${mission.stage?'B':'A'} ${Math.hypot(rocket.x-target.x,rocket.y-target.y).toFixed(0)} u`:`安全边界 ${Math.max(0,THREE_ESCAPE_R-threeM.r).toFixed(0)} u`;criticalColor='#4cf0dd';}
     ctx.fillStyle=criticalColor;ctx.fillText(critical,W-20,teleY+76);
     ctx.fillStyle='rgba(255,255,255,.45)';ctx.font='900 11px sans-serif';ctx.textAlign='left';ctx.fillText('＋',teleX+8,teleY+17);ctx.textAlign='right';
   }

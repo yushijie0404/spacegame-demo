@@ -221,7 +221,7 @@ function updateFlightPhysics(dt,dtReal,observationDt){
       if(alt<140){
         const speedNow=Math.hypot(rocket.vx,rocket.vy), safeSpeed=0.78*Math.sqrt(2*EARTH.mu/rr);
         thrustPower=Math.max(0,Math.min(1,(safeSpeed-speedNow)/30));
-        if(thrustPower<0.05){ thrustPower=0; mission.dynHint='辅助限速｜立即 D 向右压平'; }
+        if(thrustPower<0.05){ thrustPower=0; mission.dynHint='辅助限速｜按住 D 逐渐向右转'; }
       }
     }
     rocket.thrustPower=thrustPower;
@@ -432,4 +432,3 @@ function runPhysicsSelfChecks(){
     pinchAnchorStable:Math.hypot(anchorScreenX-pinch.midX,anchorScreenY-pinch.midY)<1e-9,
     chuteRemainsOutward:canopyOutwardDot>=0.35,period,horizon};
 }
-

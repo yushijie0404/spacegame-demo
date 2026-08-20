@@ -99,6 +99,21 @@ function drawBinaryZones(){
   }
   ctx.textAlign='left';
 }
+function drawStrandedRescueShip(g,index,active,visited,pulse){
+  const s=1/cam.zoom,angle=Math.atan2(g.vy||0,g.vx||0);
+  ctx.save();ctx.translate(g.x,g.y);ctx.rotate(angle);
+  ctx.globalAlpha=visited?.38:1;
+  // 船体采用空间拖船/太阳能帆板轮廓，和玩家的火箭形象明显区分。
+  ctx.fillStyle=index===0?'#d9edf7':'#f2dfbd';ctx.strokeStyle='#17213c';ctx.lineWidth=1.8*s;
+  ctx.beginPath();ctx.rect(-14*s,-7*s,28*s,14*s);ctx.fill();ctx.stroke();
+  ctx.fillStyle=index===0?'#4cc9f0':'#ff9f43';ctx.beginPath();ctx.arc(9*s,0,5*s,0,TAU);ctx.fill();ctx.stroke();
+  ctx.strokeStyle='#8fc4ff';ctx.lineWidth=4*s;
+  if(index===0){ctx.beginPath();ctx.moveTo(-14*s,-4*s);ctx.lineTo(-30*s,-11*s);ctx.moveTo(-14*s,4*s);ctx.lineTo(-30*s,11*s);ctx.stroke();}
+  else{ctx.beginPath();ctx.moveTo(-14*s,0);ctx.lineTo(-34*s,0);ctx.moveTo(-24*s,-9*s);ctx.lineTo(-24*s,9*s);ctx.stroke();ctx.strokeStyle='#ef476f';ctx.beginPath();ctx.moveTo(-29*s,-8*s);ctx.lineTo(-20*s,8*s);ctx.stroke();}
+  ctx.fillStyle=active?'#ef476f':'#ffd166';ctx.beginPath();ctx.arc(-4*s,-10*s,3.2*s,0,TAU);ctx.fill();
+  if(active){ctx.strokeStyle=`rgba(239,71,111,${.35+.35*pulse})`;ctx.lineWidth=1.5*s;for(let r=9;r<=17;r+=8){ctx.beginPath();ctx.arc(-4*s,-10*s,r*s,-2.7,-.45);ctx.stroke();}}
+  ctx.restore();
+}
 function drawThreeBodyZones(){
   if(!threeBody)return;
   const center=threeBodyBarycenter(),pulse=.72+.2*Math.sin(threeBody.time*2.1);
@@ -116,9 +131,9 @@ function drawThreeBodyZones(){
   for(let i=0;i<2;i++){
     const g=threeBodyGate(i),active=mission.stage===i,visited=mission.stage>i,col=i===0?'76,201,240':'255,209,102';
     ctx.fillStyle=`rgba(${col},${active ? .14 : visited ? .035 : .065})`;ctx.strokeStyle=`rgba(${col},${active ? pulse : visited ? .24 : .45})`;ctx.lineWidth=(active?5:2.5)/cam.zoom;
-    ctx.beginPath();ctx.arc(g.x,g.y,THREE_GATE_R,0,TAU);ctx.fill();ctx.stroke();
-    ctx.strokeStyle=`rgba(${col},${active ? .88 : .35})`;ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.moveTo(g.x-18/cam.zoom,g.y);ctx.lineTo(g.x+18/cam.zoom,g.y);ctx.moveTo(g.x,g.y-18/cam.zoom);ctx.lineTo(g.x,g.y+18/cam.zoom);ctx.stroke();
-    ctx.fillStyle=`rgba(${col},${active?1:.58})`;ctx.font=`900 ${(active?15:12)/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(`时间锚 ${i?'II':'I'}${visited?' · 已记录':''}`,g.x,g.y-THREE_GATE_R-14/cam.zoom);
+    ctx.setLineDash([10/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.arc(g.x,g.y,THREE_GATE_R,0,TAU);ctx.fill();ctx.stroke();ctx.setLineDash([]);
+    drawStrandedRescueShip(g,i,active,visited,pulse);
+    ctx.fillStyle=`rgba(${col},${active?1:.58})`;ctx.font=`900 ${(active?15:12)/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(`求救飞船 ${i?'B':'A'}${visited?' · 已营救':''}`,g.x,g.y-THREE_GATE_R-14/cam.zoom);
   }
   if(mission.stage<2){const g=threeBodyGate(mission.stage);ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1.5/cam.zoom;ctx.setLineDash([5/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.moveTo(rocket.x,rocket.y);ctx.lineTo(g.x,g.y);ctx.stroke();ctx.setLineDash([]);}
   ctx.fillStyle='rgba(255,255,255,.62)';ctx.beginPath();ctx.arc(center.x,center.y,5/cam.zoom,0,TAU);ctx.fill();ctx.textAlign='left';
