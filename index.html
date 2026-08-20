@@ -168,6 +168,7 @@
     <button id="menuDial" data-menu-action="dial">表盘模式</button>
     <button id="menuGuide" data-menu-action="guide">任务提示</button>
     <button data-menu-action="briefing">📖 本阶段科普</button>
+    <button id="menuSound" data-menu-action="sound">🔊 音效：开启</button>
     <button id="menuAssist" data-menu-action="assist">模式：教学（无限燃料）</button>
     <button id="menuPerf" data-menu-action="copyperf">📋 复制手机性能报告</button>
   </div>
@@ -175,7 +176,7 @@
   <section class="key-help" aria-label="操作说明">
     <h3>⌨️ 电脑按键</h3>
     <div class="key-help-grid">
-      <span class="pill"><kbd>W</kbd>推进</span><span class="pill"><kbd>A D</kbd>转向</span><span class="pill"><kbd>E</kbd>任务动作</span><span class="pill"><kbd>Space</kbd>8 倍速</span><span class="pill"><kbd>K</kbd>视角</span><span class="pill"><kbd>B</kbd>地图</span><span class="pill"><kbd>C</kbd>姿态</span><span class="pill"><kbd>V</kbd>表盘</span><span class="pill"><kbd>T</kbd>轨迹</span><span class="pill"><kbd>M</kbd>教学/挑战</span><span class="pill"><kbd>R</kbd>阶段回退</span><span class="pill"><kbd>Shift R</kbd>整关重来</span><span class="pill"><kbd>P</kbd>暂停</span>
+      <span class="pill"><kbd>W</kbd>推进</span><span class="pill"><kbd>A D</kbd>转向</span><span class="pill"><kbd>E</kbd>任务动作</span><span class="pill"><kbd>Space</kbd>8 倍速</span><span class="pill"><kbd>K</kbd>视角</span><span class="pill"><kbd>B</kbd>地图</span><span class="pill"><kbd>C</kbd>姿态</span><span class="pill"><kbd>V</kbd>表盘</span><span class="pill"><kbd>T</kbd>轨迹</span><span class="pill"><kbd>M</kbd>教学/挑战</span><span class="pill"><kbd>N</kbd>音效</span><span class="pill"><kbd>R</kbd>阶段回退</span><span class="pill"><kbd>Shift R</kbd>整关重来</span><span class="pill"><kbd>P</kbd>暂停</span>
     </div>
     <div class="touch-help">触屏：双指缩放、按住画面拖动视角；点击左侧姿态表或右下角地图可直接切换模式。</div>
   </section>
@@ -215,11 +216,18 @@
 </div></div>
 <div id="achievementToast" role="status" aria-live="polite"><div id="achievementToastBadge"></div><div class="achievement-toast-copy"><span class="achievement-toast-kicker">ACHIEVEMENT UNLOCKED</span><strong id="achievementToastName" class="achievement-toast-name"></strong><span id="achievementToastJoke" class="achievement-toast-joke"></span></div></div>
 <script src="./runtime-performance.js"></script>
+<script src="./game-audio.js"></script>
+<script src="./game-missions.js"></script>
+<script src="./game-progression.js"></script>
+<script src="./game-achievements.js"></script>
+<script src="./game-input.js"></script>
 <script>
 "use strict";
 const cv = document.getElementById('cv'), hudCv=document.getElementById('hudCv');
 const worldCtx=cv.getContext('2d'),hudCtx=hudCv.getContext('2d');
 const SG_PERF=globalThis.SpaceGamePerformance||{sample(){},frameGap(){},snapshot(){return {physics:{average:0,peak:0},world:{average:0,peak:0},hud:{average:0,peak:0},prediction:{average:0,peak:0},work:{average:0,peak:0},recent:{longFrameRate:0,worstGap:0}};},reset(){}};
+const SG_AUDIO=globalThis.SpaceGameAudio||{unlock(){},sfx(){},setEngine(){},setEnabled(){return false;},toggle(){return false;},stopAll(){},status(){return {enabled:false,supported:false,ready:false};},isEnabled(){return false;}};
+const SG_INPUT=globalThis.SpaceGameInput||{install(){},clear(){},resetCameraGestures(){},isInstalled(){return false;}};
 let ctx=worldCtx;
 const IOS_DEVICE=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 document.documentElement.classList.toggle('ios-device',IOS_DEVICE);
@@ -260,32 +268,6 @@ const G_KILL = 5*G_REF;      // 持续超过 → 船员死亡
 const G_BREAK = 8*G_REF;     // 瞬时超过 → 飞船解体
 const G_KILL_TIME = 1.5;     // 船员死亡所需持续秒数
 
-// 挑战模式预算经过理想转移所需速度增量后留出约 35%～70% 的操作余量。
-// 第六关给足 100%：L2/L3 的三星来自路线难度，不以省燃料卡玩家。
-const CHALLENGE_CONFIG={
-  1:{fuel:55,fuelStar:15,parTime:150,life:0,mass:1},
-  2:{fuel:70,parTime:180,life:210,mass:1},
-  3:{fuel:100,fuelStar:20,parTime:300,life:300,mass:1.2},
-  4:{fuel:95,fuelStar:18,parTime:390,life:0,mass:1},
-  5:{fuel:31,parTime:300,life:0,mass:1,vInfStar:55,exitAngleStar:18},
-  6:{fuel:100,parTime:480,life:0,mass:1},
-  7:{fuel:100,fuelStar:18,parTime:220,life:0,mass:1},
-  8:{fuel:100,fuelStar:20,parTime:330,life:0,mass:1},
-  9:{fuel:30,fuelStar:2,parTime:150,life:0,mass:1},
-  10:{fuel:85,fuelStar:20,parTime:190,life:0,mass:1}
-};
-const STAR_RULES={
-  1:['完成同步轨道部署：★','在绿色目标经度内释放：+★','挑战燃料剩余至少 15%：+★'],
-  2:['安全返回地球：★','全程不使用降落伞：+★','精确落入绿色着陆区：+★'],
-  3:['完成重载货运对接：★★','挑战燃料剩余至少 20%：+★'],
-  4:['安全着陆月球背面：★','精确落入绿色月背中央区：+★','挑战燃料剩余至少 18%：+★'],
-  5:['飞出绿圈且不会返回：★','逃逸余速 v∞ 至少 55 u/s：+★','穿越绿圈时方向偏差不超过 18°：+★'],
-  6:['抵达 L1：★','抵达 L4 或 L5：★★','抵达 L2 或 L3：★★★'],
-  7:['让小行星同时避开地球和月球：★','飞船没有在撞击中损毁：+★','挑战燃料剩余至少 18%：+★'],
-  8:['抵达另一颗太阳旁的空间站：★','全程避开两颗恒星的高温区：+★','挑战燃料剩余至少 20%：+★'],
-  9:['穿过救援门并逃离黑洞：★','在半径 270 u 内完成深渊点火：+★','挑战燃料剩余至少 2%：+★'],
-  10:['穿过两个时间锚并逃离混沌区：★','全程不进入红色潮汐危险圈：+★','挑战燃料剩余至少 20%：+★']
-};
 
 // ---------- 关卡框架 ----------
 const EARTH_OMEGA = 0.045;             // 地球自转角速度（rad/s，逆时针）
@@ -377,187 +359,6 @@ function chuteCanopyAngle(flowX,flowY,outX,outY){
   return outwardAngle+delta;
 }
 // 关卡定义
-const LEVELS = {
-  1: { title:'🛰️ 第一关 · 地球同步卫星', sub:'飞进黄色同步轨道，再释放卫星' },
-  2: { title:'🪂 第二关 · 载人航天返回', sub:'反向点火降回地球，开伞安全落地' },
-  3: { title:'🧩 第三关 · 空间站交会对接', sub:'追上空间站，速度一致后慢慢对接' },
-  4: { title:'🌘 第四关 · 月背动力着陆', sub:'飞到月球背面，只靠发动机安全落地' },
-  5: { title:'🪃 第五关 · 月球引力弹弓', sub:'借月球甩出去，飞出绿圈且不再掉回来' },
-  6: { title:'⚖️ 第六关 · 地月引力平衡点', sub:'任选一个引力平衡点，把卫星送过去停稳' },
-  7: { title:'☄️ 第七关 · 小行星拦截', sub:'追上危险小行星，改变它的轨道，保护地球和月球' },
-  8: { title:'☀️ 第八关 · 双星摆渡', sub:'穿过两颗太阳之间的引力通道，在另一边与空间站对接' },
-  9: { title:'🕳️ 第九关 · 黑洞深渊点火', sub:'让时间慢下来，在深渊最近点加速逃回远方' },
-  10:{ title:'🌀 最终关 · 三体混沌穿越', sub:'没有标准路线：读取分叉时间线，穿过移动时间锚后逃离' }
-};
-let level = 1;
-const stageInfoL1 = [
-  {name:'① 进入环绕轨道', hint:'先向上飞，再向右转，把黄线飞成一整圈',
-    steps:['默认是手动转向：先保持机头朝当地上方，短按推进离开发射台。','高度约 40～60 u 后，同时按住 D / 右转和 W / 推进，让机头逐渐朝右侧压平。','看到黄色预测线首尾相接、完整围住地球后，松开所有按键并稳定保持 3 秒。'],
-    science:'只向上飞会变成抛物线甚至逃逸；进入轨道需要足够的横向速度，让飞船一边下落、一边不断“错过”地面。这里选择右转，是顺着地球自转的顺行方向。',
-    success:'成功标志：黄色线闭合、没有穿过地球，并且近地点和远地点都在地表之外。'},
-  {name:'② 抬升远地点', hint:'在蓝点顺着青线加速，把橙点推到黄圈',
-    steps:['先看姿态盘：青色刻度表示当前速度方向。','让机头与青色方向重合；最好在蓝色近地点附近开始推进。','持续观察橙色远地点，进入金色环形带后立即停火。'],
-    science:'在轨道低点顺着速度加速，增加的能量主要会抬高轨道另一侧，这就是霍曼转移的第一次点火。',
-    success:'成功标志：橙色远地点进入金色同步高度带；此时轨道仍是椭圆，不要急着释放卫星。'},
-  {name:'③ 形成同步轨道', hint:'滑到橙点再加速，把蓝点也推到黄圈',
-    steps:['松手滑行，可按住空格 8 倍速前往橙色远地点。','到达橙圈附近，让机头再次对准青色速度方向并推进。','观察蓝色近地点：它进入金色带后停火，保持轨道 3 秒。'],
-    science:'第二次点火发生在远地点，它会抬高轨道另一侧的近地点。近、远地点都在同步带内且角速度匹配地球自转，才是真正的同步轨道。逆行圆轨道绝不会相对地面定点。',
-    success:'成功标志：近、远地点都在金色带内，偏心率很小，同步残差接近 0。'},
-  {name:'④ 释放同步卫星', hint:'轨道稳定后，点击发光的“释放卫星”',
-    steps:['确认底部提示显示“同步轨道稳定”。','普通通关：在任意经度按 E 部署。','完美挑战：等待飞船进入绿色扇形，再按 E 部署到指定经度。'],
-    science:'“同步高度”只说明距离大致正确；顺行、圆轨道且周期等于地球自转周期，才是地球静止轨道。绿色区域代表任务要求的目标经度。',
-    success:'成功标志：按 E 后显示同步残差与真实释放位置；绿色区域内释放会获得目标经度评价。'}
-];
-const stageInfoL2 = [
-  {name:'① 反推降低近地点', hint:'机头转到青线反方向，点火让黄线碰到地球',
-    steps:['看姿态盘的青色速度刻度，把机头转到它的正对面。','按住推进做一次反向点火，同时观察蓝色近地点。','蓝色近地点高度降到 250 u 以下、黄色轨迹进入地球边缘后停火。'],
-    science:'在高轨道反向点火会降低速度，使轨道另一侧的近地点下降。返回地球不是朝地球直冲，而是先把椭圆轨道压进大气层。',
-    success:'成功标志：黄色预测线与地球外圈相交，任务进入再入减速阶段。'},
-  {name:'② 再入与减速', hint:'继续减速；下降到 520 以下时打开降落伞',
-    steps:['继续让机头背对青色速度方向，短促推进以降低速度。','不要长时间大推力；同时观察高度和相对地面速度。','高度进入 520 u 以下且正在下降时，点击闪烁的“打开降落伞”按钮。'],
-    science:'再入时轨道能量要被消耗掉。真实飞船主要依靠大气阻力，本关用反推和手动开伞把这段过程压缩成可玩的两步。',
-    success:'成功标志：高度低于 400 u、速度低于 120 u/s，随后进入最终着陆。'},
-  {name:'③ 垂直软着陆', hint:'机头朝上，接近地面时轻点推进',
-    steps:['降落伞打开后先等待速度下降到约 25 u/s。','让机头朝远离地心的方向，也就是当地“正上方”。','接近细地表环时轻点推进缓冲；落入绿色弧段可完美通关。'],
-    science:'安全着陆看的是相对地面的速度，而不是绝对速度。地球在自转，所以程序会扣除当地地表线速度后再判断冲击。',
-    success:'成功标志：相对地面速度 ≤17 u/s；绿色着陆区只影响完美评价，不影响基础通关。'}
-];
-const stageInfoL3 = [
-  {name:'① 发射进入近地轨道', hint:'先向上飞，再向右转，把黄线飞成一整圈',
-    steps:['默认手动转向不会自动锁定机头；先朝当地上方推进离地。','高度约 40～60 u 后逐渐向右转，让黄色预测线闭合。','把轨道抬到空间站所在的青色轨道附近。'],
-    science:'交会对接的第一步不是直接瞄准空间站，而是先进入同方向的近地轨道。直接朝目标飞通常会因为引力和目标持续运动而错过。',
-    success:'成功标志：形成顺行闭合轨道，远地点接近空间站轨道。'},
-  {name:'② 追赶空间站', hint:'先进入空间站附近的轨道，从后面追上它',
-    steps:['观察空间站和绿色连线，不要直接长时间朝它推进。','在较低轨道会绕得更快，可从后方追赶；需要减小相位差时短促点火。','距离降到 350 u 内后进入近距离操作。'],
-    science:'较低轨道速度更快、周期更短，这是轨道交会最反直觉也最关键的规律。追赶前方目标有时要先减速进入更低轨道。',
-    success:'成功标志：右侧遥测显示“空间站距离 <350 u”。'},
-  {name:'③ 匹配相对速度', hint:'朝相对运动的反方向点火，把速度差降下来',
-    steps:['接近后重点看“相对速度”，不要只看绝对速度。','机头朝相对运动的反方向，用短促点火把速度差降下来。','保持距离小于 120 u、相对速度小于 22 u/s。'],
-    science:'两艘飞船即使都在轨道上，速度方向和大小仍可能不同。对接前必须先把相对速度消掉，否则接触瞬间仍相当于高速碰撞。',
-    success:'成功标志：距离 <120 u 且相对速度 <22 u/s。'},
-  {name:'④ 最终对接', hint:'距离小于 30、速度差小于 8，再点击“执行对接”',
-    steps:['用非常短的点火逐步靠近空间站中央的绿色对接口。','让相对速度保持在 8 u/s 以下；越慢越容易获得高分。','条件稳定后，点击闪烁的“执行对接”按钮完成捕获。'],
-    science:'真实对接最后几米通常以厘米每秒计，并由姿态控制和对接机构共同完成。本关进行了缩比，但仍强调“先消速度，再靠近”。',
-    success:'成功标志：绿色对接环闭合，火箭与空间站一起沿轨道飞行。'}
-];
-const stageInfoL4 = [
-  {name:'① 发射进入停泊轨道', hint:'先向上飞，再向右转，把黄线飞成一整圈',
-    steps:['默认手动转向不会自动锁定机头；先保持当地垂直推进离地。','高度约 40～60 u 后逐渐向右压平，建立顺行闭合轨道。','让近地点离开地表，并保留足够燃料。'],
-    science:'去月球也要先入轨。停泊轨道把发射和地月转移拆开：火箭先获得稳定的横向速度，再选择合适时机把远地点抬到月球轨道。真实任务会根据月球未来位置计算“发射窗口”。',
-    success:'成功标志：黄色预测线闭合，顺行且近地点安全。'},
-  {name:'② 地月转移点火', hint:'顺着青线加速，把橙点推到月球那一圈',
-    steps:['在近地点附近沿青色速度方向点火。','观察橙色远地点，把它抬到月球灰色轨道附近。','月球仍在公转，要瞄准它将要到达的位置，而不是当前所在点。'],
-    science:'地月转移本质上是一个很长的椭圆轨道。飞行途中月球继续运动，因此飞船必须提前量瞄准。月球的引力进入主导后，轨迹还会再次弯曲。',
-    success:'成功标志：远地点到达月球公转半径，任务进入月球接近阶段。'},
-  {name:'③ 月球捕获减速', hint:'靠近月球后反向点火，把相对速度降下来',
-    steps:['接近月球时观察黄色预测线如何被月球引力逐渐弯曲；地球和月球引力始终同时存在。','机头朝月球相对速度的反方向短促点火，直到轨迹真正绕月闭合。','不能只匹配速度或停在月球旁边；必须形成月心束缚轨道。'],
-    science:'火箭接近月球时仍带着很大的地心速度，但着陆真正关心的是相对月球的速度。制动不足会掠过或撞击，制动过多则会在高处耗尽燃料。',
-    success:'成功标志：预测轨迹绕月闭合，近月点高于月面，并显示“已被月球捕获”。'},
-  {name:'④ 月背动力着陆', hint:'飞到绿色月背，机头朝外，轻点推进安全落地',
-    steps:['绿色弧段始终位于背向地球的一面；月球公转时它会一起转动。','本阶段没有降落伞，也不会把火箭自动扶正；请用转向和短促推进控制下降。','相对月面速度降到 15 u/s 以下，在月背触地即可通关。'],
-    science:'月球总用同一面对着地球，这叫潮汐锁定，并不代表月球没有自转：它每公转一圈也恰好自转一圈。月球几乎没有大气，降落伞不起作用，着陆器必须全程依靠发动机减速。',
-    success:'成功标志：在背向地球的半球以安全相对速度着陆；绿色中央区域获得更高评分。'}
-];
-const stageInfoL5 = [
-  {name:'① 发射进入地月转移', hint:'跟着影子起飞，让橙点碰到月球那一圈',
-    steps:['你和影子都只有 29% 一级燃料，推进力、转向速度和子弹时间也完全相同。','点火后按住推进，并跟着影子的机头转向；右转或左转按钮会提示你往哪边追。','橙色远地点碰到月球那一圈后，一级自动分离，并留下 2% 修正燃料。'],
-    science:'直接逃逸需要把地心比机械能一次推到正数，燃料需求最高。弹弓路线只把火箭送上仍会返回地球的长椭圆轨道，再从运动的月球交换能量，因此能用更少的推进剂完成逃逸。',
-    success:'成功标志：橙色远地点到达月球轨道，但黄色路线还没有直接逃出地球。'},
-  {name:'② 检查预计近月点', hint:'看黄线标记：太近会撞，太远则借力太弱',
-    steps:['一级分离后以滑行为主，黄线会直接标出预计撞击点或预计近月高度。','红色“预计撞击”表示会撞月球；近月高度太大则几乎借不到力。','若预计高度不合适，只用 2% 修正燃料做非常短的点火。'],
-    science:'飞船必须瞄准月球未来的位置。经过月球运动后方时，引力会把飞船朝月球前进方向拉动，从地心参考系看就获得了额外能量。',
-    success:'成功标志：黄色路线进入月球附近，最好从月球运动方向的后面经过。'},
-  {name:'③ 借月球甩出去', hint:'别撞月球，看它的引力把黄线甩向外面',
-    steps:['进入近月区后尽量停火，观察地球和月球的叠加引力共同弯折轨迹。','低近月点不会自动失败：只要没有真正撞上月面，任务就会继续。','离开月球后，“逃逸余速”由 0 变为正数，说明轨道已经不再返回地球。'],
-    science:'靠得更近通常能获得更大的偏转，但过近会撞击月面；离得太远则几乎得不到能量。真正的任务设计会用近月点高度和 B 平面参数精确控制飞越。',
-    success:'成功标志：没有撞上月球，飞出后右上角的“逃逸余速”大于 0。'},
-  {name:'④ 飞出绿色大圈', hint:'飞出绿色大圈，右上角显示不会掉回来就成功',
-    steps:['路线已经朝外时，可以按倍速滑向绿色大圈。','右上角“逃逸余速”大于 0，表示不会再掉回地球。','向外飞出绿色大圈就通关；怎么飞、从月球哪边经过都不限制。'],
-    science:'瞬时速度不能单独判断逃逸，因为飞船仍会被地球减速。程序用比机械能 ε=v²/2−μ/r 判断：ε>0 才是双曲逃逸轨道，v∞=√(2ε) 是排除当前位置引力势能后的明确成绩。',
-    success:'成功标志：向外飞出绿色大圈，而且轨道不会再掉回地球。路线不限。'}
-];
-const stageInfoL6 = [
-  {name:'① 发射并观察五个目标', hint:'五个平衡点任选，不用提前选择',
-    steps:['L1～L5 都能通关，直接朝你想去的点飞；星越多，路线越难。','按推进后世界和目标一起开始运动；先像前几关一样建立顺行近地轨道。','点击右下角地图切到全局模式，可以同时看到五个目标。'],
-    science:'这些位置可以通俗理解为地球引力、月球引力和绕转产生的惯性效果恰好互相配合的“平衡点”。科学上称为拉格朗日点：L1 在地月之间，L2 在月球外侧，L3 在地球背向月球的一侧；L4、L5 与地球和月球组成两个等边三角形，分别位于月球运动方向的前方和后方。',
-    success:'成功标志：看清五个目标，并形成近地点安全的顺行闭合轨道。'},
-  {name:'② 把轨道送向任意目标', hint:'在近地点顺向点火，让黄线伸向想去的点',
-    steps:['在近地点附近沿速度方向点火，逐步抬高远地点。','不要直接一直朝目标喷射；先用长椭圆轨道接近目标半径。','目标会随月球一起绕地球转动，要瞄准它未来的位置。'],
-    science:'五个点都固定在“跟着地月连线一起旋转”的参考系里，所以在普通世界视角中它们一直运动。L1、L2、L3 是三个共线点；它们像山脊上的平衡，偏离后会逐渐漂走。L4、L5 在理想条件下可以稳定聚集小天体，因此太阳系中有著名的特洛伊小行星群。',
-    success:'成功标志：飞船与任意一个目标的距离小于约 3000 u。'},
-  {name:'③ 匹配平衡点速度', hint:'靠近后先消掉速度差，再慢慢进入发光圆环',
-    steps:['右上角自动显示最近的 L 点、距离和相对速度。','若速度差很大，把机头朝相对运动反方向短促点火。','距离进入 800 u 后，以低速靠近那个圆环。'],
-    science:'“平衡”不代表飞船在惯性空间中静止。平衡点本身正以月球公转角速度绕地球运动，因此必须同时匹配位置和速度。真实任务通常不会精确停在一个数学点上，而是围绕它飞行晕轮轨道或李萨如轨道，以减少长期维持的困难。',
-    success:'成功标志：距离小于 800 u、相对目标速度低于 45 u/s。'},
-  {name:'④ 停在任意平衡点', hint:'进入任意圆环并停稳，自动完成部署',
-    steps:['让飞船进入任意一个平衡点的亮色圆环。','教学模式要求相对速度低于 16 u/s；挑战模式要求低于 10 u/s。','稳定保持片刻后自动部署卫星，并按你抵达的点结算星级。'],
-    science:'L1 常用于持续观测太阳或地球—月球之间的区域；L2 适合背向地球的深空观测；L3 很难直接利用；L4、L5 适合研究共轨天体和长期稳定区域。现实中太阳、其他行星和非球形引力都会扰动航天器，所以仍需定期修正轨道。',
-    success:'成功标志：在任意一个圆环内匹配该点速度并稳定保持，系统自动部署。'}
-];
-const stageInfoL7 = [
-  {name:'① 发射追上小行星', hint:'红线就是小行星的撞击路线，先飞出去拦住它',
-    steps:['按推进发射，点击小地图切到全局视角寻找红色小行星。','别只瞄准它现在的位置，要朝它前方飞，尽早完成拦截。','红色预测线末端的叉号表示导航电脑预计会撞上哪个天体。'],
-    science:'行星防御最重要的是尽早发现。提前很多年只需极小速度变化，日积月累就能让小行星错过地球；发现得越晚，所需推力越大。',
-    success:'成功标志：接近小行星。可以低速着陆，也可以用飞船直接撞击改变它的速度。'},
-  {name:'② 选择拦截方式', hint:'着陆姿态不限；小行星有微弱引力，慢慢贴近就会落下',
-    steps:['机头朝上、朝下或侧着都能着陆；系统只检查相对小行星的接触速度。','标准方案：把相对速度降到 22 u/s 以下，再轻轻接触小行星表面。','自由方案：高速正面撞上去会牺牲飞船，但撞击动量仍会传给小行星。','只看最终轨道是否安全，不要求照着教学顺序操作。'],
-    science:'小行星质量小，但并非没有引力。本关的缩比表面重力约 2.1 u/s²、逃逸速度约 19 u/s，能帮助低速贴近，却不会像地球那样强行吸住飞船。动能撞击器则依靠动量交换改变它的轨道。',
-    success:'成功标志：火箭在小行星表面软着陆，或撞击后红色危险轨迹明显偏转。'},
-  {name:'③ 锚定并翻转', hint:'软着陆后点“锚定并翻转”，让发动机朝外、机头抵住地面',
-    steps:['点击发光的“锚定并翻转”按钮，火箭会自动把头转向小行星并锁紧。','锚定后左右键不再旋转整艘火箭，而是调节铰链喷射角。','也可以不锚定，贴在表面直接推进，但传力效率会较低。'],
-    science:'直接把发动机固定在小行星上持续推力，属于慢推力偏转思路。松散碎石堆天体未必适合打孔锚定，真实方案还可能使用离子束、引力拖船或表面质量抛射。',
-    success:'成功标志：界面显示“已锚定”，左右控制显示为铰链角度。'},
-  {name:'④ 把红线推离地月', hint:'调铰链再推进，直到预测线变绿并稳定',
-    steps:['观察红色小行星预测线和预计撞击叉号。','用左右键调喷射角，按推进持续改变小行星速度；别只让它错过地球又撞上月球。','预测线变绿并稳定几秒后自动通关。'],
-    science:'一次成功偏转不只看“错过地球”，还要复核月球和未来回归轨道。现实任务会用长期精密测轨不断更新撞击走廊，而不是只看一次瞬时预测。',
-    success:'成功标志：未来预测同时避开地球和月球，并保持安全状态 2.5 秒。'}
-];
-const stageInfoL8 = [
-  {name:'① 从晨曦星起飞',hint:'先离开蓝色行星，再顺着它的运动方向加速',
-    steps:['两颗太阳和出发行星会在你第一次推进时一起开始运动。','从蓝色“晨曦星”起飞，先避开橙色恒星的高温光圈。','建立安全飞行速度后，把黄色预测线拉向两颗太阳之间。'],
-    science:'双星不是一颗恒星绕着另一颗静止恒星转，而是两颗恒星都围绕共同质心运动。行星又在其中一颗恒星附近公转，因此火箭起飞时已经继承了行星和恒星的双重运动速度。',
-    success:'成功标志：离开晨曦星 300 u 以上，并保持在恒星表面之外。'},
-  {name:'② 穿过移动引力通道',hint:'瞄准两颗太阳之间的青色通道，不要直接撞向目标',
-    steps:['青色门是两颗恒星引力互相拉扯形成的动态狭口，会随双星一起转动。','提前瞄准青色门未来的位置，用短促点火修正黄色预测线。','穿过通道后，火箭会从橙星一侧进入蓝白星一侧。'],
-    science:'这个通道对应旋转参考系中两个引力势阱之间的“颈部”。它与拉格朗日点有关，但本关不要求停在那里，而是利用势能通道从一颗恒星的势力范围摆渡到另一颗。',
-    success:'成功标志：飞船穿过青色门，且距离蓝白色目标恒星比橙色恒星更近。'},
-  {name:'③ 被目标恒星捕获',hint:'接近蓝白星后反推，把掠过轨迹变成闭合轨道',
-    steps:['接近蓝白星时重点看右上角“目标星相对速度”和捕获状态。','把机头转到相对速度反方向，短促反推降低轨道能量。','不要进入红色高温圈；让黄色预测线绕蓝白星闭合。'],
-    science:'飞到目标恒星旁边并不等于完成转移。若相对能量仍为正，飞船只会高速掠过；必须反推降低相对速度，才能从双曲飞越变成受目标恒星束缚的轨道。',
-    success:'成功标志：HUD 显示“目标星已捕获”，并进入空间站所在轨道附近。'},
-  {name:'④ 与暮光站对接',hint:'距离和速度差都足够小时，点击“执行对接”',
-    steps:['先消除与空间站的相对速度，再从后方慢慢靠近。','进入 36 u、相对速度低于 9 u/s 后，对接按钮会发光。','直接跳过前面步骤抵达对接窗口也可以正常完成任务。'],
-    science:'在双星系统中，空间站同时受到目标恒星和伴星的扰动，因此长期轨道需要定期修正。本关用短时间解析轨道近似，重点训练跨势阱转移、恒星捕获与最终相对导航。',
-    success:'成功标志：点击对接后，飞船与暮光站一起绕蓝白星运行。'}
-];
-const stageInfoL9 = [
-  {name:'① 向深渊下潜',hint:'轻点推进启动世界，然后关机滑向黑洞',
-    steps:['第一次轻点推进只会解除待机，不消耗燃料；松开后世界才开始运动。','随后关机沿黄色轨迹滑向白色光子环内侧，不要在远处浪费燃料。','观察右上角：越靠近黑洞，远方看到的位移和速度会连续变慢。'],
-    science:'靠近黑洞时，远方观察者会发现飞船上的钟越来越慢。本关用 √(1−rₛ/r) 表示飞船钟的引力红移，并用更强的视界坐标速率表现远方所见的运动冻结；两者都做了游戏化平滑，不是完整的广义相对论数值模拟。',
-    success:'成功标志：进入半径 365 u 内，开始准备近点点火。'},
-  {name:'② 最近点顺向点火',hint:'机头对准青色速度方向，推进到逃逸能量变绿',
-    steps:['让机头和姿态表的青色速度刻度重合，继续关机滑向紫色细环。','半径降到约 220～270 u 时顺着速度按住推进。','右上角“逃逸能量”变绿后立即停火；挑战燃料只够这一次近点点火。'],
-    science:'同样的速度增量，在速度最高的轨道近点施加，增加的轨道能量最多，这叫奥伯特效应。黑洞没有给发动机额外推力，而是先用引力把飞船加速，再让发动机更有效地改变总能量。',
-    success:'成功标志：黑洞相对轨道能量大于 0，黄色预测线转为向外开放。'},
-  {name:'③ 逃回远方世界',hint:'保持向外飞行，穿过绿色救援门即可完成',
-    steps:['确认径向速度为向外，必要时用很短的修正点火。','穿过绿色救援门时仍保持正逃逸能量，就会自动获救。','不要为了更深点火贴到黑色视界；远方看到的飞船会冻结在那里。'],
-    science:'“飞船停在视界上”是远方观察者的坐标图景：信号被无限红移、到达间隔无限拉长。对随飞船下落的宇航员而言，自身固有时间正常流逝，并会在有限时间内越过视界；本关故意采用远方任务控制中心的观察视角。',
-    success:'成功标志：向外穿过 2200 u 绿色救援门，并保持逃逸能量为正。'}
-];
-const stageInfoL10 = [
-  {name:'① 抵达第一时间锚',hint:'比较三条时间线影子，选择不会撞星的一支',
-    steps:['第一次推进后，三颗恒星和飞船才会同时开始运动。','青、白、粉三条半透明影子分别表示左修正、继续滑行和右修正的短期未来。','飞向发亮的“时间锚 I”；它夹在两颗运动恒星的引力之间，会不断改变位置。'],
-    science:'三体系统没有一条能长期重复的简单轨道。极小的初始差别会随时间放大，所以本关每次重开都会扰动三颗恒星的初始状态；时间线影子只是从“此刻”向前积分的短期天气预报，不是标准答案。',
-    success:'成功标志：进入蓝色时间锚 I 的圆环。'},
-  {name:'② 抵达第二时间锚',hint:'旧预测会很快失效，边飞边重新比较时间线',
-    steps:['第一锚通过后，目标会切换到金色时间锚 II。','不要死追一条很久以前看起来安全的影子；恒星位置变化后要重新判断。','红色半透明圈是潮汐危险区，基础通关允许擦边，挑战三星要求全程避开。'],
-    science:'混沌不等于完全随机。运动仍严格服从引力方程，但长期结果对初始条件极端敏感。导航电脑不断重算多条相邻未来，就是用“短期可预测、长期会分叉”的方式帮助驾驶。',
-    success:'成功标志：进入金色时间锚 II 的圆环。'},
-  {name:'③ 逃离混沌区',hint:'选择向外发散的时间线，穿过绿色外圈并保持向外飞',
-    steps:['通过两个时间锚后，不再追逐内部目标，寻找向系统外侧展开的影子。','顺着安全分支短促修正，避免再次被某颗恒星捕获。','半径超过绿色逃逸圈、仍保持向外速度并稳定片刻，即可完成最终任务。'],
-    science:'三颗恒星的总能量和动量仍然守恒，但飞船可以在多次近距离掠过中与运动恒星交换能量。一次看似很小的修正，可能决定飞船最终被捕获、撞向恒星，还是从系统中逃逸。',
-    success:'成功标志：通过两个时间锚后，向外穿过 3900 u 绿色逃逸圈。'}
-];
 let mission;
 
 let rocket, station, asteroid, asteroidTrail, binary, blackHole, threeBody, timelineCache, trail, ghostShip, ghostTrail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
@@ -929,140 +730,6 @@ function applyLagrangeAssist(dt){
 // 当前关卡的教学步骤
 function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:level===4?stageInfoL4:level===5?stageInfoL5:level===6?stageInfoL6:level===7?stageInfoL7:level===8?stageInfoL8:level===9?stageInfoL9:stageInfoL10; }
 
-const SAVE_KEY='spacegame-progress-v2';
-const ACHIEVEMENT_KEY='spacegame-achievements-v1';
-const ACHIEVEMENTS=[
-  {id:'first_flame',title:'点火许可',icon:'flame',accent:'#ff9f43',accent2:'#ef476f',method:'第一次按下推进，让飞船真正开始运动。',joke:'万事开头难，除了火箭——它的开头主要是热。'},
-  {id:'first_orbit',title:'横着掉下去',icon:'orbit',accent:'#4cc9f0',accent2:'#4361ee',method:'形成闭合地球轨道，并让近地点安全离开地表。',joke:'恭喜，你终于学会了持续横着掉下去。'},
-  {id:'geo_postman',title:'静止的快递员',icon:'satellite',accent:'#ffd166',accent2:'#ff9f43',method:'完成第一关，把卫星部署到地球同步轨道。',joke:'站着不动，其实需要跑得非常快。'},
-  {id:'silk_wings',title:'相信一块布',icon:'chute',accent:'#ff7eb6',accent2:'#7de3ff',method:'第二关下降时亲手打开降落伞。',joke:'承认自己需要一块布，是成熟航天员的表现。'},
-  {id:'homecoming',title:'回家别砸门',icon:'home',accent:'#5fd068',accent2:'#4cc9f0',method:'完成第二关，让载人飞船安全返回地球。',joke:'回家最难的部分，是别把家门口砸出一个坑。'},
-  {id:'orbital_handshake',title:'轨道握手',icon:'dock',accent:'#7de3ff',accent2:'#8b7dff',method:'完成一次空间站对接。第三关或第八关均可。',joke:'宇宙中最昂贵的“轻轻碰一下”。'},
-  {id:'far_side_footprint',title:'月背脚印',icon:'moon',accent:'#e8edf2',accent2:'#7f8ca6',method:'完成第四关，在月球背面动力着陆。',joke:'这里信号不好，风景倒是绝对没人抢。'},
-  {id:'lunar_slingshot',title:'借力不还',icon:'sling',accent:'#c99cff',accent2:'#4cc9f0',method:'完成第五关，借月球引力飞出绿色逃逸圈。',joke:'月球没推你，它只是很礼貌地借给你一点速度。'},
-  {id:'balance_artist',title:'引力端水大师',icon:'balance',accent:'#ffd166',accent2:'#5fd068',method:'完成第六关，停稳在任意一个地月引力平衡点。',joke:'你停在了一个连引力都拿不定主意的地方。'},
-  {id:'asteroid_whisperer',title:'小行星劝退员',icon:'asteroid',accent:'#d8a16f',accent2:'#ef6f4b',method:'完成第七关，让小行星预测轨迹同时避开地球和月球。',joke:'拯救世界完成。飞船刮蹭赔偿单稍后寄到。'},
-  {id:'binary_commuter',title:'双日通勤',icon:'binary',accent:'#ffb142',accent2:'#9fdcff',method:'完成第八关，穿越双星引力通道并与暮光站对接。',joke:'一颗太阳嫌通勤不够难，于是又加了一颗。'},
-  {id:'abyss_return',title:'深渊回信',icon:'abyss',accent:'#f4f7ff',accent2:'#a66cff',method:'完成第九关，从黑洞深渊点火并逃回救援圈外。',joke:'你赢过了黑洞，但任务中心的钟先老了。'},
-  {id:'chaos_surfer',title:'混沌冲浪手',icon:'chaos',accent:'#ff8fba',accent2:'#6fdcff',method:'完成最终关，穿过两个时间锚并逃离三体系统。',joke:'三颗太阳都不知道下一步，你居然知道。'},
-  {id:'five_g_club',title:'5G 俱乐部',icon:'bolt',accent:'#ef476f',accent2:'#ffb142',method:'飞行中承受至少 5G，并保持飞船与船员完好。',joke:'脸留在了座椅上，灵魂勉强跟了上来。'},
-  {id:'challenge_ace',title:'挑战王牌',icon:'star',accent:'#fff0a8',accent2:'#f0a500',method:'在任意一关的挑战模式中获得三星。',joke:'无限燃料是教学。你显然没在听课。'},
-  {id:'tenfold_voyager',title:'十界远航者',icon:'crown',accent:'#7de3ff',accent2:'#ffd166',method:'完成全部十个关卡。星级不限，活着回来就算。',joke:'十关之后，你已具备把任何问题解释成轨道力学的资格。'}
-];
-const LEVEL_ACHIEVEMENTS={1:'geo_postman',2:'homecoming',3:'orbital_handshake',4:'far_side_footprint',5:'lunar_slingshot',6:'balance_artist',7:'asteroid_whisperer',8:'binary_commuter',9:'abyss_return',10:'chaos_surfer'};
-function achievementIconSvg(kind){
-  const paths={
-    flame:'<path d="M32 8c8 8 11 16 8 25-2 6-7 10-8 19-1-8-8-10-9-18-2-9 4-17 9-26Z"/><path d="M32 31c4 5 5 9 0 17-5-7-4-12 0-17Z" class="fill"/>',
-    orbit:'<ellipse cx="32" cy="32" rx="25" ry="12" transform="rotate(-25 32 32)"/><circle cx="32" cy="32" r="7"/><circle cx="53" cy="19" r="4" class="fill"/>',
-    satellite:'<rect x="25" y="22" width="14" height="20" rx="3"/><path d="M25 26H8v12h17M39 26h17v12H39M12 26v12M52 26v12M32 15v7M28 15h8"/>',
-    chute:'<path d="M9 29a23 19 0 0 1 46 0c-7-4-12-4-18 0-4-4-7-4-11 0-6-4-11-4-17 0Z"/><path d="m10 29 18 24m26-24L36 53M26 29l5 24m7-24-5 24M27 53h10"/>',
-    home:'<circle cx="32" cy="34" r="20"/><path d="M15 30c8 1 8-8 16-6 6 2 5 8 12 8 4 0 7 3 8 7M22 48c4-5 3-10-2-13M51 13c-7 0-12 4-15 10"/><path d="m46 8 6 5-7 4"/>',
-    dock:'<path d="M8 20h16v9h8v6h-8v9H8M56 20H40v9h-8v6h8v9h16"/><path d="M5 27v10M59 27v10"/>',
-    moon:'<path d="M43 10a22 22 0 1 0 9 38A19 19 0 0 1 43 10Z"/><path d="m22 43 8 4 8-4M30 47v8M25 55h10"/>',
-    sling:'<path d="M13 47c3-24 16-35 36-28"/><path d="m43 10 8 9-11 5"/><circle cx="25" cy="35" r="8"/><path d="M38 49c7-1 12-5 15-11"/>',
-    balance:'<path d="M32 11v41M16 19h32M12 52h40"/><path d="m18 20-9 19h18L18 20Zm28 0-9 19h18L46 20Z"/>',
-    asteroid:'<path d="m15 22 8-10 15-2 11 8 5 14-6 15-13 7-15-5-9-13 4-14Z"/><circle cx="28" cy="27" r="5"/><circle cx="42" cy="39" r="4"/><path d="M7 53 20 40m-12 4-1 9 9-1"/>',
-    binary:'<circle cx="22" cy="31" r="11"/><circle cx="45" cy="27" r="9"/><path d="M22 13V7M22 55v-6M4 31h6M34 31h5M45 12V7M45 48v-6M56 27h5"/>',
-    abyss:'<circle cx="32" cy="32" r="12" class="fill"/><ellipse cx="32" cy="32" rx="27" ry="10" transform="rotate(-12 32 32)"/><path d="M9 23c10-13 36-17 47-2M8 42c11 10 35 14 48 1"/>',
-    chaos:'<ellipse cx="24" cy="30" rx="20" ry="9" transform="rotate(35 24 30)"/><ellipse cx="40" cy="30" rx="20" ry="9" transform="rotate(-35 40 30)"/><ellipse cx="32" cy="38" rx="20" ry="9" transform="rotate(90 32 38)"/><circle cx="20" cy="20" r="3" class="fill"/><circle cx="45" cy="23" r="3" class="fill"/><circle cx="31" cy="49" r="3" class="fill"/>',
-    bolt:'<path d="M36 6 16 35h14l-3 23 21-32H34l2-20Z" class="fill"/>',
-    star:'<path d="m32 7 7 16 18 2-14 12 4 18-15-9-15 9 4-18L7 25l18-2 7-16Z"/>',
-    crown:'<path d="m9 19 12 10 11-18 11 18 12-10-5 31H14L9 19Z"/><path d="M15 42h34M20 50v5m12-5v5m12-5v5"/>'
-  };
-  return `<svg viewBox="0 0 64 64" aria-hidden="true">${paths[kind]||paths.star}</svg>`;
-}
-function achievementBadgeMarkup(item,locked=false){
-  return `<div class="medal${locked?' is-locked':''}" style="--badge-accent:${item.accent};--badge-accent2:${item.accent2}"><span class="medal-ribbon left"></span><span class="medal-ribbon right"></span><span class="medal-disk"><span class="medal-core">${locked?'':achievementIconSvg(item.icon)}</span></span></div>`;
-}
-function loadAchievementState(){try{const saved=JSON.parse(localStorage.getItem(ACHIEVEMENT_KEY)||'{}');return saved&&typeof saved==='object'?saved:{}}catch(_){return{}}}
-let achievementState=loadAchievementState(),achievementCollectionOpen=false,achievementToastQueue=[],achievementToastTimer=null,achievementFlightCheckT=0;
-function saveAchievementState(){try{localStorage.setItem(ACHIEVEMENT_KEY,JSON.stringify(achievementState));}catch(_){}}
-function achievementUnlocked(id){return !!achievementState[id];}
-function unlockAchievement(id,{silent=false}={}){
-  const item=ACHIEVEMENTS.find(a=>a.id===id);if(!item||achievementUnlocked(id))return false;
-  achievementState[id]={unlockedAt:new Date().toISOString()};saveAchievementState();updateAchievementCount();
-  if(achievementCollectionOpen)renderAchievements();
-  if(!silent)queueAchievementToast(item);
-  return true;
-}
-function updateAchievementCount(){const el=document.getElementById('achievementCount'),count=ACHIEVEMENTS.filter(a=>achievementUnlocked(a.id)).length;if(el)el.textContent=`${count}/${ACHIEVEMENTS.length}`;const summary=document.getElementById('achievementSummary');if(summary)summary.textContent=`已解锁 ${count} / ${ACHIEVEMENTS.length} · 点击勋章查看收藏吐槽`;}
-function renderAchievements(){
-  const grid=document.getElementById('achievementGrid');if(!grid)return;grid.replaceChildren();
-  for(const item of ACHIEVEMENTS){const unlocked=achievementUnlocked(item.id),card=document.createElement('button');card.type='button';card.className='achievement-card'+(unlocked?'':' is-locked');card.style.setProperty('--badge-accent',item.accent);card.style.setProperty('--badge-accent2',item.accent2);card.setAttribute('aria-label',`${item.title}，${unlocked?'已解锁':'未解锁'}`);card.innerHTML=achievementBadgeMarkup(item,!unlocked)+`<div class="achievement-state">${unlocked?'✓ 已解锁':'○ 尚未解锁'}</div><h2>${item.title}</h2><p class="achievement-method ${unlocked?'':'achievement-hint'}">${unlocked?'点击查看勋章吐槽':'解锁方法：'+item.method}</p>`;card.addEventListener('click',()=>openAchievementDetail(item.id));grid.appendChild(card);}
-  updateAchievementCount();
-}
-function openAchievementCollection(){achievementCollectionOpen=true;paused=true;closeAchievementDetail();renderAchievements();document.getElementById('achievementCollection').classList.add('is-visible');}
-function closeAchievementCollection(){achievementCollectionOpen=false;closeAchievementDetail();document.getElementById('achievementCollection').classList.remove('is-visible');}
-function openAchievementDetail(id){const item=ACHIEVEMENTS.find(a=>a.id===id);if(!item)return;const unlocked=achievementUnlocked(id);document.getElementById('achievementDetailBadge').innerHTML=achievementBadgeMarkup(item,!unlocked);document.getElementById('achievementDetailTitle').textContent=item.title;const state=achievementState[id],date=state?.unlockedAt?new Date(state.unlockedAt).toLocaleDateString('zh-CN'):'';document.getElementById('achievementDetailStatus').textContent=unlocked?`已解锁${date?' · '+date:''}`:'尚未解锁';document.getElementById('achievementDetailQuote').textContent=unlocked?'“'+item.joke+'”':'这枚勋章现在还是空的。先给它一个值得吐槽的故事。';document.getElementById('achievementDetailRequirement').textContent=(unlocked?'解锁条件：':'解锁方法：')+item.method;document.getElementById('achievementDetail').classList.add('is-visible');}
-function closeAchievementDetail(){document.getElementById('achievementDetail')?.classList.remove('is-visible');}
-function queueAchievementToast(item){
-  // Headless regression harnesses intentionally provide only a tiny DOM shim.
-  // Keep persistence testable there without pretending the visual toast exists.
-  const toast=typeof document!=='undefined'&&document.getElementById?document.getElementById('achievementToast'):null;
-  if(!toast||!toast.classList||!toast.style||typeof toast.style.setProperty!=='function'||typeof requestAnimationFrame!=='function'||typeof setTimeout!=='function')return;
-  achievementToastQueue.push(item);if(!achievementToastTimer)showNextAchievementToast();
-}
-function showNextAchievementToast(){
-  const toast=document.getElementById('achievementToast'),item=achievementToastQueue.shift();if(!toast||!item){achievementToastTimer=null;return;}
-  toast.style.setProperty('--toast-accent',item.accent);document.getElementById('achievementToastBadge').innerHTML=achievementBadgeMarkup(item,false);document.getElementById('achievementToastName').textContent=item.title;document.getElementById('achievementToastJoke').textContent=item.joke;requestAnimationFrame(()=>toast.classList.add('is-visible'));
-  achievementToastTimer=setTimeout(()=>{toast.classList.remove('is-visible');achievementToastTimer=setTimeout(showNextAchievementToast,450);},3600);
-}
-function syncProgressAchievements(){
-  const progress=loadProgress();let completed=0,hasOrbitHistory=false;
-  for(let i=1;i<=10;i++){if((progress[i]?.stars||0)>0){completed++;unlockAchievement(LEVEL_ACHIEVEMENTS[i],{silent:true});if([1,3,4,5,6,7,8].includes(i))hasOrbitHistory=true;if(i===8)unlockAchievement('orbital_handshake',{silent:true});if((progress[i]?.stars||0)>=3)unlockAchievement('challenge_ace',{silent:true});}}
-  if(hasOrbitHistory)unlockAchievement('first_orbit',{silent:true});if(completed===10)unlockAchievement('tenfold_voyager',{silent:true});updateAchievementCount();
-}
-function loadProgress(){
-  try{
-    const saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
-    return saved&&typeof saved==='object'?saved:{};
-  }catch(_){ return {}; }
-}
-function starText(count){ return '★'.repeat(count)+'☆'.repeat(3-count); }
-function saveLevelResult(levelId,score,earnedStars=1){
-  const progress=loadProgress(), previous=progress[levelId]||{score:0,stars:0};
-  const currentScore=Math.max(0,Math.min(1000,Math.round(score)));
-  const currentStars=Math.max(1,Math.min(3,Math.round(earnedStars)));
-  const bestScore=Math.max(previous.score||0,currentScore),bestStars=Math.max(previous.stars||0,currentStars);
-  progress[levelId]={score:bestScore,stars:bestStars};
-  try{ localStorage.setItem(SAVE_KEY,JSON.stringify(progress)); }catch(_){}
-  if(typeof window!=='undefined'){
-    unlockAchievement(LEVEL_ACHIEVEMENTS[levelId]);
-    if(levelId===8)unlockAchievement('orbital_handshake');
-    if(typeof challengeMode!=='undefined'&&challengeMode&&currentStars>=3)unlockAchievement('challenge_ace');
-    if(Array.from({length:10},(_,i)=>progress[i+1]).every(item=>(item?.stars||0)>0))unlockAchievement('tenfold_voyager');
-  }
-  updateLevelCards();
-  return {score:currentScore,stars:currentStars,bestScore,bestStars};
-}
-function updateLevelCards(){
-  const progress=loadProgress();
-  for(let i=1;i<=10;i++){
-    const result=progress[i]||{score:0,stars:0};
-    const scoreEl=document.querySelector(`[data-level-score="${i}"]`), starsEl=document.querySelector(`[data-level-stars="${i}"]`);
-    if(scoreEl) scoreEl.textContent=result.score||'—';
-    if(starsEl){ starsEl.textContent=starText(result.stars||0); starsEl.setAttribute('aria-label',(result.stars||0)+' 星'); }
-  }
-}
-function challengeLifeEnabled(){ return challengeMode&&(level===2||level===3); }
-function challengeRemainingFuel(){ return Math.max(0,(mission?.fuelBudget||0)-(mission?.fuelUsed||0)); }
-function performanceScore(){
-  const cfg=CHALLENGE_CONFIG[level],timeRatio=Math.max(0,Math.min(1,(cfg.parTime*2-flightT)/cfg.parTime));
-  if(!challengeMode) return Math.round(350+250*timeRatio); // 教学分最高 600，星级固定为一星。
-  const fuelRatio=cfg.fuel>0?Math.max(0,Math.min(1,challengeRemainingFuel()/cfg.fuel)):0;
-  return Math.round(440+300*fuelRatio+260*timeRatio);
-}
-function evaluateStars(bonuses,forcedStars=null){
-  if(!challengeMode) return {stars:1,items:[{ok:true,label:'教学模式完成任务：获得基础星'}],penalty:false};
-  let stars=forcedStars===null?1+bonuses.filter(item=>item.ok).length:forcedStars;
-  const penalty=challengeLifeEnabled()&&mission.lifeExpired;
-  if(penalty) stars=Math.max(1,stars-1);
-  return {stars:Math.max(1,Math.min(3,stars)),items:[{ok:true,label:'完成本关：基础星'},...bonuses],penalty};
-}
-function starBreakdownHtml(starResult){
-  const rows=starResult.items.map(item=>`${item.ok?'✅':'⬜'} ${item.label}`).join('<br>');
-  return rows+(starResult.penalty?'<br><span style="color:#c43d4b">⚠️ 生命维持耗尽：本次扣 1 星</span>':'');
-}
 function updateModePanel(){
   const teaching=document.getElementById('modeTeaching'),challenge=document.getElementById('modeChallenge');
   if(teaching) teaching.classList.toggle('is-selected',!challengeMode);
@@ -1131,7 +798,7 @@ function resetGame(){
   if(retryTimer!==null){ clearTimeout(retryTimer); retryTimer=null; }
   rewindClickAt=0; rewindHistoryIndex=-1;
   paused = false;
-  clearFlightInputs(); velOffset=0;
+  SG_INPUT.clear(); velOffset=0;
   restoreBaseWorld();binary=null;blackHole=null;threeBody=null;timelineCache=null;
   earthAngle = 0;
   if(level===10)configureThreeBodyWorld();
@@ -1238,6 +905,7 @@ function showMsg(emoji,title,text){
   next.style.display = mission && mission.done ? 'inline-block' : 'none';
   next.textContent = level<10 ? '下一关 (L)' : '返回目录 (L)';
   document.getElementById('msg').style.display = 'flex';
+  if(mission&&mission.done&&typeof SG_AUDIO!=='undefined') SG_AUDIO.sfx('success');
 }
 function openBriefing(){
   if(!mission) return;
@@ -1264,8 +932,7 @@ function closeBriefing(){
 function setPrediction(){ showPred=!showPred; syncUI(); }
 function toggleCameraMode(){
   cameraMode=(cameraMode+1)%CAMERA_MODES.length;
-  cameraPointers.clear(); pinchState=null;
-  cam.dragging=false; cam.pointerId=null; cv.classList.remove('is-panning');
+  SG_INPUT.resetCameraGestures();
   mission.toast=cameraMode===0
     ? '视角：跟随飞船｜拖动查看，松手返回'
     : `视角：${level===10?'系统质心静止':'地球静止'}｜拖动后停留`;
@@ -1284,6 +951,11 @@ function cycleAttitude(){
   mission.toast='姿态模式：'+ATT_MODES[attMode]; mission.toastT=1.5; syncUI();
 }
 function cycleDial(){ dialMode=(dialMode+1)%3; mission.toast='表盘模式：'+['世界固定','速度向上','机头向上'][dialMode]; mission.toastT=1.5; syncUI(); }
+function toggleSound(){
+  const enabled=SG_AUDIO.toggle();
+  if(mission){mission.toast=enabled?'🔊 音效已开启':'🔇 音效已关闭';mission.toastT=1.8;}
+  syncUI();
+}
 function toggleGuide(){
   mission.hintsHidden=!mission.hintsHidden;
   mission.toast=mission.hintsHidden?'已隐藏任务提示与示范影子':'任务提示与示范影子已显示'; mission.toastT=2;
@@ -1304,7 +976,7 @@ function setChallengeMode(enabled){
 function toggleAssist(){
   setChallengeMode(!challengeMode);
 }
-function togglePause(){ paused=!paused; clearFlightInputs(); syncUI(); }
+function togglePause(){ paused=!paused; SG_INPUT.clear(); syncUI(); }
 function performanceReport(){
   const p=SG_PERF.snapshot(),fmt=item=>`${item.average.toFixed(1)}/${item.peak.toFixed(1)}ms`;
   return [
@@ -1383,12 +1055,13 @@ function syncUI(){
   const briefingOpen=document.getElementById('briefing').classList.contains('is-visible');
   document.getElementById('pauseMenu').classList.toggle('is-visible',paused&&!levelSelectOpen&&!briefingOpen);
   const menuPrediction=document.getElementById('menuPrediction'), menuAttitude=document.getElementById('menuAttitude');
-  const menuRadar=document.getElementById('menuRadar'), menuDial=document.getElementById('menuDial'), menuGuide=document.getElementById('menuGuide'), menuAssist=document.getElementById('menuAssist');
+  const menuRadar=document.getElementById('menuRadar'), menuDial=document.getElementById('menuDial'), menuGuide=document.getElementById('menuGuide'), menuAssist=document.getElementById('menuAssist'),menuSound=document.getElementById('menuSound');
   if(menuPrediction){ menuPrediction.textContent='轨迹预测：'+(showPred?'开启':'关闭'); menuPrediction.classList.toggle('is-on',showPred); }
   if(menuRadar) menuRadar.textContent='小地图：'+RADAR_MODES[radarMode];
   if(menuAttitude) menuAttitude.textContent='姿态：'+ATT_MODES[attMode];
   if(menuDial) menuDial.textContent='表盘：'+['世界固定','速度向上','机头向上'][dialMode];
   if(menuGuide&&mission){ menuGuide.textContent='新手指引：'+(mission.hintsHidden?'关闭':'开启'); menuGuide.classList.toggle('is-on',!mission.hintsHidden); }
+  if(menuSound){const audio=SG_AUDIO.status();menuSound.textContent=audio.supported?(audio.enabled?'🔊 音效：开启':'🔇 音效：关闭'):'🔇 此浏览器不支持音效';menuSound.classList.toggle('is-on',audio.enabled&&audio.supported);}
   if(menuAssist&&mission){ menuAssist.textContent=challengeMode?'⚠ 模式：挑战（有限燃料）':'🎓 模式：教学（无限燃料）'; menuAssist.classList.toggle('is-on',challengeMode); }
   const modeBadge=document.getElementById('modeBadge');
   if(modeBadge&&mission){
@@ -1527,36 +1200,12 @@ function killCrew(reason){
   rocket.crewDead = true; rocket.deadReason = reason;
 }
 
-// 评分：剩余燃料越多越好，耗时越短越好；船员死亡/生命耗尽大幅降档
-function calcScore(){
-  const fuelScore = rocket.fuel * 5;                                   // 0~500
-  const timeScore = Math.max(0, 500 - flightT);                        // 越快越高
-  let score = fuelScore + timeScore;
-  let grade, note;
-  if(rocket.crewDead){
-    score *= 0.2; grade='D';
-    note = '⚰️ ' + rocket.deadReason + '——任务失败：货物到了，人没了';
-  }else if(score>=800){ grade='S'; note='教科书级的完美飞行！'; }
-  else if(score>=650){ grade='A'; note='出色的航行！'; }
-  else if(score>=450){ grade='B'; note='任务完成，还有优化空间'; }
-  else { grade='C'; note='勉强抵达，燃料和时间都很惊险'; }
-  return {score:Math.round(score), grade, note,
-    fuel:rocket.fuel.toFixed(0), time:flightT.toFixed(1),
-    maxG:(rocket.maxG/G_REF).toFixed(1)};
-}
-function resultLine(result){
-  const best=(result.bestScore>result.score||result.bestStars>result.stars)?`<span style="color:#888">历史最佳 ${result.bestScore} 分 · ${starText(result.bestStars)}</span><br>`:'';
-  return `本次得分 <b style="font-size:24px">${result.score}</b> · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br>${best}`;
-}
-function performanceDetail(){
-  if(!challengeMode) return `教学模式 · 无限燃料 · 时间 ${flightT.toFixed(1)}s（教学模式最高 600 分）`;
-  return `挑战模式 · 剩余燃料 ${challengeRemainingFuel().toFixed(1)} / ${mission.fuelBudget}% · 时间 ${flightT.toFixed(1)}s`;
-}
 
 function finishDocking(){
   if((level!==3&&level!==8)||!station||mission.done) return;
   const metrics=stationMetrics();
   station.docked=true; mission.done=true; state='complete';
+  if(typeof SG_AUDIO!=='undefined') SG_AUDIO.sfx('dock');
   rocket.x=station.x; rocket.y=station.y; rocket.vx=station.vx; rocket.vy=station.vy; rocket.a=station.a;
   if(level===8){
     const remaining=challengeRemainingFuel(),starResult=evaluateStars([
@@ -1590,189 +1239,6 @@ for(let i=0;i<(lowPowerMode?70:260);i++){
     r:Math.random()*1.8+0.5, tw:Math.random()*TAU, c:['#ffffff','#ffe9a8','#a8d8ff'][i%3] });
 }
 
-addEventListener('keydown', e=>{
-  if(achievementCollectionOpen){if(e.code==='Escape'){closeAchievementDetail();closeAchievementCollection();}e.preventDefault();return;}
-  keys[e.code]=true;
-  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
-  if(e.repeat && ['KeyR','KeyT','KeyK','KeyB','KeyV','KeyH','KeyM','KeyL','KeyC','KeyP'].includes(e.code)) return;
-  if(e.code==='KeyR') restartCurrent(e.shiftKey);
-  if(e.code==='KeyT') setPrediction();
-  if(e.code==='KeyK') toggleCameraMode();
-  if(e.code==='KeyB') cycleRadar();
-  if(e.code==='KeyV') cycleDial();
-  if(e.code==='KeyH') toggleGuide();
-  if(e.code==='KeyM') toggleAssist();
-  if(e.code==='KeyE') tryMissionAction();
-  if(e.code==='KeyL') mission&&mission.done?nextLevel():openLevelSelect();
-  if(e.code==='KeyC') cycleAttitude();
-  if(e.code==='KeyP') togglePause();
-});
-addEventListener('keyup', e=> keys[e.code]=false);
-const holdResetters=[];
-function clearFlightInputs(){
-  keys['Space']=keys['KeyA']=keys['KeyD']=keys['KeyW']=keys['ArrowUp']=keys['ArrowLeft']=keys['ArrowRight']=false;
-  holdResetters.forEach(reset=>reset());
-}
-addEventListener('blur',clearFlightInputs);
-document.addEventListener('visibilitychange',()=>{ if(document.hidden) clearFlightInputs(); });
-addEventListener('wheel', e=>{ cam.zoom = Math.min(6, Math.max(0.02, cam.zoom * (e.deltaY>0?0.9:1.12))); }, {passive:true});
-
-document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',()=>{
-  const action=btn.dataset.action;
-  if(action==='prediction') setPrediction();
-  else if(action==='camera') toggleCameraMode();
-  else if(action==='radar') cycleRadar();
-  else if(action==='attitude') cycleAttitude();
-  else if(action==='dial') cycleDial();
-  else if(action==='guide') toggleGuide();
-  else if(action==='briefing') openBriefing();
-  else if(action==='assist') toggleAssist();
-  else if(action==='level') openLevelSelect();
-  else if(action==='rewind') rewindStage();
-  else if(action==='restart') resetGame();
-  else if(action==='pause') togglePause();
-  else if(action==='mission') tryMissionAction();
-}));
-document.querySelectorAll('[data-menu-action]').forEach(btn=>btn.addEventListener('click',()=>{
-  const action=btn.dataset.menuAction;
-  if(action==='resume') togglePause();
-  else if(action==='prediction') setPrediction();
-  else if(action==='radar') cycleRadar();
-  else if(action==='attitude') cycleAttitude();
-  else if(action==='dial') cycleDial();
-  else if(action==='guide') toggleGuide();
-  else if(action==='briefing') openBriefing();
-  else if(action==='assist') toggleAssist();
-    else if(action==='restart'){ paused=false; resetGame(); }
-    else if(action==='level'){ openLevelSelect(); }
-    else if(action==='copyperf'){ copyPerformanceReport(); }
-  syncUI();
-}));
-document.getElementById('pauseMenu').addEventListener('click',e=>{
-  if(e.target===e.currentTarget&&paused) togglePause();
-});
-document.querySelectorAll('[data-level-card]').forEach(card=>{
-  const launch=()=>startLevel(card.dataset.levelCard);
-  card.addEventListener('keydown',e=>{ if(e.target===card&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); launch(); } });
-});
-// 任务目录：触屏使用原生滑动；鼠标按住拖动，竖屏走纵向、横屏走横向。
-const levelGrid=document.querySelector('.level-grid');
-let levelDrag=null, suppressLevelClick=false;
-levelGrid.addEventListener('pointerdown',e=>{
-  if(e.pointerType!=='mouse'||e.button!==0) return;
-  const vertical=matchMedia('(orientation: portrait)').matches;
-  levelDrag={id:e.pointerId,x:e.clientX,y:e.clientY,scrollLeft:levelGrid.scrollLeft,scrollTop:levelGrid.scrollTop,vertical,moved:false};
-  levelGrid.setPointerCapture(e.pointerId);
-});
-levelGrid.addEventListener('pointermove',e=>{
-  if(!levelDrag||e.pointerId!==levelDrag.id) return;
-  const dx=e.clientX-levelDrag.x,dy=e.clientY-levelDrag.y,delta=levelDrag.vertical?dy:dx;
-  if(!levelDrag.moved&&Math.abs(delta)>6){ levelDrag.moved=true; levelGrid.classList.add('is-dragging'); }
-  if(levelDrag.moved){ e.preventDefault(); if(levelDrag.vertical)levelGrid.scrollTop=levelDrag.scrollTop-dy;else levelGrid.scrollLeft=levelDrag.scrollLeft-dx; }
-});
-function endLevelDrag(e){
-  if(!levelDrag||e.pointerId!==levelDrag.id) return;
-  if(levelDrag.moved){
-    suppressLevelClick=true;
-    requestAnimationFrame(()=>{ suppressLevelClick=false; });
-  }
-  levelDrag=null; levelGrid.classList.remove('is-dragging');
-}
-levelGrid.addEventListener('pointerup',endLevelDrag);
-levelGrid.addEventListener('pointercancel',endLevelDrag);
-levelGrid.addEventListener('lostpointercapture',endLevelDrag);
-levelGrid.addEventListener('click',e=>{
-  if(suppressLevelClick){ e.preventDefault(); e.stopImmediatePropagation(); }
-},true);
-// 指针被目录捕获后 click 的目标可能变成 levelGrid，因此用坐标重新确认玩家点中的卡片。
-levelGrid.addEventListener('click',e=>{
-  if(suppressLevelClick) return;
-  const direct=e.target.closest&&e.target.closest('[data-level-card]');
-  const hit=document.elementFromPoint(e.clientX,e.clientY);
-  const card=direct||(hit&&hit.closest&&hit.closest('[data-level-card]'));
-  if(card) startLevel(card.dataset.levelCard);
-});
-document.getElementById('achievementDetail').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAchievementDetail();});
-document.getElementById('achievementCollection').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAchievementCollection();});
-document.querySelectorAll('[data-hold]').forEach(btn=>{
-  const code=btn.dataset.hold;
-  const activePointers=new Set();
-  const release=e=>{
-    activePointers.delete(e.pointerId);
-    keys[code]=activePointers.size>0;
-    btn.classList.toggle('is-pressed',activePointers.size>0);
-  };
-  btn.addEventListener('pointerdown',e=>{
-    e.preventDefault(); e.stopPropagation();
-    activePointers.add(e.pointerId); btn.setPointerCapture(e.pointerId);
-    keys[code]=true; btn.classList.add('is-pressed');
-  });
-  btn.addEventListener('pointerup',release); btn.addEventListener('pointercancel',release); btn.addEventListener('lostpointercapture',release);
-  // 捕获阶段先释放输入，避免繁重 Canvas 帧让按钮自己的 pointerup 排到下一次推进之后。
-  addEventListener('pointerup',release,true); addEventListener('pointercancel',release,true);
-  holdResetters.push(()=>{ activePointers.clear(); keys[code]=false; btn.classList.remove('is-pressed'); });
-});
-cam = {x:0,y:0,zoom:1.2,dragging:false,pointerId:null,startX:0,startY:0,startCamX:0,startCamY:0};
-const cameraPointers=new Map();
-let pinchState=null;
-function setCameraDragging(active){
-  cam.dragging=active;
-  cv.classList.toggle('is-panning',active);
-}
-function beginSingleCameraPan(point){
-  pinchState=null; setCameraDragging(true);
-  cam.startX=point.x; cam.startY=point.y; cam.startCamX=cam.x; cam.startCamY=cam.y;
-}
-function beginCameraPinch(){
-  const pts=[...cameraPointers.values()].slice(0,2);
-  if(pts.length<2) return;
-  const midX=(pts[0].x+pts[1].x)/2, midY=(pts[0].y+pts[1].y)/2;
-  pinchState={
-    distance:Math.max(8,Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y)),
-    zoom:cam.zoom,
-    worldX:cam.x+(midX-W/2)/cam.zoom,
-    worldY:cam.y+(midY-H/2)/cam.zoom
-  };
-  setCameraDragging(true);
-}
-cv.addEventListener('pointerdown',e=>{
-  if(e.pointerType==='mouse' && e.button!==0) return;
-  e.preventDefault();
-  const point={x:e.clientX,y:e.clientY};
-  const inBox=box=>box&&point.x>=box.x&&point.x<=box.x+box.w&&point.y>=box.y&&point.y<=box.y+box.h;
-  if(!paused&&inBox(attitudeHitBox)){ cycleDial(); return; }
-  if(!paused&&inBox(radarHitBox)){ cycleRadar(); return; }
-  if(!paused&&inBox(telemetryHitBox)){telemetryExpanded=!telemetryExpanded;if(mission){mission.toast=telemetryExpanded?'遥测已展开':'遥测已精简';mission.toastT=1.25;}return;}
-  cameraPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  cv.setPointerCapture(e.pointerId);
-  if(cameraPointers.size===1) beginSingleCameraPan(cameraPointers.get(e.pointerId));
-  else if(cameraPointers.size===2) beginCameraPinch();
-});
-cv.addEventListener('pointermove',e=>{
-  if(!cameraPointers.has(e.pointerId)) return;
-  cameraPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(cameraPointers.size>=2 && pinchState){
-    const pts=[...cameraPointers.values()].slice(0,2);
-    const midX=(pts[0].x+pts[1].x)/2, midY=(pts[0].y+pts[1].y)/2;
-    const distance=Math.max(8,Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y));
-    cam.zoom=Math.min(6,Math.max(0.02,pinchState.zoom*distance/pinchState.distance));
-    cam.x=pinchState.worldX-(midX-W/2)/cam.zoom;
-    cam.y=pinchState.worldY-(midY-H/2)/cam.zoom;
-  }else if(cameraPointers.size===1){
-    cam.x=cam.startCamX-(e.clientX-cam.startX)/cam.zoom;
-    cam.y=cam.startCamY-(e.clientY-cam.startY)/cam.zoom;
-  }
-});
-function endCameraPointer(e){
-  if(!cameraPointers.has(e.pointerId)) return;
-  cameraPointers.delete(e.pointerId);
-  if(cameraPointers.size>=2) beginCameraPinch();
-  else if(cameraPointers.size===1) beginSingleCameraPan([...cameraPointers.values()][0]);
-  else{ pinchState=null; setCameraDragging(false); }
-}
-cv.addEventListener('pointerup',endCameraPointer);
-cv.addEventListener('pointercancel',endCameraPointer);
-cv.addEventListener('lostpointercapture',endCameraPointer);
 
 // ---------- 更新 ----------
 let particles = [], exhaustAccumulator=0, trailSampleT=0;
@@ -1783,6 +1249,7 @@ function boom(x,y){
       c:['#ff5252','#ffb142','#fff3b0','#ff8f66'][i%4]});
   }
   shake = 14;
+  if(typeof SG_AUDIO!=='undefined') SG_AUDIO.sfx('explosion');
 }
 function asteroidContactCheck(){
   if(level!==7||!asteroid||!asteroid.alive||mission.asteroidContact||rocket.asteroidGrace>0)return false;
@@ -1984,6 +1451,7 @@ function tryDeploy(){
   mission.satReleased = true; mission.done = true;
   mission.satellite={x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,releaseAngle:Math.atan2(rocket.y-EARTH.y,rocket.x-EARTH.x)};
   state='complete';
+  if(typeof SG_AUDIO!=='undefined') SG_AUDIO.sfx('deploy');
   syncUI();
   const remaining=challengeRemainingFuel(),starResult=evaluateStars([
     {ok:inSlot,label:'在绿色目标经度内释放'},
@@ -2004,6 +1472,7 @@ function tryOpenChute(){
   const surfaceV=surfaceVelocity(EARTH,dx,dy),groundVx=rocket.vx-surfaceV.vx,groundVy=rocket.vy-surfaceV.vy;
   mission.usedChute=true;
   rocket.chute=true; rocket.chuteFlowX=groundVx; rocket.chuteFlowY=groundVy;
+  if(typeof SG_AUDIO!=='undefined') SG_AUDIO.sfx('chute');
   if(typeof unlockAchievement==='function')unlockAchievement('silk_wings');
   rocket.chuteAngle=chuteCanopyAngle(groundVx,groundVy,dx/d,dy/d);
   if(mission.stage<2) unlockFinalStage(2,'🪂 降落伞已打开！控制姿态并准备缓冲');
@@ -2021,6 +1490,7 @@ function tryDock(){
 }
 function toggleAsteroidAnchor(){
   if(level!==7||!asteroid||!mission.asteroidContact||mission.done||state!=='fly')return;
+  const wasAnchored=mission.asteroidAnchored;
   const ux=Math.cos(mission.asteroidMountAngle),uy=Math.sin(mission.asteroidMountAngle);
   if(mission.asteroidAnchored){
     mission.asteroidAnchored=false;mission.asteroidContact=false;
@@ -2035,6 +1505,7 @@ function toggleAsteroidAnchor(){
     if(mission.stage<3)unlockFinalStage(3,'⚓ 已锚定并翻转！左右调铰链，推进改变小行星轨道');
     else{mission.toast='⚓ 已锚定｜机头向下，发动机向外';mission.toastT=3;}
   }
+  if(typeof SG_AUDIO!=='undefined') SG_AUDIO.sfx(wasAnchored?'release':'anchor');
   syncUI();
 }
 function finishLagrange(m=nearestLagrangeMetrics()){
@@ -2064,7 +1535,7 @@ function tryMissionAction(){
 
 function freezeAtHorizon(){
   if(level!==9||!blackHole||blackHole.frozen)return;
-  blackHole.frozen=true;mission.blackHoleFrozen=true;state='horizon';clearFlightInputs();
+  blackHole.frozen=true;mission.blackHoleFrozen=true;state='horizon';SG_INPUT.clear();
   const m=blackHoleMetrics(),d=Math.max(1,Math.hypot(m.dx,m.dy));rocket.x=EARTH.x+m.dx/d*(BH_HORIZON+4);rocket.y=EARTH.y+m.dy/d*(BH_HORIZON+4);
   mission.toast='';syncUI();
   showMsg('⌛','最后一束光停在了视界上',
@@ -2089,7 +1560,7 @@ function finishBlackHoleEscape(m=blackHoleMetrics()){
 }
 function failBlackHoleEscape(m=blackHoleMetrics()){
   if(level!==9||mission.done||mission.blackHoleExitFailed)return;
-  mission.blackHoleExitFailed=true;state='failed';clearFlightInputs();syncUI();
+  mission.blackHoleExitFailed=true;state='failed';SG_INPUT.clear();syncUI();
   const deficit=Math.abs(Math.min(0,m.energy)),apo=m.energy<0?-BH_MU/m.energy:Infinity;
   showMsg('↩️','穿过救援圈，但还会掉回来',
     `<b style="font-size:19px">飞船到了绿色圈外，却没有获得真正的逃逸能量。</b><br><br>`+
@@ -4133,6 +3604,7 @@ function drawBlackHoleStarfield(t){
 
 function draw(){
   const worldDrawStarted=performance.now();
+  if(typeof SG_AUDIO!=='undefined') SG_AUDIO.setEngine(!paused&&state==='fly'&&rocket&&rocket.alive&&rocket.thrusting,rocket&&rocket.thrustPower);
   ctx=worldCtx;
   ctx.setTransform(DPR,0,0,DPR,0,0);
   updateActionCue();
@@ -4141,8 +3613,7 @@ function draw(){
     if(level===10){cam.zoom=W<760?.16:.3;cam.x=rocket.x;cam.y=rocket.y+((W<760&&H>650)?(H/2-235)/cam.zoom:0);}
     else if(level===9){cam.zoom=W<760?.17:.48;cam.x=rocket.x;cam.y=rocket.y+((W<760&&H>650)?(H/2-235)/cam.zoom:0);}
     else{cam.zoom=1.1;cam.x=rocket.x;cam.y=rocket.y;}
-    cameraPointers.clear(); pinchState=null;
-    cam.dragging=false; cam.pointerId=null; cv.classList.remove('is-panning');
+    SG_INPUT.resetCameraGestures();
     camInit=false;
   }
   const sx = shake? (Math.random()-0.5)*shake : 0, sy = shake? (Math.random()-0.5)*shake : 0;
@@ -4631,6 +4102,7 @@ document.documentElement.dataset.physicsChecks=JSON.stringify(window.__SPACEGAME
 if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
   addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }
+SG_INPUT.install();
 resetGame();
 openLevelSelect(true);
 requestAnimationFrame(loop);

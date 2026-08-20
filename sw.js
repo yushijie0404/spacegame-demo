@@ -1,5 +1,5 @@
-const CACHE_NAME='spacegame-v1.6.1';
-const APP_SHELL=['./','./index.html','./runtime-performance.js','./manifest.webmanifest','./icons/app-icon.svg','./icons/app-icon-180.png','./icons/app-icon-192.png','./icons/app-icon-512.png'];
+const CACHE_NAME='spacegame-v1.10.0';
+const APP_SHELL=['./','./index.html','./runtime-performance.js','./game-audio.js','./game-missions.js','./game-progression.js','./game-achievements.js','./game-input.js','./manifest.webmanifest','./icons/app-icon.svg','./icons/app-icon-180.png','./icons/app-icon-192.png','./icons/app-icon-512.png'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL)));
