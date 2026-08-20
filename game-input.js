@@ -40,7 +40,7 @@
 
   const ACTION_HANDLERS={
     prediction:()=>setPrediction(),camera:()=>toggleCameraMode(),radar:()=>cycleRadar(),attitude:()=>cycleAttitude(),
-    dial:()=>cycleDial(),guide:()=>toggleGuide(),briefing:()=>openBriefing(),assist:()=>toggleAssist(),sound:()=>toggleSound(),
+    dial:()=>cycleDial(),guide:()=>toggleGuide(),briefing:()=>openBriefing(),assist:()=>toggleAssist(),sound:()=>toggleSound(),orientation:()=>cycleScreenOrientation(),
     level:()=>openLevelSelect(),rewind:()=>rewindStage(),restart:()=>resetGame(),pause:()=>togglePause(),
     mission:()=>tryMissionAction(),copyperf:()=>copyPerformanceReport()
   };
