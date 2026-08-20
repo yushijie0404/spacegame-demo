@@ -258,32 +258,62 @@ function updateMissionL9(dt){
 function finishThreeBodyCrossing(m=threeBodyMetrics()){
   if(level!==10||mission.done)return;
   mission.done=true;state='complete';
-  const remaining=challengeRemainingFuel(),safe=!mission.threeDangerViolated;
+  const remaining=challengeRemainingFuel(),safe=!mission.threeDangerViolated,rescuedCount=(mission.threeRescued||[]).filter(Boolean).length,destroyedCount=(mission.threeDestroyed||[]).filter(Boolean).length;
   const starResult=evaluateStars([
     {ok:safe,label:'全程没有进入红色潮汐危险圈'},
     {ok:remaining>=CHALLENGE_CONFIG[10].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[10].fuelStar}%`}
   ]);
   const result=saveLevelResult(10,performanceScore(),starResult.stars),seed=mission.threeSeed.toString(16).toUpperCase().padStart(8,'0');
-  syncUI();showMsg('🆘','三体救援成功！',
-    resultLine(result)+`本局种子 <b>${seed}</b> · 最近恒星净空 ${mission.threeMinClearance.toFixed(0)} u<br>`+
+  syncUI();showMsg(destroyedCount?'🚀':'🆘',destroyedCount?'幸存者撤离完成！':'三体救援成功！',
+    resultLine(result)+`成功营救 ${rescuedCount} 艘 · 损失 ${destroyedCount} 艘 · 本局种子 <b>${seed}</b><br>最近恒星净空 ${mission.threeMinClearance.toFixed(0)} u<br>`+
     `${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
     `<span style="color:#888">这条路线只属于这一局。重新开始会扰动三颗恒星的初始条件，时间线影子也会产生新的分叉。</span>`);
+}
+function failThreeBodyRescue(){
+  if(level!==10||mission.done||state==='dead')return;
+  state='dead';mission.failed=true;syncUI();
+  showMsg('☀️','两艘求救飞船均已坠毁',`三颗恒星的引力吞没了最后的求救信号。<br><span style="color:#888">按 R 回到本阶段，或在暂停菜单重新开始整关。</span>`);
+}
+function beginThreeBodyEscapePhase(message){
+  if(mission.stage<2){mission.stage=2;saveCheckpoint();}
+  mission.toast=message;mission.toastT=4;
 }
 function updateMissionL10(dt){
   if(!threeBody)return;
   const m=threeBodyMetrics();
   mission.threeMinClearance=Math.min(mission.threeMinClearance,m.clearance);
   if(m.clearance<THREE_DANGER_PAD)mission.threeDangerViolated=true;
+  if(!Array.isArray(mission.threeDestroyed))mission.threeDestroyed=[false,false];
+  for(let index=0;index<2;index++){
+    const lost=isThreeBodyShipDestroyed(index);
+    if(lost&&!mission.threeDestroyed[index]){
+      mission.threeDestroyed[index]=true;
+      mission.toast=`☀️ 求救飞船 ${index?'B':'A'} 已坠入恒星｜另一艘仍可营救`;mission.toastT=5;
+    }
+  }
+  const destroyedCount=mission.threeDestroyed.filter(Boolean).length,rescuedCount=(mission.threeRescued||[]).filter(Boolean).length;
+  if(destroyedCount>=2){failThreeBodyRescue();return;}
   if(mission.stage<2){
-    const targetIndex=mission.stage,gate=threeBodyGate(targetIndex),distance=Math.hypot(rocket.x-gate.x,rocket.y-gate.y);
-    const relSpeed=Math.hypot(rocket.vx-gate.vx,rocket.vy-gate.vy),shipName=targetIndex===0?'A':'B';
-    mission.dynHint=distance<=THREE_GATE_R&&relSpeed>THREE_RESCUE_SPEED
-      ? `已靠近求救飞船 ${shipName}｜轻点反推，速度差 ${relSpeed.toFixed(0)}/${THREE_RESCUE_SPEED}`
-      : `靠近求救飞船 ${shipName}｜距离 ${distance.toFixed(0)}｜速度差 ${relSpeed.toFixed(0)}`;
-    if(distance<=THREE_GATE_R&&relSpeed<=THREE_RESCUE_SPEED){
-      mission.threeGateIndex=targetIndex+1;
+    if(!Array.isArray(mission.threeRescued))mission.threeRescued=[false,false];
+    if(!Array.isArray(mission.threeRescueOrder))mission.threeRescueOrder=[];
+    const candidates=[0,1].filter(index=>!mission.threeRescued[index]&&!mission.threeDestroyed[index]).map(index=>threeBodyRescueMetrics(index));
+    const target=candidates.slice().sort((a,b)=>a.distance-b.distance)[0];
+    if(!target){if(rescuedCount>0)beginThreeBodyEscapePhase('✅ 已救出幸存船员｜现在带他们逃出去');return;}
+    const shipName=target.index===0?'A':'B',choiceText=mission.stage===0?'任选一艘｜':'';
+    mission.dynHint=target.distance<=THREE_GATE_R&&target.relSpeed>THREE_RESCUE_SPEED
+      ? `${choiceText}已靠近 ${shipName}｜轻点反推，速度差 ${target.relSpeed.toFixed(0)}/${THREE_RESCUE_SPEED}`
+      : `${choiceText}最近是 ${shipName}｜距离 ${target.distance.toFixed(0)}｜速度差 ${target.relSpeed.toFixed(0)}`;
+    const rescued=candidates.filter(item=>item.distance<=THREE_GATE_R&&item.relSpeed<=THREE_RESCUE_SPEED).sort((a,b)=>a.distance-b.distance)[0];
+    if(rescued){
+      mission.threeRescued[rescued.index]=true;
+      const rescuedShip=threeBody.rescueShips?.[rescued.index];if(rescuedShip){rescuedShip.rescued=true;rescuedShip.alive=false;}
+      mission.threeRescueOrder.push(rescued.index);
+      mission.threeGateIndex=mission.threeRescueOrder.length;
       advanceStage();
-      mission.toast=targetIndex===0?'✅ 第一批船员获救｜前往求救飞船 B':'✅ 两批船员都已获救｜现在带他们逃出去';
+      const rescuedName=rescued.index===0?'A':'B',remainingName=rescued.index===0?'B':'A';
+      const unresolved=[0,1].filter(index=>!mission.threeRescued[index]&&!mission.threeDestroyed[index]);
+      if(!unresolved.length)beginThreeBodyEscapePhase(mission.threeDestroyed.some(Boolean)?'✅ 幸存船员已获救｜现在带他们逃出去':'✅ 两批船员都已获救｜现在带他们逃出去');
+      else mission.toast=`✅ 求救飞船 ${rescuedName} 的船员已获救｜接着去 ${remainingName}`;
       mission.toastT=4;
     }
     return;

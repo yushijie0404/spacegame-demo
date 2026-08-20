@@ -99,19 +99,49 @@ function drawBinaryZones(){
   }
   ctx.textAlign='left';
 }
-function drawStrandedRescueShip(g,index,active,visited,pulse){
-  const s=1/cam.zoom,angle=Math.atan2(g.vy||0,g.vx||0);
-  ctx.save();ctx.translate(g.x,g.y);ctx.rotate(angle);
-  ctx.globalAlpha=visited?.38:1;
-  // 船体采用空间拖船/太阳能帆板轮廓，和玩家的火箭形象明显区分。
-  ctx.fillStyle=index===0?'#d9edf7':'#f2dfbd';ctx.strokeStyle='#17213c';ctx.lineWidth=1.8*s;
-  ctx.beginPath();ctx.rect(-14*s,-7*s,28*s,14*s);ctx.fill();ctx.stroke();
-  ctx.fillStyle=index===0?'#4cc9f0':'#ff9f43';ctx.beginPath();ctx.arc(9*s,0,5*s,0,TAU);ctx.fill();ctx.stroke();
-  ctx.strokeStyle='#8fc4ff';ctx.lineWidth=4*s;
-  if(index===0){ctx.beginPath();ctx.moveTo(-14*s,-4*s);ctx.lineTo(-30*s,-11*s);ctx.moveTo(-14*s,4*s);ctx.lineTo(-30*s,11*s);ctx.stroke();}
-  else{ctx.beginPath();ctx.moveTo(-14*s,0);ctx.lineTo(-34*s,0);ctx.moveTo(-24*s,-9*s);ctx.lineTo(-24*s,9*s);ctx.stroke();ctx.strokeStyle='#ef476f';ctx.beginPath();ctx.moveTo(-29*s,-8*s);ctx.lineTo(-20*s,8*s);ctx.stroke();}
-  ctx.fillStyle=active?'#ef476f':'#ffd166';ctx.beginPath();ctx.arc(-4*s,-10*s,3.2*s,0,TAU);ctx.fill();
-  if(active){ctx.strokeStyle=`rgba(239,71,111,${.35+.35*pulse})`;ctx.lineWidth=1.5*s;for(let r=9;r<=17;r+=8){ctx.beginPath();ctx.arc(-4*s,-10*s,r*s,-2.7,-.45);ctx.stroke();}}
+function drawRescueSolarPanel(x,y,w,h,s,accent,damaged=false){
+  ctx.fillStyle='#102b54';ctx.strokeStyle=accent;ctx.lineWidth=1.2*s;
+  ctx.beginPath();ctx.rect(x*s,y*s,w*s,h*s);ctx.fill();ctx.stroke();
+  ctx.strokeStyle='rgba(147,213,255,.52)';ctx.lineWidth=.65*s;
+  for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo((x+w*i/4)*s,y*s);ctx.lineTo((x+w*i/4)*s,(y+h)*s);ctx.stroke();}
+  ctx.beginPath();ctx.moveTo(x*s,(y+h/2)*s);ctx.lineTo((x+w)*s,(y+h/2)*s);ctx.stroke();
+  if(damaged){ctx.strokeStyle='#ef476f';ctx.lineWidth=1.5*s;ctx.beginPath();ctx.moveTo((x+w*.25)*s,(y+1)*s);ctx.lineTo((x+w*.6)*s,(y+h-1)*s);ctx.lineTo((x+w*.82)*s,(y+2)*s);ctx.stroke();}
+}
+function drawStrandedRescueShip(g,index,active,visited,destroyed,pulse){
+  // 使用世界尺度而不是固定屏幕像素：远景中约为玩家火箭的 2～3 倍，不再和恒星一样醒目。
+  const s=1.9,angle=Math.atan2(g.vy||0,g.vx||0),accent=index===0?'#4cc9f0':'#ffd166';
+  ctx.save();ctx.translate(g.x,g.y);ctx.rotate(angle);ctx.globalAlpha=visited?.42:1;
+  if(!lowPowerMode&&!visited){ctx.shadowColor=accent;ctx.shadowBlur=10;}
+
+  if(destroyed){
+    ctx.shadowColor='#ef476f';ctx.shadowBlur=8;ctx.strokeStyle='#ef476f';ctx.fillStyle='#5c3240';ctx.lineWidth=1.5/cam.zoom;
+    for(const piece of [[-12,-8,8,4],[3,-5,11,5],[-5,7,9,4]]){ctx.save();ctx.rotate((piece[0]+piece[1])*.08);ctx.fillRect(piece[0]*s,piece[1]*s,piece[2]*s,piece[3]*s);ctx.strokeRect(piece[0]*s,piece[1]*s,piece[2]*s,piece[3]*s);ctx.restore();}
+    ctx.beginPath();ctx.moveTo(-12*s,-12*s);ctx.lineTo(12*s,12*s);ctx.moveTo(12*s,-12*s);ctx.lineTo(-12*s,12*s);ctx.stroke();ctx.restore();return;
+  }
+
+  if(index===0){
+    // A：细长的深空救生艇，双侧太阳翼、驾驶舱和发动机组清晰可辨。
+    ctx.strokeStyle='#7185a8';ctx.lineWidth=2*s;ctx.beginPath();ctx.moveTo(-8*s,-8*s);ctx.lineTo(-8*s,-14*s);ctx.moveTo(-8*s,8*s);ctx.lineTo(-8*s,14*s);ctx.stroke();
+    drawRescueSolarPanel(-19,-23,24,8,s,accent);drawRescueSolarPanel(-19,15,24,8,s,accent);
+    ctx.fillStyle='#dceaf4';ctx.strokeStyle='#17213c';ctx.lineWidth=1.8*s;ctx.beginPath();ctx.moveTo(25*s,0);ctx.lineTo(12*s,-9*s);ctx.lineTo(-17*s,-8*s);ctx.lineTo(-25*s,-4*s);ctx.lineTo(-25*s,4*s);ctx.lineTo(-17*s,8*s);ctx.lineTo(12*s,9*s);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#233553';ctx.beginPath();ctx.rect(-27*s,-7*s,8*s,5*s);ctx.rect(-27*s,2*s,8*s,5*s);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#69d9ff';ctx.beginPath();ctx.ellipse(12*s,0,9*s,5.8*s,0,0,TAU);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(23,33,60,.55)';ctx.lineWidth=1*s;ctx.beginPath();ctx.moveTo(-11*s,-7*s);ctx.lineTo(-11*s,7*s);ctx.moveTo(1*s,-8*s);ctx.lineTo(1*s,8*s);ctx.stroke();
+  }else{
+    // B：宽体工程穿梭机，货舱、折叠翼和受损太阳翼让轮廓与 A 明显不同。
+    ctx.strokeStyle='#7185a8';ctx.lineWidth=2*s;ctx.beginPath();ctx.moveTo(-4*s,-10*s);ctx.lineTo(-4*s,-16*s);ctx.moveTo(-4*s,10*s);ctx.lineTo(-4*s,16*s);ctx.stroke();
+    drawRescueSolarPanel(-16,-25,25,9,s,'#ffb45f',true);drawRescueSolarPanel(-16,16,25,9,s,'#ffb45f');
+    ctx.fillStyle='#ead9b8';ctx.strokeStyle='#2c2540';ctx.lineWidth=1.8*s;ctx.beginPath();ctx.moveTo(24*s,0);ctx.lineTo(13*s,-10*s);ctx.lineTo(-16*s,-11*s);ctx.lineTo(-26*s,-5*s);ctx.lineTo(-26*s,5*s);ctx.lineTo(-16*s,11*s);ctx.lineTo(13*s,10*s);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#39445f';ctx.beginPath();ctx.rect(-29*s,-8*s,9*s,6*s);ctx.rect(-29*s,2*s,9*s,6*s);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#ffad55';ctx.beginPath();ctx.ellipse(13*s,0,8*s,6.5*s,0,0,TAU);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#85745b';roundRect(-13*s,-7*s,13*s,14*s,3*s);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#ffd99a';ctx.lineWidth=1.2*s;ctx.beginPath();ctx.moveTo(-7*s,-6*s);ctx.lineTo(-7*s,6*s);ctx.stroke();
+  }
+
+  ctx.shadowBlur=0;ctx.fillStyle='#17213c';ctx.font=`900 ${8*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(index===0?'A':'B',-4*s,0);
+  ctx.fillStyle=visited?'#5fd068':'#ef476f';ctx.beginPath();ctx.arc(-7*s,-13*s,3.2*s,0,TAU);ctx.fill();
+  if(active&&!visited){ctx.strokeStyle=`rgba(239,71,111,${.36+.36*pulse})`;ctx.lineWidth=1.5*s;for(let r=9;r<=18;r+=9){ctx.beginPath();ctx.arc(-7*s,-13*s,r*s,-2.7,-.45);ctx.stroke();}}
+  if(visited){ctx.strokeStyle='#5fd068';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(0,0,31*s,0,TAU);ctx.stroke();ctx.beginPath();ctx.moveTo(-7*s,0);ctx.lineTo(-2*s,5*s);ctx.lineTo(8*s,-6*s);ctx.stroke();}
   ctx.restore();
 }
 function drawThreeBodyZones(){
@@ -128,14 +158,15 @@ function drawThreeBodyZones(){
   ctx.strokeStyle='rgba(201,156,255,.25)';ctx.lineWidth=3/cam.zoom;ctx.setLineDash([12/cam.zoom,14/cam.zoom]);ctx.beginPath();ctx.arc(center.x,center.y,THREE_CHAOS_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
   ctx.strokeStyle=mission.stage>=2?'rgba(95,208,104,.9)':'rgba(95,208,104,.34)';ctx.lineWidth=5/cam.zoom;ctx.setLineDash([18/cam.zoom,13/cam.zoom]);ctx.beginPath();ctx.arc(center.x,center.y,THREE_ESCAPE_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
   if(W>=760){ctx.fillStyle='rgba(95,208,104,.88)';ctx.font=`900 ${14/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('混沌逃逸边界',center.x,center.y-THREE_ESCAPE_R-17/cam.zoom);}
+  const nearestRescue=nearestUnrescuedThreeBodyShip();
   for(let i=0;i<2;i++){
-    const g=threeBodyGate(i),active=mission.stage===i,visited=mission.stage>i,col=i===0?'76,201,240':'255,209,102';
-    ctx.fillStyle=`rgba(${col},${active ? .14 : visited ? .035 : .065})`;ctx.strokeStyle=`rgba(${col},${active ? pulse : visited ? .24 : .45})`;ctx.lineWidth=(active?5:2.5)/cam.zoom;
+    const g=threeBodyGate(i),visited=isThreeBodyShipRescued(i),destroyed=isThreeBodyShipDestroyed(i),active=!visited&&!destroyed,col=i===0?'76,201,240':'255,209,102',recommended=nearestRescue?.index===i;
+    ctx.fillStyle=destroyed?'rgba(239,71,111,.035)':`rgba(${col},${active ? .10 : .035})`;ctx.strokeStyle=destroyed?'rgba(239,71,111,.55)':`rgba(${col},${active ? pulse : .24})`;ctx.lineWidth=(recommended?4:active?3:2)/cam.zoom;
     ctx.setLineDash([10/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.arc(g.x,g.y,THREE_GATE_R,0,TAU);ctx.fill();ctx.stroke();ctx.setLineDash([]);
-    drawStrandedRescueShip(g,i,active,visited,pulse);
-    ctx.fillStyle=`rgba(${col},${active?1:.58})`;ctx.font=`900 ${(active?15:12)/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(`求救飞船 ${i?'B':'A'}${visited?' · 已营救':''}`,g.x,g.y-THREE_GATE_R-14/cam.zoom);
+    drawStrandedRescueShip(g,i,active,visited,destroyed,pulse);
+    ctx.fillStyle=destroyed?'#ef476f':`rgba(${col},${active?1:.58})`;ctx.font=`900 ${(recommended?15:13)/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(`求救飞船 ${i?'B':'A'}${destroyed?' · 已坠毁':visited?' · 已营救':recommended?' · 最近':''}`,g.x,g.y-THREE_GATE_R-14/cam.zoom);
+    if(active){ctx.strokeStyle=`rgba(${col},${recommended ? .28 : .16})`;ctx.lineWidth=(recommended?1.6:1.1)/cam.zoom;ctx.setLineDash([5/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.moveTo(rocket.x,rocket.y);ctx.lineTo(g.x,g.y);ctx.stroke();ctx.setLineDash([]);}
   }
-  if(mission.stage<2){const g=threeBodyGate(mission.stage);ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1.5/cam.zoom;ctx.setLineDash([5/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.moveTo(rocket.x,rocket.y);ctx.lineTo(g.x,g.y);ctx.stroke();ctx.setLineDash([]);}
   ctx.fillStyle='rgba(255,255,255,.62)';ctx.beginPath();ctx.arc(center.x,center.y,5/cam.zoom,0,TAU);ctx.fill();ctx.textAlign='left';
 }
 function drawBlackHoleZones(){

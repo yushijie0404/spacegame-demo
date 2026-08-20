@@ -63,14 +63,41 @@ function configureThreeBodyWorld(seed=nextThreeBodySeed()){
     const plus=Math.hypot(mx+nx*THREE_GATE_OFFSET-BODIES[third].x,my+ny*THREE_GATE_OFFSET-BODIES[third].y),minus=Math.hypot(mx-nx*THREE_GATE_OFFSET-BODIES[third].x,my-ny*THREE_GATE_OFFSET-BODIES[third].y);
     sides.push(Math.abs(plus-minus)<120?(rnd()<.5?1:-1):(plus>minus?1:-1));
   }
-  threeBody={seed,time:0,pairs,sides,starTrails:[[],[],[]],trailT:0,maxSplit:0};
+  threeBody={seed,time:0,pairs,sides,rescueShips:[],starTrails:[[],[],[]],trailT:0,maxSplit:0};
+  threeBody.rescueShips=[0,1].map(index=>{
+    const g=threeBodyGateGeometry(index),center=threeBodyBarycenter(),dx=g.x-center.x,dy=g.y-center.y,d=Math.max(1,Math.hypot(dx,dy)),ux=dx/d,uy=dy/d;
+    const radius=THREE_RESCUE_ORBIT_R+(rnd()-.5)*80,sign=index?1:-1,orbitV=Math.sqrt(THREE_MU*3*THREE_RESCUE_GRAVITY/radius),drift=(rnd()-.5)*4;
+    return {...g,x:center.x+ux*radius,y:center.y+uy*radius,vx:center.vx-uy*orbitV*sign+ux*drift,vy:center.vy+ux*orbitV*sign+uy*drift,alive:true,rescued:false,destroyed:false,crashStar:'',index};
+  });
   timelineCache=null;
 }
-function threeBodyGate(index,bodies=BODIES){
+function threeBodyGateGeometry(index,bodies=BODIES){
   if(!threeBody)return {x:0,y:0,vx:0,vy:0,index};
   const pair=threeBody.pairs[Math.max(0,Math.min(1,index))],a=bodies[pair[0]],b=bodies[pair[1]],side=threeBody.sides[Math.max(0,Math.min(1,index))];
   const dx=b.x-a.x,dy=b.y-a.y,d=Math.max(1,Math.hypot(dx,dy)),nx=-dy/d*side,ny=dx/d*side;
   return {x:(a.x+b.x)/2+nx*THREE_GATE_OFFSET,y:(a.y+b.y)/2+ny*THREE_GATE_OFFSET,vx:((a.vx||0)+(b.vx||0))/2,vy:((a.vy||0)+(b.vy||0))/2,index,pair};
+}
+function threeBodyGate(index){
+  return threeBody?.rescueShips?.[Math.max(0,Math.min(1,index))]||threeBodyGateGeometry(index);
+}
+function threeBodyRescueMetrics(index,ship=rocket){
+  const gate=threeBodyGate(index),dx=ship.x-gate.x,dy=ship.y-gate.y;
+  return {index,gate,distance:Math.hypot(dx,dy),relSpeed:Math.hypot(ship.vx-gate.vx,ship.vy-gate.vy)};
+}
+function isThreeBodyShipRescued(index){
+  return !!(mission&&Array.isArray(mission.threeRescued)&&mission.threeRescued[index]);
+}
+function isThreeBodyShipDestroyed(index){
+  return !!(threeBody?.rescueShips?.[index]?.destroyed||(mission&&Array.isArray(mission.threeDestroyed)&&mission.threeDestroyed[index]));
+}
+function nearestUnrescuedThreeBodyShip(ship=rocket){
+  let nearest=null;
+  for(let index=0;index<2;index++){
+    if(isThreeBodyShipRescued(index)||isThreeBodyShipDestroyed(index))continue;
+    const metrics=threeBodyRescueMetrics(index,ship);
+    if(!nearest||metrics.distance<nearest.distance)nearest=metrics;
+  }
+  return nearest;
 }
 function threeBodyMetrics(ship=rocket){
   const center=threeBodyBarycenter(),dx=ship.x-center.x,dy=ship.y-center.y,r=Math.max(1,Math.hypot(dx,dy));
@@ -88,6 +115,19 @@ function updateThreeBodyWorld(dt){
     acc[j].x-=dx*BODIES[i].mu*inv3;acc[j].y-=dy*BODIES[i].mu*inv3;
   }
   for(let i=0;i<3;i++){const b=BODIES[i];b.vx+=acc[i].x*dt;b.vy+=acc[i].y*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;}
+  // 两艘失事飞船拥有独立惯性，并受到被刻意削弱的三恒星引力；它们可能被恒星捕获，但不会瞬间被吸走。
+  for(const ship of threeBody.rescueShips||[]){
+    if(!ship.alive||ship.rescued||ship.destroyed)continue;
+    let ax=0,ay=0;
+    for(const star of BODIES){
+      const dx=star.x-ship.x,dy=star.y-ship.y,d2=dx*dx+dy*dy+625,d=Math.sqrt(d2),inv3=1/(d2*d);
+      ax+=dx*star.mu*THREE_RESCUE_GRAVITY*inv3;ay+=dy*star.mu*THREE_RESCUE_GRAVITY*inv3;
+    }
+    ship.vx+=ax*dt;ship.vy+=ay*dt;ship.x+=ship.vx*dt;ship.y+=ship.vy*dt;
+    for(const star of BODIES){
+      if(Math.hypot(ship.x-star.x,ship.y-star.y)<=star.r+THREE_RESCUE_SHIP_R){ship.alive=false;ship.destroyed=true;ship.crashStar=star.name;break;}
+    }
+  }
   threeBody.time+=dt;threeBody.trailT+=dt;
   if(threeBody.trailT>=(lowPowerMode?.18:.1)){
     for(let i=0;i<3;i++){const tr=threeBody.starTrails[i];tr.push({x:BODIES[i].x,y:BODIES[i].y});if(tr.length>(lowPowerMode?80:190))tr.shift();}
@@ -343,4 +383,3 @@ function getPredictedPath(){
   predictionCache={t:now,x:rocket.x,y:rocket.y,vx:rocket.vx,vy:rocket.vy,moonAngle,binaryAngle:binary?.angle||0,result};
   return result;
 }
-
