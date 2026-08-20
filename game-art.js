@@ -2,6 +2,13 @@
 // Loaded as a classic script so render functions can use the live game state
 // without duplicating physics, mission, or input ownership.
 
+const feitianOneSprite=new Image();
+feitianOneSprite.decoding='async';
+feitianOneSprite.src='./assets/ships/feitian-one-overhead.png';
+const hyperionSprite=new Image();
+hyperionSprite.decoding='async';
+hyperionSprite.src='./assets/ships/hyperion-cartoon-overhead.png';
+
 function drawStylizedStar(b,core,mid,edge,phase=0){
   ctx.save();
   if(!lowPowerMode){ctx.shadowColor=mid;ctx.shadowBlur=Math.max(16,b.r*.12*cam.zoom);const g=ctx.createRadialGradient(b.x-b.r*.3,b.y-b.r*.34,b.r*.05,b.x,b.y,b.r);g.addColorStop(0,core);g.addColorStop(.46,mid);g.addColorStop(1,edge);ctx.fillStyle=g;}
@@ -184,6 +191,40 @@ function drawThreeBodyTimelines(){
   ctx.textAlign='left';
 }
 
+function drawShipFlame(x,y,width,length,redshift,phase=0){
+  const flicker=length+Math.random()*7;
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle=redshift>0?`rgb(255,${Math.round(177-82*redshift)},${Math.round(66-38*redshift)})`:'#ffb142';
+  ctx.beginPath();ctx.moveTo(-width,0);ctx.quadraticCurveTo(Math.sin(phase)*1.6,flicker,width,0);ctx.closePath();ctx.fill();
+  ctx.fillStyle=redshift>0?'#ffe2a8':'#fff3b0';ctx.beginPath();ctx.moveTo(-width*.48,0);ctx.quadraticCurveTo(0,flicker*.58,width*.48,0);ctx.closePath();ctx.fill();ctx.restore();
+}
+
+function drawClassicRocketSkin(redshift,thrusting){
+  if(thrusting)drawShipFlame(0,14,5,22,redshift);
+  const wingColor=redshift>0?`rgb(239,${Math.round(71-42*redshift)},${Math.round(111-62*redshift)})`:'#ef476f';
+  ctx.fillStyle=wingColor;
+  ctx.beginPath();ctx.moveTo(-6,6);ctx.lineTo(-13,17);ctx.lineTo(-6,14);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(6,6);ctx.lineTo(13,17);ctx.lineTo(6,14);ctx.closePath();ctx.fill();
+  ctx.fillStyle=redshift>0?`rgb(248,${Math.round(249-105*redshift)},${Math.round(250-160*redshift)})`:'#f8f9fa';ctx.strokeStyle='#222';ctx.lineWidth=2.2;
+  ctx.beginPath();ctx.moveTo(0,-22);ctx.quadraticCurveTo(8,-10,7,6);ctx.lineTo(7,14);ctx.lineTo(-7,14);ctx.lineTo(-7,6);ctx.quadraticCurveTo(-8,-10,0,-22);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle=redshift>0?`rgb(${Math.round(76+145*redshift)},${Math.round(201-95*redshift)},${Math.round(240-175*redshift)})`:'#4cc9f0';ctx.beginPath();ctx.arc(0,-4,4,0,TAU);ctx.fill();ctx.lineWidth=1.8;ctx.stroke();
+  ctx.fillStyle=wingColor;ctx.fillRect(-7,9,14,3.2);ctx.strokeRect(-7,9,14,3.2);
+}
+
+function drawSwordwingSkin(redshift,thrusting){
+  if(!feitianOneSprite.complete||!feitianOneSprite.naturalWidth){drawClassicRocketSkin(redshift,thrusting);return;}
+  if(thrusting){drawShipFlame(-8.8,29,2.7,17,redshift,.4);drawShipFlame(0,30,2.4,15,redshift);drawShipFlame(8.8,29,2.7,17,redshift,-.4);}
+  // 参考图的正俯视透明贴图。只放大视觉轮廓，不改物理碰撞半径。
+  ctx.drawImage(feitianOneSprite,-34,-34,68,68);
+}
+
+function drawHyperionSkin(redshift,thrusting){
+  if(!hyperionSprite.complete||!hyperionSprite.naturalWidth){drawClassicRocketSkin(redshift,thrusting);return;}
+  if(thrusting){for(const x of [-13,-4.4,4.4,13])drawShipFlame(x,31,2.15,14,redshift,x*.12);}
+  // 休伯利安号的卡通俯视贴图；显示更宽，碰撞盒仍沿用小火箭。
+  ctx.drawImage(hyperionSprite,-22,-32,44,64);
+}
+
 function drawRocket(){
   if(!rocket.alive) return;
   if(level===7&&mission.asteroidContact&&asteroid){
@@ -213,29 +254,11 @@ function drawRocket(){
     ctx.restore();
   }
   ctx.rotate(rocket.a + Math.PI/2);
-  // 尾焰
-  if((keys['ArrowUp']||keys['KeyW']) && rocket.fuel>0 && state==='fly'){
-    const f = 14 + Math.random()*10;
-    ctx.fillStyle=redshift>0?`rgb(255,${Math.round(177-82*redshift)},${Math.round(66-38*redshift)})`:'#ffb142';
-    ctx.beginPath(); ctx.moveTo(-5,14); ctx.quadraticCurveTo(0,14+f+8,5,14); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#fff3b0';
-    ctx.beginPath(); ctx.moveTo(-2.5,14); ctx.quadraticCurveTo(0,14+f*0.6,2.5,14); ctx.closePath(); ctx.fill();
-  }
-  // 尾翼
-  const wingColor=redshift>0?`rgb(239,${Math.round(71-42*redshift)},${Math.round(111-62*redshift)})`:'#ef476f';
-  ctx.fillStyle=wingColor;
-  ctx.beginPath(); ctx.moveTo(-6,6); ctx.lineTo(-13,17); ctx.lineTo(-6,14); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(6,6); ctx.lineTo(13,17); ctx.lineTo(6,14); ctx.closePath(); ctx.fill();
-  // 机身
-  ctx.fillStyle=redshift>0?`rgb(248,${Math.round(249-105*redshift)},${Math.round(250-160*redshift)})`:'#f8f9fa'; ctx.strokeStyle='#222'; ctx.lineWidth=2.2;
-  ctx.beginPath(); ctx.moveTo(0,-22);
-  ctx.quadraticCurveTo(8,-10,7,6); ctx.lineTo(7,14); ctx.lineTo(-7,14); ctx.lineTo(-7,6);
-  ctx.quadraticCurveTo(-8,-10,0,-22); ctx.closePath(); ctx.fill(); ctx.stroke();
-  // 舷窗
-  ctx.fillStyle=redshift>0?`rgb(${Math.round(76+145*redshift)},${Math.round(201-95*redshift)},${Math.round(240-175*redshift)})`:'#4cc9f0'; ctx.beginPath(); ctx.arc(0,-4,4,0,TAU); ctx.fill();
-  ctx.lineWidth=1.8; ctx.stroke();
-  // 条纹
-  ctx.fillStyle=wingColor; ctx.fillRect(-7,9,14,3.2); ctx.strokeRect(-7,9,14,3.2);
+  const thrusting=(keys['ArrowUp']||keys['KeyW'])&&rocket.fuel>0&&state==='fly';
+  const skin=globalThis.SpaceGameShipSkins?.current?.()||'rocket';
+  if(skin==='swordwing')drawSwordwingSkin(redshift,thrusting);
+  else if(skin==='hyperion')drawHyperionSkin(redshift,thrusting);
+  else drawClassicRocketSkin(redshift,thrusting);
   ctx.restore();
 }
 
