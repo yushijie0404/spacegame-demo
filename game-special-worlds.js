@@ -39,6 +39,13 @@ function nextThreeBodySeed(){
   const now=Date.now()>>>0,perf=Math.floor((typeof performance!=='undefined'?performance.now():0)*1000)>>>0;
   return (now^perf^Math.imul(threeBodyResetCounter,0x9E3779B1))>>>0||1;
 }
+function chooseThreeBodyRestartSeed(mode,currentSeed=0,pinnedSeed=0,nextSeed=nextThreeBodySeed){
+  if(mode==='fixed')return (pinnedSeed||currentSeed)>>>0||nextSeed();
+  return nextSeed();
+}
+function formatThreeBodySeed(seed=threeBody?.seed||threeBodyPinnedSeed||0){
+  return '#'+(seed>>>0).toString(16).toUpperCase().padStart(8,'0');
+}
 function threeBodyBarycenter(bodies=BODIES){
   return SG_ORBIT.barycenter(bodies,THREE_MU);
 }

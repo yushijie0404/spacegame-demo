@@ -358,11 +358,14 @@ function drawHUDOverlay(worldDrawStarted){
   ctx.fillStyle = gDisp>8 ? '#ef476f' : gDisp>5 ? '#ffb142' : 'rgba(255,255,255,.85)';
   ctx.fillText(`G ${gDisp.toFixed(1)}  峰值 ${(rocket.maxG/G_REF).toFixed(1)}G（耐受5G·解体8G）`, 26, lifeBarY-10);
   }
-  // 速度显示：绝对速度 + 关键相对速度（靠近哪个显示哪个）
+  // 速度显示：绝对速度 + 带参照系后缀的关键相对速度（靠近哪个显示哪个）
   const earthAlt = Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y) - EARTH.r;
   const binaryM=level===8?binaryMetrics():null;
   const blackM=level===9?blackHoleMetrics():null;
   const threeM=level===10?threeBodyMetrics():null;
+  const dominantGravity=level>=8&&level<=10?SG_ORBIT.dominantGravityAt(rocket.x,rocket.y,BODIES):null;
+  const dominantGravityMixed=!!dominantGravity&&dominantGravity.share<.5;
+  const dominantGravityName=dominantGravity?(dominantGravityMixed?'多方拉扯':dominantGravity.source?.name||'多方拉扯'):'';
   const lunarM=level>=4&&level<8?moonMetrics():null, nearMoon=!!(lunarM&&lunarM.distance<2600);
   const nearDeparture=level===8&&earthAlt<600;
   const alt=level===10?threeM.r:level===9?blackM.alt:level===8?(nearDeparture?earthAlt:binaryM.distB-MOON.r):(nearMoon?lunarM.distance-MOON.r:earthAlt);
@@ -373,7 +376,7 @@ function drawHUDOverlay(worldDrawStarted){
   const vRelEarth=Math.hypot(relEvx,relEvy);
   const landscapeHUD=H<=520,ultraShortHUD=landscapeHUD&&H<360,teleCompact=W<760||landscapeHUD,mobileTele=W<760&&!landscapeHUD,teleDetailed=(!mobileTele||telemetryExpanded)&&!ultraShortHUD;
   const teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?8:teleCompact?278:14, teleW=teleCompact?174:206;
-  const teleH=teleDetailed?((level===9||level===10)?146:(level===5||level===7||level===8)?126:level===1?86:(level===3||level===4||level===6)?106:66):86;
+  const teleH=teleDetailed?((level===9||level===10)?166:level===8?146:(level===5||level===7)?126:level===1?86:(level===3||level===4||level===6)?106:66):dominantGravity?106:86;
   telemetryHitBox=mobileTele?{x:teleX-5,y:teleY-5,w:teleW+10,h:teleH+10}:null;
   ctx.fillStyle='rgba(8,14,38,.68)'; roundRect(teleX,teleY,teleW,teleH,14); ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1; roundRect(teleX,teleY,teleW,teleH,14); ctx.stroke();
@@ -381,32 +384,39 @@ function drawHUDOverlay(worldDrawStarted){
   ctx.font=`800 ${teleCompact?11.5:13}px "Baloo 2",sans-serif`;
   ctx.fillStyle='#fff';
   ctx.fillText(level===9?`远方观测速 ${blackM.apparentSpeed.toFixed(1)} u/s`:`绝对速度 ${speed.toFixed(1)} u/s`, W-20, teleY+16);
-  // 相对速度：靠近谁显示谁（地表附近/着陆区 → 相对地表；同步轨道附近 → 相对同步速度）
+  // 相对速度：靠近谁显示谁（标签始终写明参照系）
   ctx.fillStyle='#4cc9f0';
   if(level===10){
     ctx.fillText(`最近恒星 ${threeM.nearest.name.slice(-1)} · 净空 ${threeM.clearance.toFixed(0)} u`,W-20,teleY+36);
   }else if(level===7&&asteroid){
-    const am=asteroidMetrics();ctx.fillText(`小行星相对 ${am.relSpeed.toFixed(1)} u/s`,W-20,teleY+36);
+    const am=asteroidMetrics();ctx.fillText(`相对速度·小行星 ${am.relSpeed.toFixed(1)} u/s`,W-20,teleY+36);
   }else if(level===9){
     ctx.fillText(`本地速度 ${blackM.speed.toFixed(1)} · 运动 ×${blackM.coordinateFactor.toFixed(2)}`,W-20,teleY+36);
   }else if(level===8){
-    const sm=stationMetrics();ctx.fillText(mission.stage>=2?`暮光站相对 ${sm.relSpeed.toFixed(1)} u/s`:`目标星相对 ${binaryM.targetRel.toFixed(1)} u/s`,W-20,teleY+36);
+    const sm=stationMetrics();ctx.fillText(mission.stage>=2?`相对速度·暮光站 ${sm.relSpeed.toFixed(1)} u/s`:`相对速度·暮光星 ${binaryM.targetRel.toFixed(1)} u/s`,W-20,teleY+36);
   }else if(nearMoon){
-    ctx.fillText(`月球相对 ${lunarM.relSpeed.toFixed(1)} u/s`, W-20, teleY+36);
+    ctx.fillText(`相对速度·月球 ${lunarM.relSpeed.toFixed(1)} u/s`, W-20, teleY+36);
   }else if(alt < 1200){ // 近地/着陆：显示相对地表
-    ctx.fillText(`相对地面 ${vRelEarth.toFixed(1)} u/s`, W-20, teleY+36);
+    ctx.fillText(`相对速度·地表 ${vRelEarth.toFixed(1)} u/s`, W-20, teleY+36);
   }else{ // 高空/轨道：显示相对地球（轨道速度）
     ctx.fillText(`轨道速度 ${speed.toFixed(1)} u/s`, W-20, teleY+36);
   }
   ctx.fillStyle='rgba(255,255,255,.85)';
   ctx.fillText(`${level===10?'距系统质心':level===9?'距时间视界':level===8?(nearDeparture?'离晨曦星':'离暮光星'):nearMoon?'月面':'高度'} ${alt.toFixed(0)} u`, W-20, teleY+56);
+  if(dominantGravity){
+    const gravityText=`当前主导引力：${dominantGravityName}`;
+    ctx.fillStyle=dominantGravityMixed?'#d9c6ff':dominantGravity.source?.col||'#d9c6ff';
+    fitText(gravityText,W-20,teleY+76,teleW-16,9.5);
+    const gravityStatus=document.getElementById('gravityStatus'),accessibleText=SG_I18N.t(gravityText);
+    if(gravityStatus&&gravityStatus.textContent!==accessibleText)gravityStatus.textContent=accessibleText;
+  }
   ctx.fillStyle='rgba(255,209,102,.9)';
   if(teleDetailed){
   if(level===1) ctx.fillText(`同步带高度 ${(R_GEO-EARTH.r-GEO_BAND).toFixed(0)}~${(R_GEO-EARTH.r+GEO_BAND).toFixed(0)}`, W-20, teleY+76);
   if(level===3&&station){
     const m=stationMetrics();
     ctx.fillStyle='#5fd068'; ctx.fillText(`空间站距离 ${m.distance.toFixed(0)} u`,W-20,teleY+76);
-    ctx.fillStyle='#ffd166'; ctx.fillText(`相对速度 ${m.relSpeed.toFixed(1)} u/s`,W-20,teleY+96);
+    ctx.fillStyle='#ffd166'; ctx.fillText(`相对速度·空间站 ${m.relSpeed.toFixed(1)} u/s`,W-20,teleY+96);
   }
   if(level===4&&lunarM){
     const lunarG=MOON.mu/(lunarM.distance*lunarM.distance);
@@ -426,7 +436,7 @@ function drawHUDOverlay(worldDrawStarted){
   if(level===6){
     const lm=nearestLagrangeMetrics();
     ctx.fillStyle=lm.point.color;ctx.fillText(`距 L${lm.point.id} ${lm.distance.toFixed(0)} u`,W-20,teleY+76);
-    ctx.fillStyle=lm.relSpeed<(mission.assistMode?16:10)?'#5fd068':'#ffd166';ctx.fillText(`相对目标 ${lm.relSpeed.toFixed(1)} u/s`,W-20,teleY+96);
+    ctx.fillStyle=lm.relSpeed<(mission.assistMode?16:10)?'#5fd068':'#ffd166';ctx.fillText(`相对速度·目标点 ${lm.relSpeed.toFixed(1)} u/s`,W-20,teleY+96);
   }
   if(level===7&&asteroid){
     const am=asteroidMetrics(),f=getAsteroidForecast();
@@ -437,36 +447,36 @@ function drawHUDOverlay(worldDrawStarted){
   }
   if(level===8&&binaryM){
     const sm=stationMetrics();
-    ctx.fillStyle=mission.binaryGateCrossed?'#5fd068':'#4cf0dd';ctx.fillText(`引力通道 ${binaryM.gateDistance.toFixed(0)} u`,W-20,teleY+76);
-    ctx.fillStyle=binaryM.targetEnergy<0?'#5fd068':'#ffd166';ctx.fillText(binaryM.targetEnergy<0?'已被暮光星捕获':`捕获能量 +${binaryM.targetEnergy.toFixed(0)}`,W-20,teleY+96);
-    ctx.fillStyle=mission.binaryHeatViolated?'#ef476f':'#9fe7ff';ctx.fillText(`空间站 ${sm.distance.toFixed(0)} u · ${mission.binaryHeatViolated?'曾进高温区':'热区安全'}`,W-20,teleY+116);
+    ctx.fillStyle=mission.binaryGateCrossed?'#5fd068':'#4cf0dd';ctx.fillText(`引力通道 ${binaryM.gateDistance.toFixed(0)} u`,W-20,teleY+96);
+    ctx.fillStyle=binaryM.targetEnergy<0?'#5fd068':'#ffd166';ctx.fillText(binaryM.targetEnergy<0?'已被暮光星捕获':`捕获能量 +${binaryM.targetEnergy.toFixed(0)}`,W-20,teleY+116);
+    ctx.fillStyle=mission.binaryHeatViolated?'#ef476f':'#9fe7ff';ctx.fillText(`空间站 ${sm.distance.toFixed(0)} u · ${mission.binaryHeatViolated?'曾进高温区':'热区安全'}`,W-20,teleY+136);
   }
   if(level===9&&blackM){
-    ctx.fillStyle='#cbb5ff';ctx.fillText(`飞船 τ ${blackHole.properTime.toFixed(1)}s · 远方 ×${blackM.worldRate.toFixed(1)}`,W-20,teleY+76);
-    ctx.fillStyle=blackM.energy>0?'#5fd068':'#ffd166';ctx.fillText(`逃逸能量 ${blackM.energy>0?'+':''}${blackM.energy.toFixed(0)}`,W-20,teleY+96);
-    ctx.fillStyle=blackM.tidal>18?'#ef476f':'#ffb26b';ctx.fillText(`首尾潮汐差 ${blackM.tidal.toFixed(1)} u/s²`,W-20,teleY+116);
-    ctx.fillStyle=`rgba(255,${Math.round(210-blackHole.redshift*120)},${Math.round(190-blackHole.redshift*150)},.95)`;ctx.fillText(`引力红移 ${(blackHole.redshift*100).toFixed(0)}%`,W-20,teleY+136);
+    ctx.fillStyle='#cbb5ff';ctx.fillText(`飞船 τ ${blackHole.properTime.toFixed(1)}s · 远方 ×${blackM.worldRate.toFixed(1)}`,W-20,teleY+96);
+    ctx.fillStyle=blackM.energy>0?'#5fd068':'#ffd166';ctx.fillText(`逃逸能量 ${blackM.energy>0?'+':''}${blackM.energy.toFixed(0)}`,W-20,teleY+116);
+    ctx.fillStyle=blackM.tidal>18?'#ef476f':'#ffb26b';ctx.fillText(`首尾潮汐差 ${blackM.tidal.toFixed(1)} u/s²`,W-20,teleY+136);
+    ctx.fillStyle=`rgba(255,${Math.round(210-blackHole.redshift*120)},${Math.round(190-blackHole.redshift*150)},.95)`;ctx.fillText(`引力红移 ${(blackHole.redshift*100).toFixed(0)}%`,W-20,teleY+156);
   }
   if(level===10&&threeBody){
     const rescue=mission.stage<2?nearestUnrescuedThreeBodyShip():null,split=timelineCache?.result?.divergence;
-    ctx.fillStyle=rescue?.index===1?'#ffd166':'#4cf0dd';ctx.fillText(rescue?`最近求救 ${rescue.index?'B':'A'} · ${rescue.distance.toFixed(0)} u`:`距安全边界 ${Math.max(0,THREE_ESCAPE_R-threeM.r).toFixed(0)} u`,W-20,teleY+76);
-    ctx.fillStyle=mission.threeDangerViolated?'#ef476f':'#ffd166';ctx.fillText(`混沌指数 ${threeM.chaos.toFixed(2)} · ${mission.threeDangerViolated?'已闯红区':'净空安全'}`,W-20,teleY+96);
-    ctx.fillStyle='#d9c6ff';ctx.fillText(`时间线分岔 ${Number.isFinite(split)?split.toFixed(0):'等待观测'} u`,W-20,teleY+116);
-    ctx.fillStyle='rgba(255,255,255,.72)';ctx.fillText(`宇宙种子 #${threeBody.seed.toString(16).toUpperCase().padStart(8,'0')}`,W-20,teleY+136);
+    ctx.fillStyle=rescue?.index===1?'#ffd166':'#4cf0dd';ctx.fillText(rescue?`最近求救 ${rescue.index?'B':'A'} · ${rescue.distance.toFixed(0)} u`:`距安全边界 ${Math.max(0,THREE_ESCAPE_R-threeM.r).toFixed(0)} u`,W-20,teleY+96);
+    ctx.fillStyle=mission.threeDangerViolated?'#ef476f':'#ffd166';ctx.fillText(`混沌指数 ${threeM.chaos.toFixed(2)} · ${mission.threeDangerViolated?'已闯红区':'净空安全'}`,W-20,teleY+116);
+    ctx.fillStyle='#d9c6ff';ctx.fillText(`时间线分岔 ${Number.isFinite(split)?split.toFixed(0):'等待观测'} u`,W-20,teleY+136);
+    ctx.fillStyle='rgba(255,255,255,.72)';ctx.fillText(`宇宙种子 #${threeBody.seed.toString(16).toUpperCase().padStart(8,'0')}`,W-20,teleY+156);
   }
   }else{
     let critical='任务导航正常',criticalColor='#ffd166';
     if(level===1){const s=directSyncStatus();critical=s.inBand?`同步差 ${s.residual.toFixed(3)} rad/s`:'目标：进入同步带';criticalColor=s.inBand?'#5fd068':'#ffd166';}
     else if(level===2)critical=mission.stage>=2?'目标：对准绿色着陆区':'目标：返回地表';
-    else if(level===3&&station){const m=stationMetrics();critical=`空间站 ${m.distance.toFixed(0)} u · Δv ${m.relSpeed.toFixed(1)}`;criticalColor=m.distance<300?'#5fd068':'#ffd166';}
+    else if(level===3&&station){const m=stationMetrics();critical=`空间站 ${m.distance.toFixed(0)} u · 相对速度·空间站 ${m.relSpeed.toFixed(1)}`;criticalColor=m.distance<300?'#5fd068':'#ffd166';}
     else if(level===4&&lunarM){critical=Math.abs(lunarM.farDelta)<Math.PI/2?'已到月背 · 准备着陆':'目标：月球背面';criticalColor=Math.abs(lunarM.farDelta)<Math.PI/2?'#5fd068':'#ffd166';}
     else if(level===5){const e=earthSpecificEnergy(),v=e>0?Math.sqrt(2*e):0;critical=`逃逸余速 v∞ ${v.toFixed(1)} u/s`;criticalColor=e>0?'#5fd068':'#ffd166';}
-    else if(level===6){const lm=nearestLagrangeMetrics();critical=`L${lm.point.id} ${lm.distance.toFixed(0)} u · Δv ${lm.relSpeed.toFixed(1)}`;criticalColor=lm.point.color;}
+    else if(level===6){const lm=nearestLagrangeMetrics();critical=`L${lm.point.id} ${lm.distance.toFixed(0)} u · 相对速度·目标点 ${lm.relSpeed.toFixed(1)}`;criticalColor=lm.point.color;}
     else if(level===7&&asteroid){const f=getAsteroidForecast();critical=f.safe?'预测：地月均安全':'预测：仍有撞击危险';criticalColor=f.safe?'#5fd068':'#ef476f';}
     else if(level===8&&binaryM){const sm=stationMetrics();critical=mission.stage>=2?`暮光站 ${sm.distance.toFixed(0)} u`:`引力通道 ${binaryM.gateDistance.toFixed(0)} u`;criticalColor=mission.stage>=2?'#5fd068':'#4cf0dd';}
     else if(level===9&&blackM){critical=`逃逸能量 ${blackM.energy>0?'+':''}${blackM.energy.toFixed(0)}`;criticalColor=blackM.energy>0?'#5fd068':'#ffd166';}
     else if(level===10&&threeBody){const rescue=mission.stage<2?nearestUnrescuedThreeBodyShip():null;critical=rescue?`最近求救 ${rescue.index?'B':'A'} ${rescue.distance.toFixed(0)} u`:`安全边界 ${Math.max(0,THREE_ESCAPE_R-threeM.r).toFixed(0)} u`;criticalColor=rescue?.index===1?'#ffd166':'#4cf0dd';}
-    ctx.fillStyle=criticalColor;ctx.fillText(critical,W-20,teleY+76);
+    ctx.fillStyle=criticalColor;ctx.fillText(critical,W-20,teleY+(dominantGravity?96:76));
     ctx.fillStyle='rgba(255,255,255,.45)';ctx.font='900 11px sans-serif';ctx.textAlign='left';ctx.fillText('＋',teleX+8,teleY+17);ctx.textAlign='right';
   }
   ctx.fillStyle='#fff';
@@ -533,7 +543,7 @@ function drawHUDOverlay(worldDrawStarted){
     const slingEnergy=level===5?earthSpecificEnergy():0;
     ctx.fillText(level===5?(slingEnergy>0?'继续向外飞出绿色大圈':'⚠️ 这条路线还会掉回地球'):level===6?'⚠️ 已飞过平衡点目标':'⚠️ 已飞离目标空域', W/2, H*0.4);
     ctx.fillStyle='rgba(255,255,255,.9)'; ctx.font='600 15px "Baloo 2",sans-serif';
-    ctx.fillText(level===5?(slingEnergy>0?'右上角逃逸余速已大于 0，不会再掉回来':'飞得远不等于逃走：右上角逃逸余速还必须大于 0'):level===6?'查看右上角“距目标”，掉头消除速度差':'任务在近地 / 同步轨道，可从暂停菜单重试当前阶段', W/2, H*0.4+30);
+    ctx.fillText(level===5?(slingEnergy>0?'右上角逃逸余速已大于 0，不会再掉回来':'飞得远不等于逃走：右上角逃逸余速还必须大于 0'):level===6?'查看右上角“相对速度·目标点”，掉头减小读数':'任务在近地 / 同步轨道，可从暂停菜单重试当前阶段', W/2, H*0.4+30);
     ctx.fillText(level===5?(slingEnergy>0?'保持向外飞行即可通关':'借月球再加速，或点击“阶段回退”重试'):level===6?'五个点都可通关，或点击“阶段回退”重新接近':'（燃料无限，可随时重来）', W/2, H*0.4+54);
     ctx.textAlign='left';
   }

@@ -19,6 +19,7 @@ const ACHIEVEMENTS=[
   {id:'challenge_ace',title:'挑战王牌',icon:'star',accent:'#fff0a8',accent2:'#f0a500',method:'在任意一关的挑战模式中获得三星。',joke:'无限燃料是教学。你显然没在听课。'},
   {id:'tenfold_voyager',title:'十界远航者',icon:'crown',accent:'#7de3ff',accent2:'#ffd166',method:'完成全部十个关卡。星级不限，活着回来就算。',joke:'十关之后，你已具备把任何问题解释成轨道力学的资格。'}
 ];
+globalThis.SpaceGameAchievementContent=ACHIEVEMENTS;
 const LEVEL_ACHIEVEMENTS={1:'geo_postman',2:'homecoming',3:'orbital_handshake',4:'far_side_footprint',5:'lunar_slingshot',6:'balance_artist',7:'asteroid_whisperer',8:'binary_commuter',9:'abyss_return',10:'chaos_surfer'};
 function achievementIconSvg(kind){
   const paths={

@@ -115,14 +115,15 @@ function updateMountedAsteroidRocket(dt,dtReal){
   rocket.thrusting=(keys['ArrowUp']||keys['KeyW'])&&(infiniteFuel||rocket.fuel>0);
   rocket.thrustPower=rocket.thrusting?1:0;
   if(rocket.thrusting){
-    const poweredDt=infiniteFuel?Math.min(dt,.02):Math.min(dt,.02,rocket.fuel/9);
+    const fuelRate=9*SG_UPGRADES.fuelMultiplier(challengeMode);
+    const poweredDt=infiniteFuel?Math.min(dt,.02):Math.min(dt,.02,rocket.fuel/fuelRate);
     const accel=(mission.asteroidAnchored?ASTEROID_PUSH_FORCE:ASTEROID_CONTACT_FORCE)/asteroid.mass;
     const dvx=fx*accel*poweredDt,dvy=fy*accel*poweredDt;
     asteroid.vx+=dvx;asteroid.vy+=dvy;
     const ux=Math.cos(mount),uy=Math.sin(mount);
     asteroid.av+=2*(ux*dvy-uy*dvx)/asteroid.r;
     mission.asteroidChanged=true;mission.asteroidSafeT=0;
-    if(!infiniteFuel){const spent=9*poweredDt;rocket.fuel=Math.max(0,rocket.fuel-spent);mission.fuelUsed+=spent;}
+    if(!infiniteFuel){const spent=fuelRate*poweredDt;rocket.fuel=Math.max(0,rocket.fuel-spent);mission.fuelUsed+=spent;}
     exhaustAccumulator=Math.min(3,exhaustAccumulator+dtReal*(lowPowerMode?32:58));
     const count=Math.floor(exhaustAccumulator);exhaustAccumulator-=count;
     for(let i=0;i<count&&particles.length<(lowPowerMode?(mobileEconomy?45:70):150);i++)particles.push({
@@ -227,7 +228,7 @@ function updateFlightPhysics(dt,dtReal,observationDt){
     rocket.thrustPower=thrustPower;
     // 推进属于玩家输入，单帧最多结算 20ms；掉帧时丢弃多余控制冲量，不在恢复后“补喷”。
     const thrustDt=Math.min(dt,.02);
-    const fuelRate=level===9?BH_FUEL_RATE:9;
+    const fuelRate=(level===9?BH_FUEL_RATE:9)*SG_UPGRADES.fuelMultiplier(challengeMode);
     const poweredDt=infiniteFuel?thrustDt:Math.min(thrustDt,rocket.fuel/Math.max(.001,fuelRate*thrustPower));
     const thrustAccel=THRUST/Math.max(1,rocket.mass||1);
     rocket.vx += fx*thrustAccel*thrustPower*poweredDt; rocket.vy += fy*thrustAccel*thrustPower*poweredDt;
@@ -333,6 +334,7 @@ function updateFlightPhysics(dt,dtReal,observationDt){
     const surfaceV=surfaceVelocity(b,dx,dy);
     let groundVx = rocket.vx-surfaceV.vx, groundVy = rocket.vy-surfaceV.vy;
     const vRel = Math.hypot(groundVx, groundVy);
+    const landingLimit=b.landMax*SG_UPGRADES.landingMultiplier(challengeMode);
 
     // 恒星不是可着陆天体：进入光球表面立即判定烧毁，避免低速时被通用着陆逻辑“停”在太阳上。
     if((level===8||level===10)&&b.isStar&&alt<=RING_OUT){
@@ -384,7 +386,7 @@ function updateFlightPhysics(dt,dtReal,observationDt){
     // 环形带内且相对速度足够低 = 着陆成功（触地停住）
     // 防护：起飞后必须先飞离低空（_clearedPad）才允许判定着陆，避免起飞爬升/回落误判打断
     if(alt > 60) rocket._clearedPad = true;
-    if(inRing && vOut <= 0 && vRel <= b.landMax && rocket._clearedPad){
+    if(inRing && vOut <= 0 && vRel <= landingLimit && rocket._clearedPad){
       const gImpact = vRel / 0.25;
       rocket.maxG = Math.max(rocket.maxG, gImpact); rocket.lastG = gImpact;
       if(gImpact > G_KILL) killCrew(`着陆冲击 ${(gImpact/G_REF).toFixed(1)}G 过载，船员失去生命迹象`);
@@ -399,8 +401,11 @@ function updateFlightPhysics(dt,dtReal,observationDt){
       return;
     }
     // 环形带内但速度仍高：给提示（不判定），等它减速或冲内圈
-    if(inRing && vOut <= 0 && vRel > b.landMax && !rocket.landed){
-      if(mission.assistMode && !mission.done){ mission.toast='⚠️ 相对速度过快！继续减速'; mission.toastT=0.6; }
+    if(inRing && vOut <= 0 && vRel > landingLimit && !rocket.landed){
+      if(mission.assistMode && !mission.done){
+        const landingFrame=b===MOON?'月面':b===EARTH&&level===8?'晨曦星地表':'地表';
+        mission.toast=`⚠️ 相对速度·${landingFrame}过快！继续减速`; mission.toastT=0.6;
+      }
     }
   }
   // 飞出太远：新手模式只提醒（画面变暗+提示），不强制重置；跳过指引才判死

@@ -6,6 +6,8 @@
 
 // 挑战模式预算经过理想转移所需速度增量后留出约 35%～70% 的操作余量。
 // 第六关给足 100%：L2/L3 的三星来自路线难度，不以省燃料卡玩家。
+// 第九关 40% = 18.39 u/s Δv：起点直推仍低于 36.70 u/s 的逃逸需求；
+// 在 240 u 深渊点火并留出正逃逸能量时，确定性模拟剩余约 11.5%。
 const CHALLENGE_CONFIG={
   1:{fuel:55,fuelStar:15,parTime:150,life:0,mass:1},
   2:{fuel:70,parTime:180,life:210,mass:1},
@@ -15,7 +17,7 @@ const CHALLENGE_CONFIG={
   6:{fuel:100,parTime:480,life:0,mass:1},
   7:{fuel:100,fuelStar:18,parTime:220,life:0,mass:1},
   8:{fuel:100,fuelStar:20,parTime:330,life:0,mass:1},
-  9:{fuel:30,fuelStar:2,parTime:150,life:0,mass:1},
+  9:{fuel:40,fuelStar:5,parTime:150,life:0,mass:1},
   10:{fuel:85,fuelStar:20,parTime:190,life:0,mass:1}
 };
 const STAR_RULES={
@@ -27,11 +29,17 @@ const STAR_RULES={
   6:['抵达 L1：★','抵达 L4 或 L5：★★','抵达 L2 或 L3：★★★'],
   7:['让小行星同时避开地球和月球：★','飞船没有在撞击中损毁：+★','挑战燃料剩余至少 18%：+★'],
   8:['抵达另一颗太阳旁的空间站：★','全程避开两颗恒星的高温区：+★','挑战燃料剩余至少 20%：+★'],
-  9:['穿过救援门并逃离黑洞：★','在半径 270 u 内完成深渊点火：+★','挑战燃料剩余至少 2%：+★'],
+  9:['穿过救援门并逃离黑洞：★','在半径 270 u 内完成深渊点火：+★','挑战燃料剩余至少 5%：+★'],
   10:['营救两艘求救飞船并逃离三体系统：★','全程不进入红色潮汐危险圈：+★','挑战燃料剩余至少 20%：+★']
 };
 
 const SAVE_KEY='spacegame-progress-v2';
+const SG_UPGRADES=globalThis.SpaceGameUpgrades||{
+  recordResult(){return {earned:0,reasons:[],state:{points:0,engine:0,structure:0}};},
+  reconcileProgress(){return {earned:0};},fuelMultiplier(){return 1;},landingMultiplier(){return 1;},
+  effects(){return {engineLevel:0,structureLevel:0,fuelSavingPercent:0,landingBonusPercent:0};},
+  state(){return {points:0,engine:0,structure:0};},purchase(){return {ok:false,reason:'points'};},MAX_LEVEL:3
+};
 function loadProgress(){
   try{
     const saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
@@ -39,11 +47,12 @@ function loadProgress(){
   }catch(_){ return {}; }
 }
 function starText(count){ return '★'.repeat(count)+'☆'.repeat(3-count); }
-function saveLevelResult(levelId,score,earnedStars=1){
+function saveLevelResult(levelId,score,earnedStars=1,options={}){
   const progress=loadProgress(), previous=progress[levelId]||{score:0,stars:0};
   const currentScore=Math.max(0,Math.min(1000,Math.round(score)));
   const currentStars=Math.max(1,Math.min(3,Math.round(earnedStars)));
-  const bestScore=Math.max(previous.score||0,currentScore),bestStars=Math.max(previous.stars||0,currentStars);
+  const scoreSaved=options.saveScore!==false;
+  const bestScore=scoreSaved?Math.max(previous.score||0,currentScore):(previous.score||0),bestStars=Math.max(previous.stars||0,currentStars);
   progress[levelId]={score:bestScore,stars:bestStars};
   try{ localStorage.setItem(SAVE_KEY,JSON.stringify(progress)); }catch(_){}
   if(typeof window!=='undefined'){
@@ -52,17 +61,20 @@ function saveLevelResult(levelId,score,earnedStars=1){
     if(typeof challengeMode!=='undefined'&&challengeMode&&currentStars>=3)unlockAchievement('challenge_ace');
     if(Array.from({length:10},(_,i)=>progress[i+1]).every(item=>(item?.stars||0)>0))unlockAchievement('tenfold_voyager');
   }
+  const upgradeReward=SG_UPGRADES.recordResult(levelId,{completed:true,challenge:typeof challengeMode!=='undefined'&&challengeMode,stars:currentStars});
   updateLevelCards();
-  return {score:currentScore,stars:currentStars,bestScore,bestStars};
+  return {score:currentScore,stars:currentStars,bestScore,bestStars,scoreSaved,upgradeReward};
 }
 function updateLevelCards(){
   const progress=loadProgress();
+  SG_UPGRADES.reconcileProgress(progress);
   for(let i=1;i<=10;i++){
     const result=progress[i]||{score:0,stars:0};
     const scoreEl=document.querySelector(`[data-level-score="${i}"]`), starsEl=document.querySelector(`[data-level-stars="${i}"]`);
     if(scoreEl) scoreEl.textContent=result.score||'—';
     if(starsEl){ starsEl.textContent=starText(result.stars||0); starsEl.setAttribute('aria-label',(result.stars||0)+' 星'); }
   }
+  if(typeof syncUpgradeBay==='function')syncUpgradeBay();
 }
 function challengeLifeEnabled(){ return challengeMode&&(level===2||level===3); }
 function challengeRemainingFuel(){ return Math.max(0,(mission?.fuelBudget||0)-(mission?.fuelUsed||0)); }
@@ -102,10 +114,13 @@ function calcScore(){
     maxG:(rocket.maxG/G_REF).toFixed(1)};
 }
 function resultLine(result){
+  const reward=result.upgradeReward?.earned?`<span style="color:#28794a">⬆ 首次达成奖励：+${result.upgradeReward.earned} 升级点</span><br>`:'';
+  if(result.scoreSaved===false)return `本局练习得分 <b style="font-size:24px">${result.score}</b> · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br><span style="color:#888">固定种子练习：本局星级正常结算，分数不计入最高分。</span><br>${reward}`;
   const best=(result.bestScore>result.score||result.bestStars>result.stars)?`<span style="color:#888">历史最佳 ${result.bestScore} 分 · ${starText(result.bestStars)}</span><br>`:'';
-  return `本次得分 <b style="font-size:24px">${result.score}</b> · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br>${best}`;
+  return `本次得分 <b style="font-size:24px">${result.score}</b> · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br>${best}${reward}`;
 }
 function performanceDetail(){
   if(!challengeMode) return `教学模式 · 无限燃料 · 时间 ${flightT.toFixed(1)}s（教学模式最高 600 分）`;
-  return `挑战模式 · 剩余燃料 ${challengeRemainingFuel().toFixed(1)} / ${mission.fuelBudget}% · 时间 ${flightT.toFixed(1)}s`;
+  const upgrades=SG_UPGRADES.effects(true);
+  return `挑战模式 · 剩余燃料 ${challengeRemainingFuel().toFixed(1)} / ${mission.fuelBudget}% · 时间 ${flightT.toFixed(1)}s · 升级：燃料消耗 -${upgrades.fuelSavingPercent}% · 着陆容错 +${upgrades.landingBonusPercent}%`;
 }

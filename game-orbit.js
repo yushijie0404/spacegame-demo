@@ -56,6 +56,17 @@
     }
     const result=out||{};result.ax=ax;result.ay=ay;return result;
   }
+  function dominantGravityAt(x,y,sources){
+    let source=null,acceleration=0,total=0;
+    const contributions=[];
+    for(const candidate of sources||[]){
+      const dx=candidate.x-x,dy=candidate.y-y,d2=Math.max(1,dx*dx+dy*dy);
+      const value=Math.max(0,Number(candidate.mu)||0)/d2;
+      contributions.push({source:candidate,acceleration:value});total+=value;
+      if(value>acceleration){source=candidate;acceleration=value;}
+    }
+    return {source,acceleration,total,share:total>EPSILON?acceleration/total:0,contributions};
+  }
   function seededRandom(seed){
     let value=seed>>>0;
     return ()=>{value=(value+0x6D2B79F5)>>>0;let t=value;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};
@@ -68,6 +79,6 @@
 
   global.SpaceGameOrbit=Object.freeze({
     relativeState,specificEnergy,angularRate,apsides,relativeNavigation,normalizeAngle,
-    surfaceVelocity,barycenter,gravityAt,seededRandom,periodFromEnergy
+    surfaceVelocity,barycenter,gravityAt,dominantGravityAt,seededRandom,periodFromEnergy
   });
 })(globalThis);

@@ -40,9 +40,9 @@
 
   const ACTION_HANDLERS={
     prediction:()=>setPrediction(),camera:()=>toggleCameraMode(),radar:()=>cycleRadar(),attitude:()=>cycleAttitude(),
-    dial:()=>cycleDial(),guide:()=>toggleGuide(),briefing:()=>openBriefing(),science:()=>openSciencePage(false),assist:()=>toggleAssist(),sound:()=>toggleSound(),orientation:()=>cycleScreenOrientation(),
+    dial:()=>cycleDial(),guide:()=>toggleGuide(),briefing:()=>openBriefing(),science:()=>openSciencePage(false),concept:()=>reviewConceptCard(),conceptcards:()=>toggleConceptCards(),assist:()=>toggleAssist(),sound:()=>toggleSound(),orientation:()=>cycleScreenOrientation(),language:()=>globalThis.SpaceGameI18n?.cycle?.(),
     level:()=>openLevelSelect(),rewind:()=>rewindStage(),restart:()=>resetGame(),pause:()=>togglePause(),
-    mission:()=>tryMissionAction(),copyperf:()=>copyPerformanceReport()
+    mission:()=>tryMissionAction(),threeseed:()=>toggleThreeBodySeedMode(),copyseed:()=>copyThreeBodySeed(),copyperf:()=>copyPerformanceReport()
   };
   function dispatchAction(action,fromMenu=false){
     if(fromMenu&&action==='resume')togglePause();
