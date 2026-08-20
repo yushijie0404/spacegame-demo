@@ -66,8 +66,8 @@ function configureThreeBodyWorld(seed=nextThreeBodySeed()){
   threeBody={seed,time:0,pairs,sides,rescueShips:[],starTrails:[[],[],[]],trailT:0,maxSplit:0};
   threeBody.rescueShips=[0,1].map(index=>{
     const g=threeBodyGateGeometry(index),center=threeBodyBarycenter(),dx=g.x-center.x,dy=g.y-center.y,d=Math.max(1,Math.hypot(dx,dy)),ux=dx/d,uy=dy/d;
-    const radius=THREE_RESCUE_ORBIT_R+(rnd()-.5)*80,sign=index?1:-1,orbitV=Math.sqrt(THREE_MU*3*THREE_RESCUE_GRAVITY/radius),drift=(rnd()-.5)*4;
-    return {...g,x:center.x+ux*radius,y:center.y+uy*radius,vx:center.vx-uy*orbitV*sign+ux*drift,vy:center.vy+ux*orbitV*sign+uy*drift,alive:true,rescued:false,destroyed:false,crashStar:'',index};
+    const radius=THREE_RESCUE_ORBIT_R+(rnd()-.5)*80,sign=index?1:-1,orbitV=Math.sqrt(THREE_MU*3/radius)*THREE_RESCUE_SPEED_FACTOR,drift=(rnd()-.5)*2;
+    return {...g,x:center.x+ux*radius,y:center.y+uy*radius,vx:center.vx-uy*orbitV*sign+ux*drift,vy:center.vy+ux*orbitV*sign+uy*drift,alive:true,rescued:false,destroyed:false,crashStar:'',trail:[],index};
   });
   timelineCache=null;
 }
@@ -115,14 +115,17 @@ function updateThreeBodyWorld(dt){
     acc[j].x-=dx*BODIES[i].mu*inv3;acc[j].y-=dy*BODIES[i].mu*inv3;
   }
   for(let i=0;i<3;i++){const b=BODIES[i];b.vx+=acc[i].x*dt;b.vy+=acc[i].y*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;}
-  // 两艘失事飞船拥有独立惯性，并受到被刻意削弱的三恒星引力；它们可能被恒星捕获，但不会瞬间被吸走。
+  // 两艘失事飞船拥有独立惯性。合成主引力负责把轨道束缚在系统内，局部潮汐扰动让它们仍可能被某颗移动恒星捕获。
   for(const ship of threeBody.rescueShips||[]){
     if(!ship.alive||ship.rescued||ship.destroyed)continue;
-    let ax=0,ay=0;
+    const center=threeBodyBarycenter(),rx=center.x-ship.x,ry=center.y-ship.y,rd2=rx*rx+ry*ry+625,rd=Math.sqrt(rd2),centerInv3=1/(rd2*rd);
+    const centerAx=rx*(THREE_MU*3)*centerInv3,centerAy=ry*(THREE_MU*3)*centerInv3;
+    let exactAx=0,exactAy=0;
     for(const star of BODIES){
       const dx=star.x-ship.x,dy=star.y-ship.y,d2=dx*dx+dy*dy+625,d=Math.sqrt(d2),inv3=1/(d2*d);
-      ax+=dx*star.mu*THREE_RESCUE_GRAVITY*inv3;ay+=dy*star.mu*THREE_RESCUE_GRAVITY*inv3;
+      exactAx+=dx*star.mu*inv3;exactAy+=dy*star.mu*inv3;
     }
+    const ax=centerAx+(exactAx-centerAx)*THREE_RESCUE_TIDE_MIX,ay=centerAy+(exactAy-centerAy)*THREE_RESCUE_TIDE_MIX;
     ship.vx+=ax*dt;ship.vy+=ay*dt;ship.x+=ship.vx*dt;ship.y+=ship.vy*dt;
     for(const star of BODIES){
       if(Math.hypot(ship.x-star.x,ship.y-star.y)<=star.r+THREE_RESCUE_SHIP_R){ship.alive=false;ship.destroyed=true;ship.crashStar=star.name;break;}
@@ -131,6 +134,7 @@ function updateThreeBodyWorld(dt){
   threeBody.time+=dt;threeBody.trailT+=dt;
   if(threeBody.trailT>=(lowPowerMode?.18:.1)){
     for(let i=0;i<3;i++){const tr=threeBody.starTrails[i];tr.push({x:BODIES[i].x,y:BODIES[i].y});if(tr.length>(lowPowerMode?80:190))tr.shift();}
+    for(const ship of threeBody.rescueShips||[]){if(!ship.destroyed){ship.trail=ship.trail||[];ship.trail.push({x:ship.x,y:ship.y});if(ship.trail.length>(lowPowerMode?55:120))ship.trail.shift();}}
     threeBody.trailT=0;
   }
 }

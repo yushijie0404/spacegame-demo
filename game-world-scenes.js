@@ -158,6 +158,11 @@ function drawThreeBodyZones(){
   ctx.strokeStyle='rgba(201,156,255,.25)';ctx.lineWidth=3/cam.zoom;ctx.setLineDash([12/cam.zoom,14/cam.zoom]);ctx.beginPath();ctx.arc(center.x,center.y,THREE_CHAOS_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
   ctx.strokeStyle=mission.stage>=2?'rgba(95,208,104,.9)':'rgba(95,208,104,.34)';ctx.lineWidth=5/cam.zoom;ctx.setLineDash([18/cam.zoom,13/cam.zoom]);ctx.beginPath();ctx.arc(center.x,center.y,THREE_ESCAPE_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
   if(W>=760){ctx.fillStyle='rgba(95,208,104,.88)';ctx.font=`900 ${14/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('混沌逃逸边界',center.x,center.y-THREE_ESCAPE_R-17/cam.zoom);}
+  // 受困飞船的短轨迹让合成引力造成的弯曲肉眼可见。
+  for(let i=0;i<2;i++){
+    const tr=threeBody.rescueShips?.[i]?.trail||[];if(tr.length<2)continue;
+    ctx.strokeStyle=i===0?'rgba(76,201,240,.34)':'rgba(255,209,102,.32)';ctx.lineWidth=1.5/cam.zoom;ctx.beginPath();ctx.moveTo(tr[0].x,tr[0].y);for(let j=1;j<tr.length;j++)ctx.lineTo(tr[j].x,tr[j].y);ctx.stroke();
+  }
   const nearestRescue=nearestUnrescuedThreeBodyShip();
   for(let i=0;i<2;i++){
     const g=threeBodyGate(i),visited=isThreeBodyShipRescued(i),destroyed=isThreeBodyShipDestroyed(i),active=!visited&&!destroyed,col=i===0?'76,201,240':'255,209,102',recommended=nearestRescue?.index===i;

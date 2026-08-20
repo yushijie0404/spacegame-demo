@@ -398,7 +398,7 @@ const BH_MU=2.2e6,BH_HORIZON=180,BH_PHOTON_RING=250,BH_BURN_IN=205,BH_BURN_R=275
 const BH_START_R=1100,BH_START_V=26.54,BH_FUEL_RATE=174,BH_BEACON_R=2550,BH_BEACON_OMEGA=.035;
 const THREE_MU=2.4e6,THREE_SCALE=1300,THREE_STAR_R=135,THREE_ENTRY_R=3500,THREE_ESCAPE_R=3900;
 const THREE_CHAOS_R=2450,THREE_GATE_R=110,THREE_GATE_OFFSET=390,THREE_DANGER_PAD=175,THREE_RESCUE_SPEED=180;
-const THREE_RESCUE_GRAVITY=.1,THREE_RESCUE_ORBIT_R=1900,THREE_RESCUE_SHIP_R=42;
+const THREE_RESCUE_ORBIT_R=2300,THREE_RESCUE_SPEED_FACTOR=.92,THREE_RESCUE_TIDE_MIX=.12,THREE_RESCUE_SHIP_R=42;
 // 姿态控制模式（C 切换）：0=随速偏转 1=手动转向 2=纯惯性
 const ATT_MODES = ['随速偏转','手动转向','纯惯性'];
 let attMode = 1, velOffset = 0;
@@ -1042,7 +1042,7 @@ function saveCheckpoint(){
     binaryMission:level===8?{binaryHeatViolated:mission.binaryHeatViolated,binaryCaptured:mission.binaryCaptured,binaryGateCrossed:mission.binaryGateCrossed}:null,
     blackHoleState:blackHole?{properTime:blackHole.properTime,farTime:blackHole.farTime,factor:blackHole.factor,coordinateFactor:blackHole.coordinateFactor,minRadius:blackHole.minRadius,beaconAngle:blackHole.beaconAngle,frozen:false}:null,
     blackHoleMission:level===9?{blackHoleMinR:mission.blackHoleMinR,blackHoleDeepBurn:mission.blackHoleDeepBurn,blackHoleEscaping:mission.blackHoleEscaping,blackHoleFrozen:false,blackHoleAwaitRelease:!!mission.blackHoleAwaitRelease,blackHoleInvalidExitT:0,blackHoleExitFailed:false}:null,
-    threeBodyState:threeBody?{seed:threeBody.seed,time:threeBody.time,pairs:threeBody.pairs.map(p=>p.slice()),sides:threeBody.sides.slice(),bodies:BODIES.map(b=>({x:b.x,y:b.y,vx:b.vx,vy:b.vy})),rescueShips:(threeBody.rescueShips||[]).map(s=>({...s}))}:null,
+    threeBodyState:threeBody?{seed:threeBody.seed,time:threeBody.time,pairs:threeBody.pairs.map(p=>p.slice()),sides:threeBody.sides.slice(),bodies:BODIES.map(b=>({x:b.x,y:b.y,vx:b.vx,vy:b.vy})),rescueShips:(threeBody.rescueShips||[]).map(s=>({...s,pair:(s.pair||[]).slice(),trail:(s.trail||[]).map(p=>({...p}))}))}:null,
     threeBodyMission:level===10?{threeGateIndex:mission.threeGateIndex,threeRescued:(mission.threeRescued||[false,false]).slice(),threeDestroyed:(mission.threeDestroyed||[false,false]).slice(),threeRescueOrder:(mission.threeRescueOrder||[]).slice(),threeDangerViolated:mission.threeDangerViolated,threeMinClearance:mission.threeMinClearance,threeEscapeT:mission.threeEscapeT,threeSeed:mission.threeSeed}:null,
     launchFrameActive:!!rocket._launchFrameActive, launchAssistActive:!!rocket._launchAssistActive,
     launchCompleted:!!rocket._launchCompleted, chute:!!rocket.chute, chuteAngle:rocket.chuteAngle,
@@ -1080,7 +1080,7 @@ function retryFromStage(reason){
     if(cp.blackHoleState&&blackHole)Object.assign(blackHole,cp.blackHoleState);
     if(cp.threeBodyState&&threeBody){
       threeBody.seed=cp.threeBodyState.seed;threeBody.time=cp.threeBodyState.time;threeBody.pairs=cp.threeBodyState.pairs.map(p=>p.slice());threeBody.sides=cp.threeBodyState.sides.slice();threeBody.starTrails=[[],[],[]];threeBody.trailT=0;
-      cp.threeBodyState.bodies.forEach((s,i)=>Object.assign(BODIES[i],s));threeBody.rescueShips=(cp.threeBodyState.rescueShips||[]).map(s=>({...s}));timelineCache=null;
+      cp.threeBodyState.bodies.forEach((s,i)=>Object.assign(BODIES[i],s));threeBody.rescueShips=(cp.threeBodyState.rescueShips||[]).map(s=>({...s,pair:(s.pair||[]).slice(),trail:(s.trail||[]).map(p=>({...p}))}));timelineCache=null;
     }
     updateMoon(0); mission.stage=cp.stage;
     mission.worldStarted=!!cp.worldStarted;
