@@ -1,4 +1,4 @@
-const CACHE_NAME='spacegame-v1.45.1';
+const CACHE_NAME='spacegame-v1.45.4';
 const MUSIC_CACHE_NAME='spacegame-music-runtime-v2';
 const APP_SHELL=['./','./index.html','./game-loader.js','./runtime-performance.js','./game-audio.js','./game-missions.js','./game-orbit.js','./game-upgrades.js','./game-progression.js','./game-achievements.js','./game-i18n.js','./game-display.js','./game-ship-skins.js','./game-ship-skills.js','./game-special-worlds.js','./game-guides.js','./game-flight-physics.js','./game-objectives.js','./game-input.js','./game-art.js','./game-world-scenes.js','./game-hud.js','./manifest.webmanifest','./assets/ships/star-courier-overhead.png','./assets/ships/feitian-one-overhead.png','./assets/ships/hyperion-cartoon-overhead.png','./assets/ships/waterdrop-overhead.png','./icons/app-icon.svg','./icons/app-icon-180.png','./icons/app-icon-192.png','./icons/app-icon-512.png'];
 

@@ -279,7 +279,7 @@ function drawWaterdropFallback(redshift){
   ctx.fillStyle=gradient;ctx.strokeStyle=redshift>0?'#e99b91':'#dffcff';ctx.lineWidth=1.4;traceWaterdropHull();ctx.fill();ctx.stroke();
   ctx.globalAlpha=.8;ctx.strokeStyle='#ffffff';ctx.lineWidth=2.1;ctx.beginPath();ctx.moveTo(-8,-25);ctx.bezierCurveTo(-13,-12,-8,5,-2,18);ctx.stroke();ctx.globalAlpha=1;
 }
-function drawWaterdropSkin(redshift,thrusting){
+function drawWaterdropSkin(redshift){
   if(lowPowerMode||!waterdropSprite.complete||!waterdropSprite.naturalWidth)drawWaterdropFallback(redshift);
   else{
     ctx.drawImage(waterdropSprite,-17.3,-35.5,34.6,72);
@@ -292,8 +292,7 @@ function drawWaterdropSkin(redshift,thrusting){
       ctx.save();traceWaterdropHull();ctx.clip();const reflection=ctx.createRadialGradient(rx,ry,0,rx,ry,18);reflection.addColorStop(0,nearest.isStar?'rgba(255,245,190,.64)':'rgba(113,218,255,.55)');reflection.addColorStop(.34,'rgba(185,242,255,.22)');reflection.addColorStop(1,'rgba(95,205,255,0)');ctx.fillStyle=reflection;ctx.fillRect(-20,-38,40,76);ctx.restore();
     }
   }
-  // The canonical hull has no visible nozzle; keep thrust feedback as a compact wake touching the needle tip.
-  if(thrusting)drawShipFlame(0,34.2,1.45,8.5,redshift,0,'blue');
+  // Strong-interaction field propulsion has no nozzle, exhaust plume or tail flame.
 }
 
 function drawRocket(){
@@ -329,7 +328,7 @@ function drawRocket(){
   const skin=globalThis.SpaceGameShipSkins?.current?.()||'rocket';
   if(skin==='swordwing')drawSwordwingSkin(redshift,thrusting);
   else if(skin==='hyperion')drawHyperionSkin(redshift,thrusting);
-  else if(skin==='waterdrop')drawWaterdropSkin(redshift,thrusting);
+  else if(skin==='waterdrop')drawWaterdropSkin(redshift);
   else drawClassicRocketSkin(redshift,thrusting);
   ctx.restore();
 }

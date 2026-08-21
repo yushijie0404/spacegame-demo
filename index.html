@@ -1442,6 +1442,7 @@ function shipSkillRuntimeContext(){
 }
 function tryShipSkill(){
   if(!mission||paused||state!=='fly')return {ok:false,reason:'inactive'};
+  if(globalThis.SpaceGameShipSkins?.current?.()==='waterdrop')return {ok:false,reason:'brake-control'};
   const result=SG_SKILLS.use(shipSkillRuntimeContext());
   if(result.ok&&result.payload?.yamatoFx?.phase==='charging')markSkillWorldStarted();
   if(result.message){mission.toast=(result.ok?'✦ ':'⚠️ ')+result.message;mission.toastT=2.8;}
@@ -1787,8 +1788,18 @@ function update(dt, dtReal){
   // 屏幕震动是镜头反馈，按真实时间结束；推进触发的子弹时间不能把它无限拉长。
   shake = Math.max(0, shake - dtReal*30);
 
-  SG_SKILLS.update(dt,dtReal,shipSkillRuntimeContext());
-  updateFlightPhysics(dt,dtReal,observationDt);
+  const skillContext=shipSkillRuntimeContext();
+  const sharpAngleSteering=SG_SKILLS.definition?.().id==='sharp_angle_maneuver';
+  if(sharpAngleSteering){
+    // Waterdrop must use the attitude after this frame's turn input, then make
+    // follow-velocity mode start its next adjustment from the newly aligned vector.
+    updateFlightPhysics(dt,dtReal,observationDt);
+    const sharpTurnResult=SG_SKILLS.update(dt,dtReal,skillContext);
+    if(sharpTurnResult?.velocityAligned){markSkillWorldStarted();predictionCache=null;if(attMode===0)velOffset=0;}
+  }else{
+    SG_SKILLS.update(dt,dtReal,skillContext);
+    updateFlightPhysics(dt,dtReal,observationDt);
+  }
   updateRewardFlightStats(dt);
 }
 

@@ -112,7 +112,7 @@ function updateMountedAsteroidRocket(dt,dtReal){
   mission.asteroidMountAngle=mount;
   if(mission.asteroidAnchored)rocket.a=mount+Math.PI+mission.hingeAngle;
   const fx=Math.cos(rocket.a),fy=Math.sin(rocket.a),infiniteFuel=mission.assistMode&&!mission.done;
-  rocket.thrusting=(keys['ArrowUp']||keys['KeyW'])&&(infiniteFuel||rocket.fuel>0);
+  rocket.braking=false;rocket.accelerating=(keys['ArrowUp']||keys['KeyW'])&&(infiniteFuel||rocket.fuel>0);rocket.thrusting=rocket.accelerating;
   rocket.thrustPower=rocket.thrusting?1:0;
   if(rocket.thrusting){
     const fuelRate=9*SG_UPGRADES.fuelMultiplier(challengeMode);
@@ -210,10 +210,14 @@ function updateFlightPhysics(dt,dtReal,observationDt){
   const fx = Math.cos(rocket.a), fy = Math.sin(rocket.a);
   // 推进（辅助模式 = 无限燃料；第一关低空带防逃逸节流）
   const infiniteFuel = mission.assistMode && !mission.done;
-  rocket.thrusting = (keys['ArrowUp']||keys['KeyW']) && (infiniteFuel || rocket.fuel>0);
+  const waterdropBrakeControl=globalThis.SpaceGameShipSkins?.current?.()==='waterdrop';
+  const forwardInput=!!(keys['ArrowUp']||keys['KeyW']),speedBeforeThrust=Math.hypot(rocket.vx,rocket.vy);
+  rocket.braking=waterdropBrakeControl&&!!keys['KeyF']&&!rocket.landed&&speedBeforeThrust>1e-7&&(infiniteFuel||rocket.fuel>0);
+  rocket.accelerating=forwardInput&&!rocket.braking&&(infiniteFuel||rocket.fuel>0);
+  rocket.thrusting=rocket.accelerating||rocket.braking;
   rocket.thrustPower = 0;
   if(rocket.thrusting){
-    unlockAchievement('first_flame');
+    if(rocket.accelerating)unlockAchievement('first_flame');
     if(level===9){const bm=blackHoleMetrics();if(bm.r<=270&&bm.r>BH_HORIZON+12)mission.blackHoleDeepBurn=true;}
     if(rocket.landed){ rocket.landed=false; rocket.body=null; launched=true; rocket.launchGrace=1.2; } // 起飞离地宽限
     let thrustPower=1;
@@ -231,13 +235,17 @@ function updateFlightPhysics(dt,dtReal,observationDt){
     const fuelRate=(level===9?BH_FUEL_RATE:9)*SG_UPGRADES.fuelMultiplier(challengeMode);
     const poweredDt=infiniteFuel?thrustDt:Math.min(thrustDt,rocket.fuel/Math.max(.001,fuelRate*thrustPower));
     const thrustAccel=THRUST/Math.max(1,rocket.mass||1);
-    rocket.vx += fx*thrustAccel*thrustPower*poweredDt; rocket.vy += fy*thrustAccel*thrustPower*poweredDt;
+    if(rocket.braking){
+      const brake=globalThis.SpaceGameShipSkills?.resolveWaterdropBrake?.({vx:rocket.vx,vy:rocket.vy,acceleration:thrustAccel*thrustPower,dt:poweredDt});
+      if(brake?.ok){rocket.vx=brake.vx;rocket.vy=brake.vy;}
+    }else{rocket.vx += fx*thrustAccel*thrustPower*poweredDt;rocket.vy += fy*thrustAccel*thrustPower*poweredDt;}
     if(!infiniteFuel){
       const fuelSpent=fuelRate*thrustPower*poweredDt;
       rocket.fuel=Math.max(0,rocket.fuel-fuelSpent); mission.fuelUsed+=fuelSpent;
     }
     // 固定“每秒”生成量，避免 8 倍速子步或低帧率时一帧生成几十个粒子。
-    exhaustAccumulator=Math.min(3,exhaustAccumulator+dtReal*(lowPowerMode?42:78)*thrustPower);
+    const visibleExhaust=rocket.accelerating&&!waterdropBrakeControl;
+    exhaustAccumulator=visibleExhaust?Math.min(3,exhaustAccumulator+dtReal*(lowPowerMode?42:78)*thrustPower):0;
     const spawnCount=Math.floor(exhaustAccumulator),particleCap=lowPowerMode?(mobileEconomy?52:80):180;
     exhaustAccumulator-=spawnCount;
     for(let i=0;i<spawnCount&&particles.length<particleCap;i++) particles.push({

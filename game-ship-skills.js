@@ -6,23 +6,29 @@
   const INTRO_KEY='spacegame-ship-skill-intros-v1';
   const SPACE_WARP_DISTANCE=150,SPACE_WARP_CLEARANCE=5,SPACE_WARP_MAX_USES=3,SPACE_WARP_FUEL_COST=5,SPACE_WARP_COOLDOWN=5,SPACE_WARP_CHARGE_DURATION=.1;
   const YAMATO_RANGE=2000,YAMATO_CHARGE_DURATION=.9,YAMATO_BEAM_DURATION=1.55,YAMATO_IMPACT_DURATION=1.35,YAMATO_RESCUE_CORRIDOR=480;
-  const SHARP_TURN_DV=15,SHARP_TURN_IMPULSE_WINDOW=.25,SHARP_TURN_FX_DURATION=.95,SHARP_TURN_COOLDOWN=.2,SHARP_TURN_FUEL_COST=1,SHARP_TURN_MIN_ANGLE=.012;
+  const SHARP_TURN_IMPULSE_WINDOW=.25,SHARP_TURN_FX_DURATION=.95,SHARP_TURN_COOLDOWN=.2,SHARP_TURN_FUEL_COST=1,SHARP_TURN_MIN_ANGLE=.012;
   const planned=new Map([
     ['rocket',{shipId:'rocket',id:'buffer_fork',icon:'🛬',name:'缓冲货叉',kind:'passive',summary:'安全着陆速度上限提高 15%。',specialty:'擅长：返回与着陆任务',available:false}],
     ['swordwing',{shipId:'swordwing',id:'space_warp',icon:'✦',name:'空间折跃',kind:'active',holdToCharge:true,maxUses:SPACE_WARP_MAX_USES,cooldown:SPACE_WARP_COOLDOWN,fuelCost:SPACE_WARP_FUEL_COST,summary:'按住聚能 0.1 秒后沿机头折跃 150u，松手取消；每关 3 次，挑战模式每次消耗 5% 燃料，冷却 5 秒。',specialty:'擅长：连续交会与路径修正',available:false}],
     ['hyperion',{shipId:'hyperion',id:'yamato_cannon',icon:'☄',name:'大和炮',kind:'active',holdToCharge:true,summary:'按住聚能 0.9 秒后发射，松手取消；小行星、友方空间站和求救飞船都会被击毁。',specialty:'擅长：小行星防御 · 每关一次',available:false}],
-    ['waterdrop',{shipId:'waterdrop',id:'sharp_angle_maneuver',icon:'⌁',name:'锐角机动',kind:'passive',summary:'转向时自动将速度矢量拉向机头，速率不变；冷却 0.2 秒，挑战模式每次消耗 1% 燃料。',specialty:'擅长：连续锐角变轨 · 被动',available:false}]
+    ['waterdrop',{shipId:'waterdrop',id:'sharp_angle_maneuver',icon:'⌁',name:'锐角机动',kind:'passive',brakeControl:true,summary:'转向期间速度方向持续锁定机头，速率不变且不设转角上限；推进键加速，按住 F 或手机减速键制动，全程无尾焰。',specialty:'擅长：连续锐角变轨 · 被动',available:false}]
   ]);
   function normalizeSignedAngle(value){
     let angle=Number(value)||0;while(angle>Math.PI)angle-=Math.PI*2;while(angle<-Math.PI)angle+=Math.PI*2;return angle;
   }
   function resolveSharpAngleManeuver(input={}){
     const vx=Number(input.vx)||0,vy=Number(input.vy)||0,heading=Number(input.heading)||0,speed=Math.hypot(vx,vy);
-    if(speed<=1e-7)return {ok:false,reason:'stationary',speed,vx,vy,maxAngle:0,turnAngle:0,deltaV:0};
-    const beforeAngle=Math.atan2(vy,vx),maxAngle=2*Math.asin(Math.min(1,SHARP_TURN_DV/(2*speed))),requestedAngle=normalizeSignedAngle(heading-beforeAngle);
-    const turnAngle=Math.max(-maxAngle,Math.min(maxAngle,requestedAngle)),afterAngle=beforeAngle+turnAngle;
+    if(speed<=1e-7)return {ok:false,reason:'stationary',speed,vx,vy,turnAngle:0,deltaV:0};
+    const beforeAngle=Math.atan2(vy,vx),requestedAngle=normalizeSignedAngle(heading-beforeAngle),turnAngle=requestedAngle,afterAngle=heading;
     const nextVx=Math.cos(afterAngle)*speed,nextVy=Math.sin(afterAngle)*speed,deltaV=Math.hypot(nextVx-vx,nextVy-vy);
-    return {ok:true,speed,vx:nextVx,vy:nextVy,beforeAngle,afterAngle,maxAngle,requestedAngle,turnAngle,deltaV};
+    return {ok:true,speed,vx:nextVx,vy:nextVy,beforeAngle,afterAngle,requestedAngle,turnAngle,deltaV};
+  }
+  function resolveWaterdropBrake(input={}){
+    const vx=Number(input.vx)||0,vy=Number(input.vy)||0,speed=Math.hypot(vx,vy);
+    const deltaSpeed=Math.max(0,Number(input.acceleration)||0)*Math.max(0,Number(input.dt)||0);
+    if(speed<=1e-7||deltaSpeed<=0)return {ok:false,speed,vx,vy,deltaV:0};
+    const nextSpeed=Math.max(0,speed-deltaSpeed),scale=nextSpeed/speed;
+    return {ok:true,speed:nextSpeed,vx:vx*scale,vy:vy*scale,deltaV:speed-nextSpeed};
   }
   function resolveWarpPath(input={}){
     const start={x:Number(input.x)||0,y:Number(input.y)||0},heading=Number(input.heading)||0;
@@ -170,19 +176,22 @@
       const step=Math.max(0,Number(dtReal)||0),fx=state.payload?.sharpTurnFx;
       if(fx){fx.remaining=Math.max(0,fx.remaining-step);if(fx.remaining===0)delete state.payload.sharpTurnFx;}
       if(!rocket||rocket.alive===false||rocket.landed||!Number(turnInput)){state.passiveState='ready';return;}
-      if(state.cooldown>0){state.passiveState='cooldown';return;}
       if(challengeMode&&Number(rocket.fuel)<SHARP_TURN_FUEL_COST){state.passiveState='fuel';return;}
       const maneuver=resolveSharpAngleManeuver({vx:rocket.vx,vy:rocket.vy,heading:rocket.a});
-      if(!maneuver.ok||Math.abs(maneuver.turnAngle)<SHARP_TURN_MIN_ANGLE){state.passiveState='ready';return;}
+      if(!maneuver.ok){state.passiveState='ready';return;}
       const origin={x:Number(rocket.x)||0,y:Number(rocket.y)||0};
       rocket.vx=maneuver.vx;rocket.vy=maneuver.vy;rocket.launchGrace=Math.max(.25,Number(rocket.launchGrace)||0);
       rocket.skillImpulseG=Math.max(Number(rocket.skillImpulseG)||0,maneuver.deltaV/SHARP_TURN_IMPULSE_WINDOW);
+      const alignment={velocityAligned:true,maneuver};
+      if(state.cooldown>0){state.passiveState='cooldown';return alignment;}
+      if(Math.abs(maneuver.turnAngle)<SHARP_TURN_MIN_ANGLE){state.passiveState='ready';return alignment;}
       if(challengeMode){rocket.fuel=Math.max(0,Number(rocket.fuel)-SHARP_TURN_FUEL_COST);if(mission)mission.fuelUsed=(Number(mission.fuelUsed)||0)+SHARP_TURN_FUEL_COST;}
       if(Array.isArray(trail))trail.push({...origin,sharpTurn:true,beforeAngle:maneuver.beforeAngle,afterAngle:maneuver.afterAngle});
       state.cooldown=SHARP_TURN_COOLDOWN;state.passiveState='cooldown';state.payload.sharpTurnCount=(Number(state.payload.sharpTurnCount)||0)+1;
-      state.payload.sharpTurnFx={...origin,beforeAngle:maneuver.beforeAngle,afterAngle:maneuver.afterAngle,turnAngle:maneuver.turnAngle,maxAngle:maneuver.maxAngle,deltaV:maneuver.deltaV,remaining:SHARP_TURN_FX_DURATION,duration:SHARP_TURN_FX_DURATION};
+      state.payload.sharpTurnFx={...origin,beforeAngle:maneuver.beforeAngle,afterAngle:maneuver.afterAngle,turnAngle:maneuver.turnAngle,deltaV:maneuver.deltaV,remaining:SHARP_TURN_FX_DURATION,duration:SHARP_TURN_FX_DURATION};
       if(typeof onSharpTurn==='function')onSharpTurn(maneuver,challengeMode?SHARP_TURN_FUEL_COST:0);
       global.SpaceGameAudio?.sfx?.('sharp_angle_maneuver');
+      return {...alignment,triggered:true};
     }}]
   ]);
   let state=null;
@@ -250,12 +259,13 @@
     const current=ensure(),def=definition(current.shipId);if(!def?.available)return;
     const cooldownTick=Math.ceil(current.cooldown*10);
     current.cooldown=Math.max(0,current.cooldown-Math.max(0,Number(dtReal)||0));
-    if(typeof def.update==='function')def.update(context({dt,dtReal,...extra}));
+    const result=typeof def.update==='function'?def.update(context({dt,dtReal,...extra})):undefined;
     if(current.active&&current.remaining>0){
       current.remaining=Math.max(0,current.remaining+(def.durationClock==='real'?-dtReal:-dt));
       if(current.remaining===0){current.active=false;if(typeof def.deactivate==='function')def.deactivate(context(extra));sync();}
     }
     if(Math.ceil(current.cooldown*10)!==cooldownTick)sync();
+    return result;
   }
   function statusLabel(current=ensure()){
     if(!current.available)return t('待安装');
@@ -289,7 +299,11 @@
     const current=ensure(),def=definition(current.shipId),visible=!!def?.available;
     const hud=document.getElementById?.('shipSkillHud'),button=document.getElementById?.('shipSkillButton');
     if(hud){hud.hidden=!visible;if(visible){hud.querySelector('[data-skill-icon]').textContent=def.icon;hud.querySelector('[data-skill-name]').textContent=t(def.name);hud.querySelector('[data-skill-status]').textContent=statusLabel(current);}}
-    if(button){const usable=visible&&def.kind==='active',cyclable=current.active&&typeof def?.cycle==='function',yamatoPhase=current.payload?.yamatoFx?.phase,charging=yamatoPhase==='charging'||!!current.payload?.warpChargeFx,effectBusy=!!yamatoPhase||!!current.payload?.warpChargeFx;button.hidden=!usable;button.disabled=!usable||current.cooldown>0||(effectBusy&&!charging)||(current.active&&!cyclable)||(current.used&&!current.active&&!effectBusy);button.classList.toggle('is-ready',usable&&!current.used&&current.cooldown<=0&&!effectBusy);button.classList.toggle('is-used',current.used&&!current.active&&!effectBusy);button.classList.toggle('is-pressed',charging);button.setAttribute('aria-pressed',charging?'true':'false');button.setAttribute('aria-label',`${def?.holdToCharge?t('按住使用技能'):t('使用技能')}：${t(def?.name||'')}`);button.querySelector('.ico').textContent=def?.icon||'✦';button.querySelector('.lbl').textContent=statusLabel(current);}
+    if(button){
+      const brakeControl=visible&&def.brakeControl;
+      if(brakeControl){button.hidden=false;button.disabled=false;button.classList.add('is-ready');button.classList.remove('is-used');if(!button.classList.contains('is-pressed'))button.setAttribute('aria-pressed','false');button.setAttribute('aria-label',t('按住减速'));button.setAttribute('title',`${t('按住减速')} (F)`);button.querySelector('.ico').textContent='▼';button.querySelector('.lbl').textContent=t('减速');return;}
+      const usable=visible&&def.kind==='active',cyclable=current.active&&typeof def?.cycle==='function',yamatoPhase=current.payload?.yamatoFx?.phase,charging=yamatoPhase==='charging'||!!current.payload?.warpChargeFx,effectBusy=!!yamatoPhase||!!current.payload?.warpChargeFx;button.hidden=!usable;button.disabled=!usable||current.cooldown>0||(effectBusy&&!charging)||(current.active&&!cyclable)||(current.used&&!current.active&&!effectBusy);button.classList.toggle('is-ready',usable&&!current.used&&current.cooldown<=0&&!effectBusy);button.classList.toggle('is-used',current.used&&!current.active&&!effectBusy);button.classList.toggle('is-pressed',charging);button.setAttribute('aria-pressed',charging?'true':'false');button.setAttribute('aria-label',`${def?.holdToCharge?t('按住使用技能'):t('使用技能')}：${t(def?.name||'')}`);button.removeAttribute('title');button.querySelector('.ico').textContent=def?.icon||'✦';button.querySelector('.lbl').textContent=statusLabel(current);
+    }
   }
   function introState(){try{return JSON.parse(localStorage.getItem(INTRO_KEY)||'{}')||{};}catch(_){return{};}}
   function saveIntroState(value){try{localStorage.setItem(INTRO_KEY,JSON.stringify(value));}catch(_){}}
@@ -303,7 +317,7 @@
   function plannedList(){return [...new Set([...planned.keys(),...installed.keys()])].map(id=>clone(definition(id)));}
   function visualState(){return clone(ensure().payload||{});}
 
-  global.SpaceGameShipSkills={register,definition,plannedList,landingMultiplier,resolveWarpPath,resolveYamatoShot,resolveYamatoRescueCollateral,resolveSharpAngleManeuver,visualState,beginMission,snapshot,restore,use,release,update,sync,status:()=>clone(ensure()),statusLabel,resultText,closeIntro,disableIntro};
+  global.SpaceGameShipSkills={register,definition,plannedList,landingMultiplier,resolveWarpPath,resolveYamatoShot,resolveYamatoRescueCollateral,resolveSharpAngleManeuver,resolveWaterdropBrake,visualState,beginMission,snapshot,restore,use,release,update,sync,status:()=>clone(ensure()),statusLabel,resultText,closeIntro,disableIntro};
   global.useShipSkill=()=>global.SpaceGameShipSkills.use();
   global.closeShipSkillIntro=closeIntro;global.disableShipSkillIntro=disableIntro;
 })(globalThis);

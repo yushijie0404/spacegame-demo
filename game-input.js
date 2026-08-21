@@ -4,6 +4,7 @@
 // The module installs after the main runtime has declared its live state.
 (function createSpaceGameInput(global){
   let installed=false,clearImpl=()=>{},resetCameraImpl=()=>{};
+  const usesWaterdropBrake=()=>global.SpaceGameShipSkins?.current?.()==='waterdrop';
 
   function install(){
     if(installed)return;
@@ -24,7 +25,7 @@
     if(e.code==='KeyM') toggleAssist();
     if(e.code==='KeyN') toggleSound();
     if(e.code==='KeyE') tryMissionAction();
-    if(e.code==='KeyF') tryShipSkill();
+    if(e.code==='KeyF'&&!usesWaterdropBrake()) tryShipSkill();
     if(e.code==='KeyL') mission&&mission.done?nextLevel():openLevelSelect();
     if(e.code==='KeyC') cycleAttitude();
     if(e.code==='KeyP') togglePause();
@@ -32,7 +33,7 @@
   addEventListener('keyup', e=>{keys[e.code]=false;if(e.code==='KeyF')releaseShipSkill();});
   const holdResetters=[];
   function clearFlightInputs(){
-    keys['Space']=keys['KeyA']=keys['KeyD']=keys['KeyW']=keys['ArrowUp']=keys['ArrowLeft']=keys['ArrowRight']=false;
+    keys['Space']=keys['KeyA']=keys['KeyD']=keys['KeyW']=keys['KeyF']=keys['ArrowUp']=keys['ArrowLeft']=keys['ArrowRight']=false;
     releaseShipSkill(true);
     holdResetters.forEach(reset=>reset());
     if(typeof SG_AUDIO!=='undefined') SG_AUDIO.stopAll();
@@ -59,26 +60,32 @@
     if(e.target===e.currentTarget&&paused) togglePause();
   });
   const skillButton=document.getElementById('shipSkillButton');
-  let skillPointerId=null,skillKeyboardHeld=false;
+  let skillPointerId=null,skillPointerBrake=false,skillKeyboardHeld=false;
   const releaseSkillPointer=e=>{
     if(skillPointerId===null||(e?.pointerId!==undefined&&e.pointerId!==skillPointerId))return;
-    skillPointerId=null;releaseShipSkill();
+    skillPointerId=null;keys['KeyF']=false;skillButton?.classList.remove('is-pressed');skillButton?.setAttribute('aria-pressed','false');
+    if(!skillPointerBrake)releaseShipSkill();skillPointerBrake=false;
   };
   skillButton?.addEventListener('pointerdown',e=>{
     if(e.pointerType==='mouse'&&e.button!==0)return;
-    e.preventDefault();e.stopPropagation();skillPointerId=e.pointerId;skillButton.setPointerCapture?.(e.pointerId);tryShipSkill();
+    e.preventDefault();e.stopPropagation();skillPointerId=e.pointerId;skillButton.setPointerCapture?.(e.pointerId);
+    skillPointerBrake=usesWaterdropBrake();
+    if(skillPointerBrake){keys['KeyF']=true;skillButton.classList.add('is-pressed');skillButton.setAttribute('aria-pressed','true');}
+    else tryShipSkill();
   });
   skillButton?.addEventListener('pointerup',releaseSkillPointer);skillButton?.addEventListener('pointercancel',releaseSkillPointer);skillButton?.addEventListener('lostpointercapture',releaseSkillPointer);
   addEventListener('pointerup',releaseSkillPointer,true);addEventListener('pointercancel',releaseSkillPointer,true);
   skillButton?.addEventListener('keydown',e=>{
     if((e.code!=='Space'&&e.code!=='Enter')||e.repeat)return;
-    e.preventDefault();e.stopPropagation();skillKeyboardHeld=true;tryShipSkill();
+    e.preventDefault();e.stopPropagation();skillKeyboardHeld=true;
+    if(usesWaterdropBrake()){keys['KeyF']=true;skillButton.classList.add('is-pressed');skillButton.setAttribute('aria-pressed','true');}
+    else tryShipSkill();
   });
   skillButton?.addEventListener('keyup',e=>{
     if((e.code!=='Space'&&e.code!=='Enter')||!skillKeyboardHeld)return;
-    e.preventDefault();e.stopPropagation();skillKeyboardHeld=false;releaseShipSkill();
+    e.preventDefault();e.stopPropagation();skillKeyboardHeld=false;keys['KeyF']=false;skillButton.classList.remove('is-pressed');skillButton.setAttribute('aria-pressed','false');releaseShipSkill();
   });
-  holdResetters.push(()=>{skillPointerId=null;skillKeyboardHeld=false;releaseShipSkill(true);});
+  holdResetters.push(()=>{skillPointerId=null;skillPointerBrake=false;skillKeyboardHeld=false;keys['KeyF']=false;skillButton?.classList.remove('is-pressed');skillButton?.setAttribute('aria-pressed','false');releaseShipSkill(true);});
   document.getElementById('sciencePage').addEventListener('click',e=>{
     if(e.target===e.currentTarget)closeSciencePage();
   });
