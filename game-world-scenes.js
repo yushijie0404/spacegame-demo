@@ -78,7 +78,7 @@ function drawLagrangeZones(){
   if(mission.satellite){ctx.fillStyle='#ffd166';ctx.strokeStyle='#17213c';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(mission.satellite.x,mission.satellite.y,10/cam.zoom,0,TAU);ctx.fill();ctx.stroke();}
 }
 function drawAsteroidDefenseZones(){
-  if(!asteroid)return;
+  if(!asteroid||asteroid.shattered)return;
   const f=getAsteroidForecast();
   if(asteroidTrail.length>1){
     drawSpeedTrail(asteroidTrail,Math.hypot(asteroid.vx,asteroid.vy),'rgba(206,151,103,.5)',2/cam.zoom,lowPowerMode?2:1);
@@ -393,38 +393,44 @@ function drawSpaceWarpEffect(){
   ctx.restore();
 }
 
+function drawYamatoAimGuide(){
+  const system=globalThis.SpaceGameShipSkills,status=system?.status?.(),fx=system?.visualState?.()?.yamatoFx;
+  if(!rocket?.alive||status?.shipId!=='hyperion'||status.kind!=='active'||(status.used&&fx?.phase!=='charging')||fx?.phase==='beam')return;
+  const shot=fx?.phase==='charging'?fx:system.resolveYamatoShot({x:rocket.x,y:rocket.y,heading:rocket.a,range:2000,targets:typeof currentYamatoTargets==='function'?currentYamatoTargets():[]});
+  if(!shot?.start||!shot?.end)return;
+  const charging=fx?.phase==='charging',nose={x:shot.start.x+Math.cos(shot.heading)*38,y:shot.start.y+Math.sin(shot.heading)*38},color=shot.hit?'#7df6ff':'#72b8d8';
+  ctx.save();ctx.lineCap='round';ctx.globalAlpha=charging ? .9 : .58;ctx.strokeStyle=color;ctx.lineWidth=(charging?3.5:2.2)/cam.zoom;ctx.setLineDash(charging?[10/cam.zoom,5/cam.zoom]:[7/cam.zoom,9/cam.zoom]);
+  ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(shot.end.x,shot.end.y);ctx.stroke();ctx.setLineDash([]);
+  const radius=(shot.hit?13:8)/cam.zoom;ctx.globalAlpha=charging?1:.72;ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(shot.end.x,shot.end.y,radius,0,TAU);ctx.stroke();
+  if(shot.hit){ctx.beginPath();ctx.moveTo(shot.end.x-radius*1.45,shot.end.y);ctx.lineTo(shot.end.x+radius*1.45,shot.end.y);ctx.moveTo(shot.end.x,shot.end.y-radius*1.45);ctx.lineTo(shot.end.x,shot.end.y+radius*1.45);ctx.stroke();}
+  ctx.fillStyle=color;ctx.font=`900 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(charging?'大和炮聚能锁定':shot.hit?`锁定：${shot.targetName||'目标'}`:'大和炮瞄准线',shot.end.x,shot.end.y-18/cam.zoom);ctx.restore();ctx.textAlign='left';
+}
+
 function drawYamatoEffect(){
   const fx=globalThis.SpaceGameShipSkills?.visualState?.()?.yamatoFx;
   if(!fx||fx.remaining<=0||!fx.start||!fx.end)return;
-  const duration=Math.max(.001,Number(fx.duration)||.86),elapsed=duration-fx.remaining,charge=Math.max(.001,Number(fx.chargeDuration)||.6);
   const nose={x:fx.start.x+Math.cos(fx.heading)*38,y:fx.start.y+Math.sin(fx.heading)*38};
   ctx.save();ctx.lineCap='round';
-  if(elapsed<charge){
-    const p=Math.max(0,Math.min(1,elapsed/charge)),pulse=.75+.25*Math.sin(elapsed*52),radius=(4+p*10)*pulse/cam.zoom;
-    ctx.globalAlpha=.48+.5*p;ctx.fillStyle='#dffcff';
-    if(!lowPowerMode){ctx.shadowColor='#69eaff';ctx.shadowBlur=(10+18*p)/cam.zoom;}
-    ctx.beginPath();ctx.arc(nose.x,nose.y,radius,0,TAU);ctx.fill();
-    ctx.strokeStyle='#77efff';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(nose.x,nose.y,radius*1.8,0,TAU);ctx.stroke();
+  if(fx.phase==='charging'){
+    const charge=Math.max(.001,Number(fx.chargeDuration)||.9),p=Math.max(0,Math.min(1,1-fx.chargeRemaining/charge)),pulse=.82+.18*Math.sin(p*38),radius=(6+p*15)*pulse/cam.zoom;
+    ctx.globalAlpha=.62+.38*p;ctx.fillStyle='#efffff';if(!lowPowerMode){ctx.shadowColor='#69eaff';ctx.shadowBlur=(14+24*p)/cam.zoom;}
+    ctx.beginPath();ctx.arc(nose.x,nose.y,radius*.55,0,TAU);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#77efff';ctx.lineWidth=(2.4+2*p)/cam.zoom;
+    for(let ring=0;ring<3;ring++){const rr=radius*(2.5-ring*.52)*(1-p*.34);ctx.globalAlpha=.28+.2*ring+.28*p;ctx.beginPath();ctx.arc(nose.x,nose.y,rr,0,TAU);ctx.stroke();}
+    ctx.globalAlpha=.35+.55*p;ctx.lineWidth=2/cam.zoom;for(let i=0;i<(lowPowerMode?6:10);i++){const a=i*TAU/(lowPowerMode?6:10)+p*1.8,outer=radius*(3.8+(i%2)*.45),inner=radius*.72;ctx.beginPath();ctx.moveTo(nose.x+Math.cos(a)*outer,nose.y+Math.sin(a)*outer);ctx.lineTo(nose.x+Math.cos(a)*inner,nose.y+Math.sin(a)*inner);ctx.stroke();}
+    ctx.globalAlpha=.95;ctx.fillStyle='#dffcff';ctx.font=`900 ${12/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(`聚能 ${Math.round(p*100)}%`,nose.x,nose.y-34/cam.zoom);
   }else{
-    const afterCharge=elapsed-charge,beamDuration=Math.max(.001,Number(fx.beamDuration)||1.2),beamLife=Math.max(0,Math.min(1,1-afterCharge/beamDuration));
-    ctx.globalAlpha=.78+.22*beamLife;ctx.strokeStyle=lowPowerMode?'#5ee7ff':'#31d9ff';ctx.lineWidth=(lowPowerMode?18:22)/cam.zoom;
-    if(!lowPowerMode){ctx.shadowColor='#42dfff';ctx.shadowBlur=22/cam.zoom;}
-    ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(fx.end.x,fx.end.y);ctx.stroke();
-    ctx.shadowBlur=0;ctx.globalAlpha=.94+.06*beamLife;ctx.strokeStyle='#f5ffff';ctx.lineWidth=(lowPowerMode?5.5:6.5)/cam.zoom;ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(fx.end.x,fx.end.y);ctx.stroke();
-    ctx.globalAlpha=.82;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(nose.x,nose.y,(lowPowerMode?6:8)/cam.zoom,0,TAU);ctx.fill();
+    const beamDuration=Math.max(.001,Number(fx.beamDuration)||1.55),beamLife=Math.max(0,Math.min(1,fx.remaining/beamDuration));
+    ctx.globalAlpha=.78+.22*beamLife;ctx.strokeStyle=lowPowerMode?'#5ee7ff':'#31d9ff';ctx.lineWidth=(lowPowerMode?18:22)/cam.zoom;if(!lowPowerMode){ctx.shadowColor='#42dfff';ctx.shadowBlur=22/cam.zoom;}
+    ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(fx.end.x,fx.end.y);ctx.stroke();ctx.shadowBlur=0;ctx.globalAlpha=.94+.06*beamLife;ctx.strokeStyle='#f5ffff';ctx.lineWidth=(lowPowerMode?5.5:6.5)/cam.zoom;ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(fx.end.x,fx.end.y);ctx.stroke();
+    ctx.globalAlpha=.9;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(nose.x,nose.y,(lowPowerMode?7:9)/cam.zoom,0,TAU);ctx.fill();
     if(fx.hit){
-      const impactDuration=Math.max(.001,Number(fx.impactDuration)||1),impactLife=Math.max(0,Math.min(1,1-afterCharge/impactDuration));
-      const bodyScale=fx.targetKind==='body'||fx.targetKind==='star'||fx.targetKind==='black-hole'?1.45:1,radius=(22+52*(1-impactLife))*bodyScale/cam.zoom;
-      ctx.globalAlpha=.4+.6*impactLife;ctx.fillStyle='#f7ffff';ctx.strokeStyle='#69eaff';ctx.lineWidth=3.5/cam.zoom;
-      ctx.beginPath();ctx.arc(fx.impact.x,fx.impact.y,Math.max(4,radius*.24),0,TAU);ctx.fill();
-      for(const scale of [1,.62]){ctx.globalAlpha=(.25+.65*impactLife)*scale;ctx.beginPath();ctx.arc(fx.impact.x,fx.impact.y,radius*(2-scale),0,TAU);ctx.stroke();}
-      if(!lowPowerMode){
-        ctx.strokeStyle='#eaffff';ctx.lineWidth=2.2/cam.zoom;ctx.globalAlpha=.35+.6*impactLife;
-        for(let i=0;i<10;i++){const a=i*TAU/10+elapsed*.7,inner=radius*.35,outer=radius*(1.05+(i%2)*.28);ctx.beginPath();ctx.moveTo(fx.impact.x+Math.cos(a)*inner,fx.impact.y+Math.sin(a)*inner);ctx.lineTo(fx.impact.x+Math.cos(a)*outer,fx.impact.y+Math.sin(a)*outer);ctx.stroke();}
-      }
+      const impactDuration=Math.max(.001,Number(fx.impactDuration)||1.35),impactLife=Math.max(0,Math.min(1,fx.remaining/impactDuration)),bodyScale=fx.targetKind==='body'||fx.targetKind==='star'||fx.targetKind==='black-hole'?1.45:fx.targetKind==='asteroid'?1.25:1,radius=(26+62*(1-impactLife))*bodyScale/cam.zoom;
+      ctx.globalAlpha=.5+.5*impactLife;ctx.fillStyle='#f7ffff';ctx.strokeStyle='#69eaff';ctx.lineWidth=3.5/cam.zoom;ctx.beginPath();ctx.arc(fx.impact.x,fx.impact.y,Math.max(5,radius*.24),0,TAU);ctx.fill();
+      for(const scale of [1,.62]){ctx.globalAlpha=(.3+.68*impactLife)*scale;ctx.beginPath();ctx.arc(fx.impact.x,fx.impact.y,radius*(2-scale),0,TAU);ctx.stroke();}
+      if(!lowPowerMode){ctx.strokeStyle='#eaffff';ctx.lineWidth=2.2/cam.zoom;ctx.globalAlpha=.4+.6*impactLife;for(let i=0;i<12;i++){const a=i*TAU/12+(beamDuration-fx.remaining)*.8,inner=radius*.3,outer=radius*(1.08+(i%2)*.34);ctx.beginPath();ctx.moveTo(fx.impact.x+Math.cos(a)*inner,fx.impact.y+Math.sin(a)*inner);ctx.lineTo(fx.impact.x+Math.cos(a)*outer,fx.impact.y+Math.sin(a)*outer);ctx.stroke();}}
     }
   }
-  ctx.restore();
+  ctx.restore();ctx.textAlign='left';
 }
 
 function drawBlackHoleStarfield(t){
@@ -569,6 +575,7 @@ function draw(){
   }
   ctx.globalAlpha = 1;
 
+  drawYamatoAimGuide();
   drawRocket();
   drawYamatoEffect();
   ctx.restore();

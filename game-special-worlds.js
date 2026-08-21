@@ -185,7 +185,27 @@ function binaryMetrics(ship=rocket){
 function createAsteroid(){
   const mass=70;
   return {x:9000,y:-2600,vx:-55,vy:0,r:ASTEROID_R,mass,mu:mass*ASTEROID_MU_PER_MASS,angle:.35,av:.018,
-    inertia:.5*70*ASTEROID_R*ASTEROID_R,name:'小行星 2026-Q7',col:'#a97850',alive:true};
+    inertia:.5*70*ASTEROID_R*ASTEROID_R,name:'小行星 2026-Q7',col:'#a97850',alive:true,shattered:false,fragments:[]};
+}
+
+function shatterAsteroid(shot={}){
+  if(!asteroid||!asteroid.alive)return [];
+  const dir=shot.dir||{x:Math.cos(Number(shot.heading)||0),y:Math.sin(Number(shot.heading)||0)},side={x:-dir.y,y:dir.x};
+  const sizes=[.52,.46,.41,.36,.31,.27],spread=[-1,-.58,-.2,.22,.61,1];
+  asteroid.fragments=sizes.map((scale,index)=>{
+    const lateral=spread[index],forward=.25+index*.08,offsetR=asteroid.r*(.18+index*.035),speed=22+index*4;
+    return {x:asteroid.x+dir.x*offsetR+side.x*lateral*asteroid.r*.48,y:asteroid.y+dir.y*offsetR+side.y*lateral*asteroid.r*.48,
+      vx:asteroid.vx+dir.x*(speed+forward*10)+side.x*lateral*28,vy:asteroid.vy+dir.y*(speed+forward*10)+side.y*lateral*28,
+      r:asteroid.r*scale,angle:asteroid.angle+index*.73,av:asteroid.av+(index-2.5)*.19,life:6,maxLife:6,index};
+  });
+  asteroid.alive=false;asteroid.shattered=true;asteroid.mu=0;
+  if(typeof particles!=='undefined'&&Array.isArray(particles)){
+    for(let i=0;i<30;i++){
+      const a=i/30*TAU+(i%3)*.17,speed=35+(i%7)*11;
+      particles.push({x:shot.impact?.x??asteroid.x,y:shot.impact?.y??asteroid.y,vx:asteroid.vx+Math.cos(a)*speed+dir.x*38,vy:asteroid.vy+Math.sin(a)*speed+dir.y*38,life:.8+(i%5)*.12,c:i%3?'#ffd1a8':'#dffcff'});
+    }
+  }
+  return asteroid.fragments;
 }
 
 function asteroidMetrics(ship=rocket){
@@ -203,7 +223,16 @@ function asteroidGravityAt(x,y,t=0){
   return {ax,ay};
 }
 function updateAsteroid(dt){
-  if(level!==7||!asteroid||!asteroid.alive||mission.done) return;
+  if(level!==7||!asteroid) return;
+  if(asteroid.shattered){
+    if(mission.done)return;
+    for(const fragment of asteroid.fragments||[]){
+      const g=asteroidGravityAt(fragment.x,fragment.y);fragment.vx+=g.ax*dt;fragment.vy+=g.ay*dt;fragment.x+=fragment.vx*dt;fragment.y+=fragment.vy*dt;
+      fragment.angle=normalizeAngle(fragment.angle+fragment.av*dt);fragment.life=Math.max(0,fragment.life-dt);
+    }
+    return;
+  }
+  if(!asteroid.alive||mission.done)return;
   const g=asteroidGravityAt(asteroid.x,asteroid.y);
   asteroid.vx+=g.ax*dt;asteroid.vy+=g.ay*dt;
   asteroid.x+=asteroid.vx*dt;asteroid.y+=asteroid.vy*dt;
@@ -222,6 +251,7 @@ function updateAsteroid(dt){
 }
 function predictAsteroidPath(){
   if(!asteroid) return {pts:[],safe:false,minEarth:Infinity,minMoon:Infinity,impact:null};
+  if(asteroid.shattered)return {pts:[],safe:true,minEarth:ASTEROID_SAFE_EARTH+asteroid.r,minMoon:ASTEROID_SAFE_MOON+asteroid.r,impact:null,shattered:true,horizon:0};
   let x=asteroid.x,y=asteroid.y,vx=asteroid.vx,vy=asteroid.vy,minEarth=Infinity,minMoon=Infinity,impact=null;
   const horizon=190,steps=lowPowerMode?150:300,dt=horizon/steps,pts=[];
   for(let i=0;i<steps;i++){
@@ -377,7 +407,7 @@ function predictPath(ship=rocket){
         return {pts,markers,horizon,steps,impact,moonApproach};
       }
     }
-    if(level===7&&asteroid){
+    if(level===7&&asteroid?.alive){
       const bx=asteroid.x+asteroid.vx*i*dt,by=asteroid.y+asteroid.vy*i*dt;
       if(Math.hypot(px-bx,py-by)<asteroid.r){
         impact={x:px,y:py,body:'小行星'};

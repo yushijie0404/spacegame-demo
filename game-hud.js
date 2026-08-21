@@ -41,7 +41,7 @@ function objectiveVisualTarget(){
   if(level===4)return{x:MOON.x,y:MOON.y,r:MOON.r,label:'月球',color:'#dce3e8'};
   if(level===5){if(mission.stage<3)return{x:MOON.x,y:MOON.y,r:MOON.r,label:'月球借力',color:'#dce3e8'};const p=outwardPoint(EARTH.x,EARTH.y,SLING_EXIT_R);return{...p,label:'地球逃逸门',color:'#5fd068'};}
   if(level===6){const lm=nearestLagrangeMetrics(),p=lm.point;return{x:p.x,y:p.y,r:220,label:`最近 L${p.id}`,color:p.color};}
-  if(level===7&&asteroid)return{x:asteroid.x,y:asteroid.y,r:asteroid.r,label:'目标小行星',color:'#d8a16f'};
+  if(level===7&&asteroid?.alive)return{x:asteroid.x,y:asteroid.y,r:asteroid.r,label:'目标小行星',color:'#d8a16f'};
   if(level===8&&binary){if(mission.stage===0)return{x:0,y:0,r:60,label:'双星通道',color:'#4cf0dd'};const p=mission.stage===1?binaryGatePoint():station;return{x:p.x,y:p.y,r:mission.stage===1?30:38,label:mission.stage===1?'引力通道':'暮光站',color:mission.stage===1?'#4cf0dd':'#5fd068'};}
   if(level===9&&blackHole){if(mission.stage<2)return{x:0,y:0,r:BH_PHOTON_RING,label:'黑洞近点',color:'#d9a6ff'};const p=outwardPoint(0,0,BH_ESCAPE_R);return{...p,label:'远方救援门',color:'#5fd068'};}
   if(level===10&&threeBody){if(mission.stage<2){const rescue=nearestUnrescuedThreeBodyShip();if(rescue){const p=rescue.gate;return{x:p.x,y:p.y,r:THREE_GATE_R,label:`最近：求救飞船 ${rescue.index?'B':'A'}`,color:rescue.index?'#ffd166':'#4cf0dd'};}}const c=threeBodyBarycenter(),p=outwardPoint(c.x,c.y,THREE_ESCAPE_R);return{...p,label:'安全边界',color:'#5fd068'};}
@@ -186,7 +186,7 @@ function drawRadar(){
       else{ ctx.strokeStyle='rgba(207,216,220,.55)'; ctx.beginPath(); ctx.arc(mqx,mqy,mr+3,0,TAU); ctx.stroke(); }
     }
 
-    if(level===7&&asteroid){
+    if(level===7&&asteroid?.alive){
       const f=getAsteroidForecast(),ax=mapX(asteroid.x),ay=mapY(asteroid.y);
       if(showPred&&f.pts.length>1){ctx.strokeStyle=f.safe?'rgba(95,208,104,.78)':'rgba(239,71,111,.82)';ctx.lineWidth=1.4;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(ax,ay);for(const p of f.pts){ctx.lineTo(mapX(p.x),mapY(p.y));}ctx.stroke();ctx.setLineDash([]);}
       ctx.fillStyle='#c98f61';ctx.beginPath();ctx.arc(ax,ay,Math.max(3,asteroid.r*scale),0,TAU);ctx.fill();
@@ -258,7 +258,7 @@ function drawRadar(){
       }
       ctx.globalAlpha=1;
     }
-    if(level===7&&asteroid){
+    if(level===7&&asteroid?.alive){
       const qx=mapX(asteroid.x),qy=mapY(asteroid.y);ctx.fillStyle='#c98f61';ctx.beginPath();ctx.arc(qx,qy,3.5,0,TAU);ctx.fill();ctx.fillStyle='#ffd1a8';ctx.fillText('小行星',qx,qy-7);
     }
     // 全局导航专属视角框：显示主画面当前观察区域；轨道雷达保持简洁，不绘制此框。
@@ -437,7 +437,7 @@ function drawHUDOverlay(worldDrawStarted){
   if(level===10){
     ctx.fillStyle=threeM.clearance>THREE_DANGER_PAD?'#5fd068':threeM.clearance>0?'#ffd166':'#ef476f';
     ctx.fillText(`最近恒星 ${threeM.nearest.name.slice(-1)} · 净空 ${threeM.clearance.toFixed(0)} u`,W-20,teleY+36);
-  }else if(level===7&&asteroid){
+  }else if(level===7&&asteroid?.alive){
     const am=asteroidMetrics();ctx.fillStyle=telemetryRiskColor(am.relSpeed,22,60);ctx.fillText(`相对速度·小行星 ${am.relSpeed.toFixed(1)} u/s`,W-20,teleY+36);
   }else if(level===9){
     ctx.fillText(`本地速度 ${blackM.speed.toFixed(1)} · 运动 ×${blackM.coordinateFactor.toFixed(2)}`,W-20,teleY+36);
@@ -489,7 +489,7 @@ function drawHUDOverlay(worldDrawStarted){
     ctx.fillStyle=telemetryRiskColor(lm.distance,mission.assistMode?220:140,1000);ctx.fillText(`距 L${lm.point.id} ${lm.distance.toFixed(0)} u`,W-20,teleY+76);
     ctx.fillStyle=telemetryRiskColor(lm.relSpeed,mission.assistMode?16:10,35);ctx.fillText(`相对速度·目标点 ${lm.relSpeed.toFixed(1)} u/s`,W-20,teleY+96);
   }
-  if(level===7&&asteroid){
+  if(level===7&&asteroid?.alive){
     const am=asteroidMetrics(),f=getAsteroidForecast();
     ctx.fillStyle='#d8a16f';ctx.fillText(`距小行星 ${am.distance.toFixed(0)} u`,W-20,teleY+76);
     ctx.fillStyle=f.safe?'#5fd068':'#ef476f';ctx.fillText(f.safe?'预测：地月均安全':`预测：${f.impact?'将撞'+f.impact.body:'距离仍危险'}`,W-20,teleY+96);
@@ -523,7 +523,7 @@ function drawHUDOverlay(worldDrawStarted){
     else if(level===4&&lunarM){critical=Math.abs(lunarM.farDelta)<Math.PI/2?'已到月背 · 准备着陆':'目标：月球背面';criticalColor=Math.abs(lunarM.farDelta)<Math.PI/2?'#5fd068':'#ffd166';}
     else if(level===5){const e=earthSpecificEnergy(),v=e>0?Math.sqrt(2*e):0;critical=`逃逸余速 v∞ ${v.toFixed(1)} u/s`;criticalColor=e>0?'#5fd068':'#ffd166';}
     else if(level===6){const lm=nearestLagrangeMetrics();critical=`L${lm.point.id} ${lm.distance.toFixed(0)} u · 相对速度·目标点 ${lm.relSpeed.toFixed(1)}`;criticalColor=lm.point.color;}
-    else if(level===7&&asteroid){const f=getAsteroidForecast();critical=f.safe?'预测：地月均安全':'预测：仍有撞击危险';criticalColor=f.safe?'#5fd068':'#ef476f';}
+    else if(level===7&&asteroid){const f=getAsteroidForecast();critical=asteroid.shattered?'小行星已碎裂':f.safe?'预测：地月均安全':'预测：仍有撞击危险';criticalColor=f.safe?'#5fd068':'#ef476f';}
     else if(level===8&&binaryM){const sm=stationMetrics();critical=mission.stage>=2?`暮光站 ${sm.distance.toFixed(0)} u`:`引力通道 ${binaryM.gateDistance.toFixed(0)} u`;criticalColor=mission.stage>=2?'#5fd068':'#4cf0dd';}
     else if(level===9&&blackM){critical=`逃逸能量 ${blackM.energy>0?'+':''}${blackM.energy.toFixed(0)}`;criticalColor=blackM.energy>0?'#5fd068':'#ffd166';}
     else if(level===10&&threeBody){const rescue=mission.stage<2?nearestUnrescuedThreeBodyShip():null;critical=rescue?`最近求救 ${rescue.index?'B':'A'} ${rescue.distance.toFixed(0)} u`:`安全边界 ${Math.max(0,THREE_ESCAPE_R-threeM.r).toFixed(0)} u`;criticalColor=rescue?.index===1?'#ffd166':'#4cf0dd';}

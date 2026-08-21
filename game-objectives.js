@@ -636,14 +636,21 @@ function finishAsteroidDefense(forecast=getAsteroidForecast(true)){
   ]);
   const result=saveLevelResult(7,performanceScore(),starResult.stars);
   syncUI();
+  const defenseSummary=mission.asteroidShattered
+    ?`大和炮已将小行星击碎为 ${asteroid.fragments?.length||0} 块，高能光束使碎片快速散开，不再沿原轨道撞向地球或月球<br>`
+    :`${mission.asteroidYamato?'大和炮定向冲量':mission.asteroidImpact?'动能撞击':'持续推力'}已改变小行星轨道<br>预计最近地球表面 ${Math.max(0,forecast.minEarth-EARTH.r-asteroid.r).toFixed(0)} u · 月球表面 ${Math.max(0,forecast.minMoon-MOON.r-asteroid.r).toFixed(0)} u<br>小行星自转 ${(asteroid.av*180/Math.PI).toFixed(2)}°/s · `;
   showMsg(survived?'🛡️':'💥','行星防御成功！',
-    resultLine(result)+`${mission.asteroidYamato?'大和炮定向冲量':mission.asteroidImpact?'动能撞击':'持续推力'}已改变小行星轨道<br>`+
-    `预计最近地球表面 ${Math.max(0,forecast.minEarth-EARTH.r-asteroid.r).toFixed(0)} u · 月球表面 ${Math.max(0,forecast.minMoon-MOON.r-asteroid.r).toFixed(0)} u<br>`+
-    `小行星自转 ${(asteroid.av*180/Math.PI).toFixed(2)}°/s · ${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
+    resultLine(result)+defenseSummary+`${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
     `<span style="color:#888">无论软着陆、持续推离还是牺牲飞船撞击，只要最终轨道同时避开地球和月球就算成功。</span>`);
 }
 function updateMissionL7(dt){
-  if(!asteroid||!asteroid.alive)return;
+  if(!asteroid)return;
+  if(asteroid.shattered){
+    mission.asteroidSafeT+=dt;mission.dynHint='小行星已碎裂｜正在确认碎片散开';
+    if(mission.asteroidSafeT>=1.8)finishAsteroidDefense(getAsteroidForecast(true));
+    return;
+  }
+  if(!asteroid.alive)return;
   const m=asteroidMetrics(),forecast=getAsteroidForecast();
   mission.asteroidMinEarth=forecast.minEarth;mission.asteroidMinMoon=forecast.minMoon;
   if(mission.asteroidChanged&&forecast.safe){

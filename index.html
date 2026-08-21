@@ -705,7 +705,9 @@ function syncMusicContext(){
   SG_AUDIO.playLevel(level,{intensity:musicPressureMode,duration:2.8});
   const resultOpen=document.getElementById('msg')?.style.display==='flex';
   const briefingOpen=visible('briefing'),scienceOpen=visible('sciencePage'),conceptOpen=visible('conceptCard');
-  const factor=resultOpen ? .35 : briefingOpen ? .45 : (scienceOpen||conceptOpen||paused) ? .4 : 1;
+  // The briefing is part of the mission's musical runway, so keep it clearly
+  // audible instead of treating it like a pause overlay.
+  const factor=resultOpen ? .35 : briefingOpen ? .82 : (scienceOpen||conceptOpen||paused) ? .4 : 1;
   if(factor<1)SG_AUDIO.setMusicDuck('overlay',factor,resultOpen ? .8 : .6);else SG_AUDIO.clearMusicDuck('overlay',.8);
 }
 function installMusicContextObserver(){
@@ -717,7 +719,7 @@ function installMusicContextObserver(){
 function setMusicPressure(mode){
   if(mode===musicPressureMode)return;
   musicPressureMode=mode;musicCalmT=0;
-  SG_AUDIO.setIntensity(level,mode,{duration:3.5,phraseBoundary:true});
+  SG_AUDIO.setIntensity(level,mode,{duration:6.5,phraseBoundary:true});
 }
 function updateMusicPressure(dt){
   if(!mission||mission.done||state!=='fly'||level<7)return;
@@ -725,13 +727,11 @@ function updateMusicPressure(dt){
     const forecast=mission.asteroidForecast;
     const danger=!forecast?.safe&&(!!mission.asteroidContact||!!mission.asteroidAnchored||(mission.stage>=1&&!!forecast?.impact));
     if(danger){musicCalmT=0;setMusicPressure('high');}
-    else if(musicPressureMode==='high'){musicCalmT+=dt;if(musicCalmT>=5)setMusicPressure('normal');}
   }else if(level===8&&binary&&station){
-    const bm=binaryMetrics(),sm=stationMetrics();
+    const bm=binaryMetrics();
     const nearHeat=bm.distA<binary.heatRadiusA+180||bm.distB<binary.heatRadiusB+180;
     const fastCorridor=mission.stage===1&&bm.gateDistance<1600&&bm.gateRel>100;
     if(bm.gateDistance<700||nearHeat||fastCorridor)setMusicPressure('high');
-    else if(musicPressureMode==='high'&&mission.stage>=3&&sm.relSpeed<25)setMusicPressure('normal');
   }else if(level===9&&blackHole){
     const m=blackHoleMetrics();if(m.r<BH_BURN_R+90||mission.stage>=1||mission.blackHoleDeepBurn||mission.blackHoleEscaping)setMusicPressure('high');
   }else if(level===10&&threeBody){
@@ -894,6 +894,9 @@ function closeLevelSelect(){
 function startLevel(levelId){
   closeMainSettings();
   level=Math.max(1,Math.min(10,Number(levelId)||1));
+  // Start the level score on the mission-selection gesture. resetGame() asks
+  // for the same track again, which preserves this early musical lead-in.
+  SG_AUDIO.playLevel(level,{intensity:'normal',duration:4.5});
   challengeMode=false;
   gameStarted=true; levelSelectOpen=false; paused=false; lastBriefedLevel=0;
   closeAchievementCollection();
@@ -1008,7 +1011,7 @@ function resetGame(){
     slingWasInside:false,slingFlybyValid:false,slingGain:0,slingVInf:0,slingFailed:false,
     lagrangeTarget:1,lagrangeDistance:Infinity,lagrangeRelSpeed:Infinity,
     asteroidContact:false,asteroidAnchored:false,asteroidMountAngle:0,hingeAngle:0,
-    asteroidChanged:false,asteroidImpact:false,asteroidYamato:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null,
+    asteroidChanged:false,asteroidImpact:false,asteroidYamato:false,asteroidShattered:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null,
     binaryHeatViolated:false,binaryCaptured:false,binaryGateCrossed:false,binaryTargetEnergy:Infinity,
     blackHoleMinR:Infinity,blackHoleDeepBurn:false,blackHoleEscaping:false,blackHoleFrozen:false,blackHoleAwaitRelease:false,blackHoleInvalidExitT:0,blackHoleExitFailed:false,
     threeGateIndex:0,threeRescued:[false,false],threeDestroyed:[false,false],threeRescueOrder:[],threeApproachMade:false,threeDangerViolated:false,threeMinClearance:Infinity,threeEscapeT:0,threeSeed:threeBody?.seed||0};
@@ -1368,25 +1371,41 @@ function cycleScreenOrientation(){
   syncUI();
 }
 
-function tryShipSkill(){
-  if(!mission||paused||state!=='fly')return {ok:false,reason:'inactive'};
+function currentYamatoTargets(){
+  const targets=BODIES.filter(body=>(body.r||0)>5).map(body=>({ref:body,x:body.x,y:body.y,r:body.r,name:body.name,kind:body.isStar?'star':body.isBlackHole?'black-hole':'body'}));
+  if(asteroid?.alive)targets.push({ref:asteroid,x:asteroid.x,y:asteroid.y,r:asteroid.r,name:asteroid.name,kind:'asteroid'});
+  if(station)targets.push({ref:station,x:station.x,y:station.y,r:32,name:'空间站',kind:'station'});
+  for(const ship of threeBody?.rescueShips||[]){
+    if(ship.alive&&!ship.destroyed&&!ship.rescued)targets.push({ref:ship,x:ship.x,y:ship.y,r:THREE_RESCUE_SHIP_R,name:`求救飞船 ${ship.index?'B':'A'}`,kind:'rescue'});
+  }
+  return targets;
+}
+function markSkillWorldStarted(){
+  mission.worldStarted=true;launched=true;rocket._clearedPad=true;rocket._launchAssistActive=false;rocket._launchCompleted=true;
+  if(ghostShip)ghostShip.started=true;trailSampleT=0;predictionCache=null;
+}
+function shipSkillRuntimeContext(){
   const boundaryCenter=level===10&&threeBody?threeBodyBarycenter():level===8?{x:0,y:0}:EARTH;
   const worldBounds={x:boundaryCenter.x,y:boundaryCenter.y,radius:level===10?30000:level===8?80000:150000};
   const warpBodies=asteroid?.alive?[...BODIES,asteroid]:BODIES;
-  const yamatoTargets=BODIES.filter(body=>(body.r||0)>5).map(body=>({ref:body,x:body.x,y:body.y,r:body.r,name:body.name,kind:body.isStar?'star':body.isBlackHole?'black-hole':'body'}));
-  if(asteroid?.alive)yamatoTargets.push({ref:asteroid,x:asteroid.x,y:asteroid.y,r:asteroid.r,name:asteroid.name,kind:'asteroid'});
-  if(station)yamatoTargets.push({ref:station,x:station.x,y:station.y,r:32,name:'空间站',kind:'station'});
-  for(const ship of threeBody?.rescueShips||[]){
-    if(ship.alive&&!ship.destroyed&&!ship.rescued)yamatoTargets.push({ref:ship,x:ship.x,y:ship.y,r:THREE_RESCUE_SHIP_R,name:`求救飞船 ${ship.index?'B':'A'}`,kind:'rescue'});
-  }
-  const markWorldStarted=()=>{mission.worldStarted=true;launched=true;rocket._clearedPad=true;rocket._launchAssistActive=false;rocket._launchCompleted=true;if(ghostShip)ghostShip.started=true;trailSampleT=0;predictionCache=null;};
-  const result=SG_SKILLS.use({rocket,mission,level,challengeMode,bodies:warpBodies,worldBounds,ringOut:RING_OUT,trail,asteroid,station,binary,blackHole,threeBody,
-    yamatoTargets,asteroidPushForce:ASTEROID_PUSH_FORCE,onWarp:markWorldStarted,onYamatoFire(){markWorldStarted();shake=Math.max(shake,5);},
-    onYamatoAsteroidHit(){
-      mission.asteroidChanged=true;mission.asteroidYamato=true;mission.asteroidSafeT=0;mission.stage=Math.max(3,mission.stage);mission.holdT=0;mission.asteroidForecast=null;
-      const forecast=getAsteroidForecast(true);mission.asteroidForecast=forecast;
-      mission.dynHint=forecast.safe?'大和炮偏转有效｜正在确认地球与月球均安全':'大和炮已经消耗｜当前预测仍有撞击风险';
-    }});
+  return {rocket,mission,level,challengeMode,bodies:warpBodies,worldBounds,ringOut:RING_OUT,trail,asteroid,station,binary,blackHole,threeBody,
+    yamatoTargets:currentYamatoTargets(),onWarp:markSkillWorldStarted,
+    onYamatoFire(shot){
+      markSkillWorldStarted();shake=Math.max(shake,shot.destruction?11:7);
+      const message=shot.destruction?`${SG_I18N.t('大和炮击碎小行星')} · ${shot.destruction.fragments} ${SG_I18N.t('块')}`:
+        shot.hit?`${SG_I18N.t('光束消散在')} ${SG_I18N.t(shot.targetName||'目标')} ${SG_I18N.t('引力场中')}`:SG_I18N.t('大和炮射程内没有目标');
+      mission.toast='☄ '+message;mission.toastT=3.4;
+    },
+    onYamatoAsteroidHit(shot){
+      const fragments=shatterAsteroid(shot);
+      mission.asteroidChanged=true;mission.asteroidYamato=true;mission.asteroidShattered=true;mission.asteroidSafeT=0;mission.stage=Math.max(3,mission.stage);mission.holdT=0;mission.asteroidForecast=null;
+      mission.dynHint='小行星已被大和炮击碎｜碎片正在远离危险轨道';
+      return {fragments:fragments.length};
+    }};
+}
+function tryShipSkill(){
+  if(!mission||paused||state!=='fly')return {ok:false,reason:'inactive'};
+  const result=SG_SKILLS.use(shipSkillRuntimeContext());
   if(result.message){mission.toast=(result.ok?'✦ ':'⚠️ ')+result.message;mission.toastT=2.8;}
   syncUI();return result;
 }
@@ -1546,11 +1565,11 @@ function saveCheckpoint(){
       slingWasInside:mission.slingWasInside,slingFlybyValid:mission.slingFlybyValid,
       slingGain:mission.slingGain,slingVInf:mission.slingVInf,slingFailed:false
     }:null,
-    asteroid:asteroid?{x:asteroid.x,y:asteroid.y,vx:asteroid.vx,vy:asteroid.vy,angle:asteroid.angle,av:asteroid.av,alive:asteroid.alive}:null,
+    asteroid:asteroid?{x:asteroid.x,y:asteroid.y,vx:asteroid.vx,vy:asteroid.vy,angle:asteroid.angle,av:asteroid.av,alive:asteroid.alive,shattered:!!asteroid.shattered,mu:asteroid.mu,fragments:(asteroid.fragments||[]).map(fragment=>({...fragment}))}:null,
     asteroidMission:level===7?{
       asteroidContact:mission.asteroidContact,asteroidAnchored:mission.asteroidAnchored,
       asteroidMountAngle:mission.asteroidMountAngle,asteroidMountLocal:mission.asteroidMountLocal,
-      hingeAngle:mission.hingeAngle,asteroidChanged:mission.asteroidChanged,asteroidImpact:mission.asteroidImpact,asteroidYamato:mission.asteroidYamato
+      hingeAngle:mission.hingeAngle,asteroidChanged:mission.asteroidChanged,asteroidImpact:mission.asteroidImpact,asteroidYamato:mission.asteroidYamato,asteroidShattered:mission.asteroidShattered
     }:null,
     ghost:ghostShip?{...ghostShip}:null,
     shipSkill:SG_SKILLS.snapshot()
@@ -1724,7 +1743,7 @@ function update(dt, dtReal){
   // 屏幕震动是镜头反馈，按真实时间结束；推进触发的子弹时间不能把它无限拉长。
   shake = Math.max(0, shake - dtReal*30);
 
-  SG_SKILLS.update(dt,dtReal,{rocket,mission,level,state});
+  SG_SKILLS.update(dt,dtReal,shipSkillRuntimeContext());
   updateFlightPhysics(dt,dtReal,observationDt);
   updateRewardFlightStats(dt);
 }

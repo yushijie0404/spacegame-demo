@@ -145,7 +145,20 @@ function drawBody(b){
 }
 
 function drawAsteroid(){
-  if(!asteroid||!asteroid.alive||!worldCircleVisible(asteroid,160))return;
+  if(!asteroid)return;
+  if(asteroid.shattered){
+    for(const fragment of asteroid.fragments||[]){
+      if(fragment.life<=0||!worldCircleVisible(fragment,100))continue;
+      const alpha=Math.max(0,Math.min(1,fragment.life/Math.max(.001,fragment.maxLife||6)));
+      ctx.save();ctx.translate(fragment.x,fragment.y);ctx.rotate(fragment.angle);ctx.globalAlpha=.25+.75*alpha;
+      if(!lowPowerMode){ctx.shadowColor='rgba(105,234,255,.42)';ctx.shadowBlur=10/cam.zoom;}
+      const grad=ctx.createRadialGradient(-fragment.r*.25,-fragment.r*.28,1,0,0,fragment.r);grad.addColorStop(0,'#e7b98a');grad.addColorStop(.58,'#8d5c3e');grad.addColorStop(1,'#382721');
+      ctx.fillStyle=grad;ctx.strokeStyle='#dffcff';ctx.lineWidth=1.8/cam.zoom;ctx.beginPath();
+      const points=7;for(let i=0;i<points;i++){const a=i/points*TAU,r=fragment.r*(.76+((i*3+fragment.index)%5)*.065),x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+    }
+    return;
+  }
+  if(!asteroid.alive||!worldCircleVisible(asteroid,160))return;
   ctx.save();ctx.translate(asteroid.x,asteroid.y);ctx.rotate(asteroid.angle);
   ctx.shadowColor='rgba(255,157,92,.35)';ctx.shadowBlur=lowPowerMode?0:16/cam.zoom;
   const grad=ctx.createRadialGradient(-25,-30,5,0,0,asteroid.r);

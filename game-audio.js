@@ -436,10 +436,13 @@
         relayClick(.022);filteredNoise({duration:.22,from:260,to:2400,volume:.035,q:1.25});
         glassNote(440,.035,.025,.08);glassNote(880,.16,.038,.18);glassNote(1318.51,.22,.028,.31);
         break;
+      case 'yamato_charge':
+        relayClick(.03);filteredNoise({duration:.86,from:95,to:1450,volume:.035,q:3.1});
+        glassNote(110,.035,.045,.03);glassNote(220,.1,.04,.3);glassNote(440,.18,.045,.64);
+        break;
       case 'yamato_cannon':
-        filteredNoise({duration:.58,from:180,to:1250,volume:.028,q:2.1});
-        glassNote(110,.04,.055,.04);glassNote(220,.12,.05,.24);glassNote(440,.19,.052,.46);
-        lowThump(.085,.24,.6,72,38);filteredNoise({duration:.24,from:2800,to:180,volume:.075,q:.85,delay:.6});
+        lowThump(.12,.28,0,88,34);filteredNoise({duration:.11,from:5200,to:680,volume:.12,q:.75,attack:.001});
+        filteredNoise({duration:.52,from:1100,to:160,volume:.065,q:1.25,delay:.025});glassNote(880,.08,.035,.01);
         break;
       default:
         relayClick(.022);

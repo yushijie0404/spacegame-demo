@@ -5,11 +5,11 @@
 (function createShipSkillSystem(global){
   const INTRO_KEY='spacegame-ship-skill-intros-v1';
   const SPACE_WARP_DISTANCE=150,SPACE_WARP_CLEARANCE=5,SPACE_WARP_MAX_USES=3,SPACE_WARP_FUEL_COST=5,SPACE_WARP_COOLDOWN=5;
-  const YAMATO_RANGE=2000,YAMATO_FORCE_SECONDS=60,YAMATO_RECOIL_SPEED=8,YAMATO_RECOIL_SAMPLE=.25;
+  const YAMATO_RANGE=2000,YAMATO_CHARGE_DURATION=.9,YAMATO_BEAM_DURATION=1.55,YAMATO_IMPACT_DURATION=1.35;
   const planned=new Map([
     ['rocket',{shipId:'rocket',id:'buffer_fork',icon:'🛬',name:'缓冲货叉',kind:'passive',summary:'安全着陆速度上限提高 15%。',specialty:'擅长：返回与着陆任务',available:false}],
     ['swordwing',{shipId:'swordwing',id:'space_warp',icon:'✦',name:'空间折跃',kind:'active',maxUses:SPACE_WARP_MAX_USES,cooldown:SPACE_WARP_COOLDOWN,fuelCost:SPACE_WARP_FUEL_COST,summary:'沿机头方向折跃 150u，每关 3 次；挑战模式每次消耗 5% 燃料，冷却 5 秒。',specialty:'擅长：连续交会与路径修正',available:false}],
-    ['hyperion',{shipId:'hyperion',id:'yamato_cannon',icon:'☄',name:'大和炮',kind:'active',summary:'舰首聚能后发射 2000u 光束；命中小行星时一次施加 60 秒等效定向冲量。',specialty:'擅长：小行星防御 · 每关一次',available:false}]
+    ['hyperion',{shipId:'hyperion',id:'yamato_cannon',icon:'☄',name:'大和炮',kind:'active',summary:'显示 2000u 瞄准线；舰首聚能 0.9 秒后发射，命中小行星会将其击碎。',specialty:'擅长：小行星防御 · 每关一次',available:false}]
   ]);
   function resolveWarpPath(input={}){
     const start={x:Number(input.x)||0,y:Number(input.y)||0},heading=Number(input.heading)||0;
@@ -68,16 +68,6 @@
     const end={x:start.x+dir.x*distance,y:start.y+dir.y*distance};
     return {start,end,impact:{...end},heading,dir,range,distance,hit:!!hit,target:hit?.target||null,targetKind:hit?.kind||'',targetName:hit?.name||''};
   }
-  function applyYamatoImpulse(target,shot,force,seconds=YAMATO_FORCE_SECONDS){
-    if(!target||!shot?.hit)return {dvx:0,dvy:0,avDelta:0};
-    const mass=Math.max(1,Number(target.mass)||1),magnitude=Math.max(0,Number(force)||0)*Math.max(0,Number(seconds)||0)/mass;
-    const dvx=shot.dir.x*magnitude,dvy=shot.dir.y*magnitude;
-    const rx=shot.impact.x-Number(target.x||0),ry=shot.impact.y-Number(target.y||0),radius=Math.max(1,Number(target.r)||Math.hypot(rx,ry)||1);
-    const radial=Math.max(1e-7,Math.hypot(rx,ry)),ux=rx/radial,uy=ry/radial;
-    const avDelta=2*(ux*dvy-uy*dvx)/radius;
-    target.vx=(Number(target.vx)||0)+dvx;target.vy=(Number(target.vy)||0)+dvy;target.av=(Number(target.av)||0)+avDelta;
-    return {dvx,dvy,avDelta,magnitude,seconds:Math.max(0,Number(seconds)||0)};
-  }
   const installed=new Map([
     ['rocket',{...planned.get('rocket'),available:true,landingMultiplier:1.15}],
     ['swordwing',{...planned.get('swordwing'),available:true,activate({rocket,mission,challengeMode,bodies,worldBounds,ringOut,trail,onWarp}){
@@ -96,26 +86,27 @@
       fx.remaining=Math.max(0,fx.remaining-Math.max(0,Number(dtReal)||0));
       if(fx.remaining===0)delete state.payload.warpFx;
     }}],
-    ['hyperion',{...planned.get('hyperion'),available:true,activate({rocket,yamatoTargets,asteroid,asteroidPushForce,onYamatoFire,onYamatoAsteroidHit}){
+    ['hyperion',{...planned.get('hyperion'),available:true,activate({rocket,yamatoTargets}){
       if(!rocket||rocket.alive===false)return {ok:false,reason:'inactive',message:t('飞船状态不允许开炮')};
-      const shot=resolveYamatoShot({x:rocket.x,y:rocket.y,heading:rocket.a,range:YAMATO_RANGE,targets:yamatoTargets});
-      rocket.vx=(Number(rocket.vx)||0)-shot.dir.x*YAMATO_RECOIL_SPEED;
-      rocket.vy=(Number(rocket.vy)||0)-shot.dir.y*YAMATO_RECOIL_SPEED;
-      rocket.skillImpulseG=Math.max(Number(rocket.skillImpulseG)||0,YAMATO_RECOIL_SPEED/YAMATO_RECOIL_SAMPLE);
-      if(rocket.landed){rocket.landed=false;rocket.body=null;rocket.launchGrace=Math.max(.12,Number(rocket.launchGrace)||0);}
-      let impulse=null;
-      if(asteroid&&shot.hit&&shot.target===asteroid){
-        impulse=applyYamatoImpulse(asteroid,shot,asteroidPushForce,YAMATO_FORCE_SECONDS);
-        if(typeof onYamatoAsteroidHit==='function')onYamatoAsteroidHit({...shot,impulse});
-      }
-      if(typeof onYamatoFire==='function')onYamatoFire({...shot,impulse});
-      const message=asteroid&&shot.target===asteroid?`${t('大和炮命中小行星')} · Δv ${Math.hypot(impulse.dvx,impulse.dvy).toFixed(1)} u/s`:
-        shot.hit?`${t('光束消散在')} ${t(shot.targetName||'目标')} ${t('引力场中')}`:t('大和炮射程内没有目标');
-      const fx={start:shot.start,end:shot.end,impact:shot.impact,heading:shot.heading,hit:shot.hit,targetKind:shot.targetKind,
-        remaining:2.1,duration:2.1,chargeDuration:.65,beamDuration:1.45,impactDuration:1.25};
-      return {ok:true,sound:'yamato_cannon',message,shot,impulse,payload:{yamatoFx:fx}};
-    },update({state,dtReal}){
+      const preview=resolveYamatoShot({x:rocket.x,y:rocket.y,heading:rocket.a,range:YAMATO_RANGE,targets:yamatoTargets});
+      const fx={phase:'charging',start:preview.start,end:preview.end,impact:preview.impact,heading:preview.heading,hit:preview.hit,targetKind:preview.targetKind,targetName:preview.targetName,
+        chargeRemaining:YAMATO_CHARGE_DURATION,chargeDuration:YAMATO_CHARGE_DURATION,remaining:YAMATO_CHARGE_DURATION,beamDuration:YAMATO_BEAM_DURATION,impactDuration:YAMATO_IMPACT_DURATION};
+      return {ok:true,sound:'yamato_charge',message:t('大和炮开始聚能 · 保持瞄准'),preview,payload:{yamatoFx:fx}};
+    },update({state,dtReal,rocket,yamatoTargets,asteroid,onYamatoFire,onYamatoAsteroidHit}){
       const fx=state.payload?.yamatoFx;if(!fx)return;
+      const step=Math.max(0,Number(dtReal)||0);
+      if(fx.phase==='charging'){
+        if(!rocket||rocket.alive===false){delete state.payload.yamatoFx;return;}
+        const shot=resolveYamatoShot({x:rocket.x,y:rocket.y,heading:rocket.a,range:YAMATO_RANGE,targets:yamatoTargets});
+        Object.assign(fx,{start:shot.start,end:shot.end,impact:shot.impact,heading:shot.heading,hit:shot.hit,targetKind:shot.targetKind,targetName:shot.targetName});
+        fx.chargeRemaining=Math.max(0,fx.chargeRemaining-step);fx.remaining=fx.chargeRemaining;
+        if(fx.chargeRemaining>0)return;
+        let destruction=null;
+        if(asteroid&&shot.hit&&shot.target===asteroid&&typeof onYamatoAsteroidHit==='function')destruction=onYamatoAsteroidHit(shot)||null;
+        Object.assign(fx,{phase:'beam',remaining:YAMATO_BEAM_DURATION,hit:shot.hit,targetKind:shot.targetKind,targetName:shot.targetName});
+        if(typeof onYamatoFire==='function')onYamatoFire({...shot,destruction});
+        global.SpaceGameAudio?.sfx?.('yamato_cannon');sync();return;
+      }
       fx.remaining=Math.max(0,fx.remaining-Math.max(0,Number(dtReal)||0));
       if(fx.remaining===0)delete state.payload.yamatoFx;
     }}]
@@ -188,6 +179,8 @@
   function statusLabel(current=ensure()){
     if(!current.available)return t('待安装');
     if(current.kind==='passive')return t(current.passiveState==='broken'?'已碎裂':'被动');
+    if(current.payload?.yamatoFx?.phase==='charging')return `${t('聚能')} ${Math.max(0,current.payload.yamatoFx.chargeRemaining).toFixed(1)}s`;
+    if(current.payload?.yamatoFx?.phase==='beam')return t('发射中');
     if(current.active&&current.remaining>0)return `${t('生效中')} ${current.remaining.toFixed(1)}s`;
     if(current.used)return current.maxUses>1?`${t('已用')} ${current.uses}/${current.maxUses}`:t('已用');
     if(current.cooldown>0)return `${t('冷却')} ${current.cooldown.toFixed(1)}s · ${current.maxUses-current.uses}/${current.maxUses}`;
@@ -210,7 +203,7 @@
     const current=ensure(),def=definition(current.shipId),visible=!!def?.available;
     const hud=document.getElementById?.('shipSkillHud'),button=document.getElementById?.('shipSkillButton');
     if(hud){hud.hidden=!visible;if(visible){hud.querySelector('[data-skill-icon]').textContent=def.icon;hud.querySelector('[data-skill-name]').textContent=t(def.name);hud.querySelector('[data-skill-status]').textContent=statusLabel(current);}}
-    if(button){const usable=visible&&def.kind==='active';button.hidden=!usable;button.disabled=!usable||current.used&&!current.active||current.cooldown>0;button.classList.toggle('is-ready',usable&&!current.used&&current.cooldown<=0);button.classList.toggle('is-used',current.used&&!current.active);button.setAttribute('aria-label',`${t('使用技能')}：${t(def?.name||'')}`);button.querySelector('.ico').textContent=def?.icon||'✦';button.querySelector('.lbl').textContent=statusLabel(current);}
+    if(button){const usable=visible&&def.kind==='active',cyclable=current.active&&typeof def?.cycle==='function',effectBusy=!!current.payload?.yamatoFx;button.hidden=!usable;button.disabled=!usable||current.cooldown>0||effectBusy||(current.active&&!cyclable)||(current.used&&!current.active);button.classList.toggle('is-ready',usable&&!current.used&&current.cooldown<=0&&!effectBusy);button.classList.toggle('is-used',current.used&&!current.active&&!effectBusy);button.setAttribute('aria-label',`${t('使用技能')}：${t(def?.name||'')}`);button.querySelector('.ico').textContent=def?.icon||'✦';button.querySelector('.lbl').textContent=statusLabel(current);}
   }
   function introState(){try{return JSON.parse(localStorage.getItem(INTRO_KEY)||'{}')||{};}catch(_){return{};}}
   function saveIntroState(value){try{localStorage.setItem(INTRO_KEY,JSON.stringify(value));}catch(_){}}
@@ -224,7 +217,7 @@
   function plannedList(){return [...new Set([...planned.keys(),...installed.keys()])].map(id=>clone(definition(id)));}
   function visualState(){return clone(ensure().payload||{});}
 
-  global.SpaceGameShipSkills={register,definition,plannedList,landingMultiplier,resolveWarpPath,resolveYamatoShot,applyYamatoImpulse,visualState,beginMission,snapshot,restore,use,update,sync,status:()=>clone(ensure()),statusLabel,resultText,closeIntro,disableIntro};
+  global.SpaceGameShipSkills={register,definition,plannedList,landingMultiplier,resolveWarpPath,resolveYamatoShot,visualState,beginMission,snapshot,restore,use,update,sync,status:()=>clone(ensure()),statusLabel,resultText,closeIntro,disableIntro};
   global.useShipSkill=()=>global.SpaceGameShipSkills.use();
   global.closeShipSkillIntro=closeIntro;global.disableShipSkillIntro=disableIntro;
 })(globalThis);
