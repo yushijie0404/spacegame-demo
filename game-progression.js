@@ -47,6 +47,14 @@ function loadProgress(){
   }catch(_){ return {}; }
 }
 function starText(count){ return '★'.repeat(count)+'☆'.repeat(3-count); }
+function campaignCatalogState(progress=loadProgress()){
+  const completed=[];
+  for(let i=1;i<=10;i++)if(Number(progress?.[i]?.stars||0)>0)completed.push(i);
+  const recommended=Array.from({length:10},(_,i)=>i+1).find(i=>!completed.includes(i))||0;
+  const pathLevels=recommended?[...completed,recommended].sort((a,b)=>a-b):completed.slice().sort((a,b)=>a-b);
+  const freeLevels=Array.from({length:10},(_,i)=>i+1).filter(i=>!pathLevels.includes(i));
+  return {novice:completed.length===0,recommended,pathLevels,freeLevels,completedLevels:completed};
+}
 function saveLevelResult(levelId,score,earnedStars=1,options={}){
   const progress=loadProgress(), previous=progress[levelId]||{score:0,stars:0};
   const currentScore=Math.max(0,Math.min(1000,Math.round(score)));
@@ -74,6 +82,7 @@ function updateLevelCards(){
     if(scoreEl) scoreEl.textContent=result.score||'—';
     if(starsEl){ starsEl.textContent=starText(result.stars||0); starsEl.setAttribute('aria-label',(result.stars||0)+' 星'); }
   }
+  if(typeof updateCampaignCatalog==='function')updateCampaignCatalog(progress);
   if(typeof syncUpgradeBay==='function')syncUpgradeBay();
 }
 function challengeLifeEnabled(){ return challengeMode&&(level===2||level===3); }

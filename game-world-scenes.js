@@ -3,11 +3,42 @@
 // World-space scene renderer: mission zones, environment effects and draw orchestration.
 // Frame scheduling, physics, input, persistence and mission completion stay in their owning modules.
 
+function drawZoneEncoding(cx,cy,r,kind,start=0,end=TAU,innerR=null){
+  if(!colorAssistEnabled||!Number.isFinite(r)||r<=0)return;
+  // 形状纹理属于区域内部，而不是边界线。默认在边界内侧铺陈；
+  // 热区等环带可以传入真实内半径，避免纹理覆盖天体本体。
+  const span=Math.max(.05,Math.abs(end-start)),padding=10/cam.zoom,outer=Math.max(0,r-padding);
+  const fallbackInner=Math.max(0,outer-Math.min(r*.42,62/cam.zoom));
+  const inner=Math.min(outer,Math.max(0,Number.isFinite(innerR)?innerR+padding:fallbackInner));
+  const radialSpan=Math.max(outer-inner,1/cam.zoom),rows=Math.max(1,Math.min(4,Math.ceil(radialSpan*cam.zoom/24)));
+  const marker=kind==='danger'?5.8/cam.zoom:5/cam.zoom;
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,.72)';ctx.fillStyle='rgba(255,255,255,.72)';ctx.lineWidth=1.35/cam.zoom;ctx.setLineDash([]);
+  for(let row=0;row<rows;row++){
+    const rr=inner+radialSpan*(row+.55)/rows,count=Math.max(3,Math.min(42,Math.round(span*rr*cam.zoom/38))),stagger=(row%2)*.5;
+    for(let i=0;i<count;i++){
+      const a=start+(end-start)*(i+.5+stagger)/count,x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;ctx.save();ctx.translate(x,y);ctx.rotate(a);
+      if(kind==='danger'){ctx.beginPath();ctx.moveTo(-marker,-marker);ctx.lineTo(marker,marker);ctx.moveTo(marker,-marker);ctx.lineTo(-marker,marker);ctx.stroke();}
+      else if(kind==='safe'){ctx.beginPath();ctx.moveTo(-marker,marker);ctx.lineTo(marker,-marker);ctx.stroke();}
+      else{ctx.beginPath();ctx.arc(0,0,3/cam.zoom,0,TAU);ctx.fill();}
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+function drawPredictionEndpoint(points,kind='target'){
+  if(!colorAssistEnabled||!points||points.length<2)return;
+  const p=points[points.length-1],s=8/cam.zoom;ctx.save();ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=2/cam.zoom;ctx.setLineDash([]);ctx.beginPath();
+  if(kind==='danger'){ctx.moveTo(p.x-s,p.y-s);ctx.lineTo(p.x+s,p.y+s);ctx.moveTo(p.x+s,p.y-s);ctx.lineTo(p.x-s,p.y+s);}
+  else{ctx.moveTo(p.x,p.y-s);ctx.lineTo(p.x+s,p.y);ctx.lineTo(p.x,p.y+s);ctx.lineTo(p.x-s,p.y);ctx.closePath();}
+  ctx.stroke();ctx.restore();
+}
+
 function drawSlingshotZones(){
   // 明确的最终目标：只有有效飞越后，向外穿过这道门且地心能量为正才通关。
   ctx.strokeStyle=mission.slingFlybyValid?'rgba(95,208,104,.9)':'rgba(95,208,104,.4)';
   ctx.lineWidth=4/cam.zoom; ctx.setLineDash([18/cam.zoom,14/cam.zoom]);
   ctx.beginPath(); ctx.arc(EARTH.x,EARTH.y,SLING_EXIT_R,0,TAU); ctx.stroke(); ctx.setLineDash([]);
+  drawZoneEncoding(EARTH.x,EARTH.y,SLING_EXIT_R,'safe');
   ctx.fillStyle='rgba(95,208,104,.9)'; ctx.font=`800 ${15/cam.zoom}px "Microsoft YaHei",sans-serif`; ctx.textAlign='center';
   ctx.fillText('地球逃逸门',EARTH.x,EARTH.y-SLING_EXIT_R-16/cam.zoom);
 
@@ -40,10 +71,11 @@ function drawLagrangeZones(){
   ctx.beginPath();ctx.moveTo(EARTH.x,EARTH.y);ctx.lineTo(MOON.x,MOON.y);ctx.lineTo(p4.x,p4.y);ctx.closePath();ctx.stroke();
   ctx.beginPath();ctx.moveTo(EARTH.x,EARTH.y);ctx.lineTo(MOON.x,MOON.y);ctx.lineTo(p5.x,p5.y);ctx.closePath();ctx.stroke();ctx.setLineDash([]);
   for(const p of points){
-    const active=p.id===selected,r=targetRadius,col=p.color;
+    const active=p.id===selected,r=targetRadius,col=p.color,zoneCol='#5fd068';
     const marker=lagrangeMarkerLayout(active,r);
-    ctx.globalAlpha=active?1:.48;ctx.strokeStyle=col;ctx.fillStyle=active?`${col}24`:`${col}12`;ctx.lineWidth=(active?4:2)/cam.zoom;
+    ctx.globalAlpha=active?1:.48;ctx.strokeStyle=zoneCol;ctx.fillStyle=active?'rgba(95,208,104,.14)':'rgba(95,208,104,.07)';ctx.lineWidth=(active?4:2)/cam.zoom;
     ctx.beginPath();ctx.arc(p.x,p.y,r,0,TAU);ctx.fill();ctx.stroke();
+    drawZoneEncoding(p.x,p.y,r,'target');
     ctx.beginPath();ctx.moveTo(p.x-marker.crossWorld,p.y);ctx.lineTo(p.x+marker.crossWorld,p.y);ctx.moveTo(p.x,p.y-marker.crossWorld);ctx.lineTo(p.x,p.y+marker.crossWorld);ctx.stroke();
     ctx.fillStyle=col;ctx.font=`900 ${marker.fontWorld}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';
     ctx.fillText(`L${p.id} ${'★'.repeat(p.stars)}`,p.x,p.y+marker.topY);
@@ -51,21 +83,19 @@ function drawLagrangeZones(){
   }
   ctx.globalAlpha=1;ctx.textAlign='left';
   const target=points[selected-1];
-  if(mission.stage>=1){ctx.strokeStyle='rgba(255,209,102,.5)';ctx.lineWidth=2/cam.zoom;ctx.setLineDash([6/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.moveTo(rocket.x,rocket.y);ctx.lineTo(target.x,target.y);ctx.stroke();ctx.setLineDash([]);}
+  if(mission.stage>=1){ctx.strokeStyle='rgba(95,208,104,.5)';ctx.lineWidth=2/cam.zoom;ctx.setLineDash([6/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.moveTo(rocket.x,rocket.y);ctx.lineTo(target.x,target.y);ctx.stroke();ctx.setLineDash([]);}
   if(mission.satellite){ctx.fillStyle='#ffd166';ctx.strokeStyle='#17213c';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(mission.satellite.x,mission.satellite.y,10/cam.zoom,0,TAU);ctx.fill();ctx.stroke();}
 }
 function drawAsteroidDefenseZones(){
   if(!asteroid)return;
   const f=getAsteroidForecast();
   if(asteroidTrail.length>1){
-    ctx.strokeStyle='rgba(206,151,103,.34)';ctx.lineWidth=2/cam.zoom;ctx.setLineDash([5/cam.zoom,8/cam.zoom]);
-    ctx.beginPath();ctx.moveTo(asteroidTrail[0].x,asteroidTrail[0].y);
-    for(let i=1;i<asteroidTrail.length;i+=lowPowerMode?2:1)ctx.lineTo(asteroidTrail[i].x,asteroidTrail[i].y);
-    ctx.stroke();ctx.setLineDash([]);
+    drawSpeedTrail(asteroidTrail,Math.hypot(asteroid.vx,asteroid.vy),'rgba(206,151,103,.5)',2/cam.zoom,lowPowerMode?2:1);
   }
   if(showPred&&f.pts.length>1){
-    ctx.strokeStyle=f.safe?'rgba(95,208,104,.92)':'rgba(239,71,111,.9)';ctx.lineWidth=4/cam.zoom;ctx.setLineDash([15/cam.zoom,11/cam.zoom]);
+    ctx.strokeStyle='rgba(255,209,102,.92)';ctx.lineWidth=4/cam.zoom;ctx.setLineDash([15/cam.zoom,11/cam.zoom]);
     ctx.beginPath();ctx.moveTo(asteroid.x,asteroid.y);for(const p of f.pts)ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);
+    drawPredictionEndpoint(f.pts,'target');
     if(f.impact){
       const p=f.impact,s=18/cam.zoom;ctx.strokeStyle='#ff5d7d';ctx.lineWidth=4/cam.zoom;
       ctx.beginPath();ctx.moveTo(p.x-s,p.y-s);ctx.lineTo(p.x+s,p.y+s);ctx.moveTo(p.x+s,p.y-s);ctx.lineTo(p.x-s,p.y+s);ctx.stroke();
@@ -85,11 +115,13 @@ function drawBinaryZones(){
     const hr=s===MARS?binary.heatRadiusA:binary.heatRadiusB;
     ctx.strokeStyle='rgba(255,91,71,.42)';ctx.lineWidth=4/cam.zoom;ctx.setLineDash([14/cam.zoom,10/cam.zoom]);
     ctx.beginPath();ctx.arc(s.x,s.y,hr,0,TAU);ctx.stroke();ctx.setLineDash([]);
+    drawZoneEncoding(s.x,s.y,hr,'danger',0,TAU,s.r);
   }
   const g=binaryGatePoint(),dx=MOON.x-MARS.x,dy=MOON.y-MARS.y,d=Math.max(1,Math.hypot(dx,dy)),nx=-dy/d,ny=dx/d,gw=260;
-  ctx.strokeStyle=mission.binaryGateCrossed?'rgba(95,208,104,.9)':'rgba(76,240,221,.9)';ctx.lineWidth=5/cam.zoom;
+  ctx.strokeStyle='rgba(95,208,104,.9)';ctx.lineWidth=5/cam.zoom;
   ctx.beginPath();ctx.moveTo(g.x-nx*gw,g.y-ny*gw);ctx.lineTo(g.x+nx*gw,g.y+ny*gw);ctx.stroke();
-  ctx.fillStyle=mission.binaryGateCrossed?'#5fd068':'#4cf0dd';ctx.beginPath();ctx.arc(g.x,g.y,14/cam.zoom,0,TAU);ctx.fill();
+  if(colorAssistEnabled){ctx.fillStyle='rgba(255,255,255,.78)';for(let i=-3;i<=3;i++){const q=i*gw/3.4;ctx.beginPath();ctx.arc(g.x+nx*q,g.y+ny*q,3.2/cam.zoom,0,TAU);ctx.fill();}}
+  ctx.fillStyle='#5fd068';ctx.beginPath();ctx.arc(g.x,g.y,14/cam.zoom,0,TAU);ctx.fill();
   ctx.font=`900 ${14/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('移动引力通道',g.x,g.y-24/cam.zoom);
   ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.moveTo(-13/cam.zoom,0);ctx.lineTo(13/cam.zoom,0);ctx.moveTo(0,-13/cam.zoom);ctx.lineTo(0,13/cam.zoom);ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,.65)';ctx.font=`800 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText('共同质心',0,-20/cam.zoom);
@@ -150,27 +182,29 @@ function drawThreeBodyZones(){
   // 三颗恒星的近期轨迹与瞬时引力三角形。
   for(let i=0;i<3;i++){
     const tr=threeBody.starTrails[i];
-    if(tr.length>1){ctx.strokeStyle=i===0?'rgba(255,240,168,.22)':i===1?'rgba(191,232,255,.2)':'rgba(255,208,217,.2)';ctx.lineWidth=1.4/cam.zoom;ctx.beginPath();ctx.moveTo(tr[0].x,tr[0].y);for(let j=1;j<tr.length;j++)ctx.lineTo(tr[j].x,tr[j].y);ctx.stroke();}
+    if(tr.length>1){const b=BODIES[i];drawSpeedTrail(tr,Math.hypot(b.vx,b.vy),i===0?'rgba(255,240,168,.3)':i===1?'rgba(191,232,255,.28)':'rgba(255,208,217,.28)',1.4/cam.zoom);}
   }
   ctx.strokeStyle='rgba(207,224,255,.16)';ctx.lineWidth=1.2/cam.zoom;ctx.setLineDash([6/cam.zoom,9/cam.zoom]);ctx.beginPath();ctx.moveTo(EARTH.x,EARTH.y);ctx.lineTo(MARS.x,MARS.y);ctx.lineTo(MOON.x,MOON.y);ctx.closePath();ctx.stroke();ctx.setLineDash([]);
   // 红圈只表示危险潮汐区，不是硬碰撞边界。
-  for(const b of BODIES){ctx.fillStyle='rgba(239,71,111,.055)';ctx.strokeStyle='rgba(239,71,111,.42)';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(b.x,b.y,b.r+THREE_DANGER_PAD,0,TAU);ctx.fill();ctx.stroke();}
+  for(const b of BODIES){ctx.fillStyle='rgba(239,71,111,.055)';ctx.strokeStyle='rgba(239,71,111,.42)';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(b.x,b.y,b.r+THREE_DANGER_PAD,0,TAU);ctx.fill();ctx.stroke();drawZoneEncoding(b.x,b.y,b.r+THREE_DANGER_PAD,'danger',0,TAU,b.r);}
   ctx.strokeStyle='rgba(201,156,255,.25)';ctx.lineWidth=3/cam.zoom;ctx.setLineDash([12/cam.zoom,14/cam.zoom]);ctx.beginPath();ctx.arc(center.x,center.y,THREE_CHAOS_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
   ctx.strokeStyle=mission.stage>=2?'rgba(95,208,104,.9)':'rgba(95,208,104,.34)';ctx.lineWidth=5/cam.zoom;ctx.setLineDash([18/cam.zoom,13/cam.zoom]);ctx.beginPath();ctx.arc(center.x,center.y,THREE_ESCAPE_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  drawZoneEncoding(center.x,center.y,THREE_ESCAPE_R,'safe');
   if(W>=760){ctx.fillStyle='rgba(95,208,104,.88)';ctx.font=`900 ${14/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('混沌逃逸边界',center.x,center.y-THREE_ESCAPE_R-17/cam.zoom);}
   // 受困飞船的短轨迹让合成引力造成的弯曲肉眼可见。
   for(let i=0;i<2;i++){
-    const tr=threeBody.rescueShips?.[i]?.trail||[];if(tr.length<2)continue;
-    ctx.strokeStyle=i===0?'rgba(76,201,240,.34)':'rgba(255,209,102,.32)';ctx.lineWidth=1.5/cam.zoom;ctx.beginPath();ctx.moveTo(tr[0].x,tr[0].y);for(let j=1;j<tr.length;j++)ctx.lineTo(tr[j].x,tr[j].y);ctx.stroke();
+    const ship=threeBody.rescueShips?.[i],tr=ship?.trail||[];if(tr.length<2)continue;
+    drawSpeedTrail(tr,Math.hypot(ship.vx,ship.vy),i===0?'rgba(76,201,240,.42)':'rgba(255,209,102,.4)',1.5/cam.zoom);
   }
   const nearestRescue=nearestUnrescuedThreeBodyShip();
   for(let i=0;i<2;i++){
     const g=threeBodyGate(i),visited=isThreeBodyShipRescued(i),destroyed=isThreeBodyShipDestroyed(i),active=!visited&&!destroyed,col=i===0?'76,201,240':'255,209,102',recommended=nearestRescue?.index===i;
-    ctx.fillStyle=destroyed?'rgba(239,71,111,.035)':`rgba(${col},${active ? .10 : .035})`;ctx.strokeStyle=destroyed?'rgba(239,71,111,.55)':`rgba(${col},${active ? pulse : .24})`;ctx.lineWidth=(recommended?4:active?3:2)/cam.zoom;
+    ctx.fillStyle=destroyed?'rgba(239,71,111,.035)':`rgba(95,208,104,${active ? .10 : .035})`;ctx.strokeStyle=destroyed?'rgba(239,71,111,.55)':`rgba(95,208,104,${active ? pulse : .24})`;ctx.lineWidth=(recommended?4:active?3:2)/cam.zoom;
     ctx.setLineDash([10/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.arc(g.x,g.y,THREE_GATE_R,0,TAU);ctx.fill();ctx.stroke();ctx.setLineDash([]);
+    drawZoneEncoding(g.x,g.y,THREE_GATE_R,'target');
     drawStrandedRescueShip(g,i,active,visited,destroyed,pulse);
     ctx.fillStyle=destroyed?'#ef476f':`rgba(${col},${active?1:.58})`;ctx.font=`900 ${(recommended?15:13)/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(`求救飞船 ${i?'B':'A'}${destroyed?' · 已坠毁':visited?' · 已营救':recommended?' · 最近':''}`,g.x,g.y-THREE_GATE_R-14/cam.zoom);
-    if(active){ctx.strokeStyle=`rgba(${col},${recommended ? .28 : .16})`;ctx.lineWidth=(recommended?1.6:1.1)/cam.zoom;ctx.setLineDash([5/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.moveTo(rocket.x,rocket.y);ctx.lineTo(g.x,g.y);ctx.stroke();ctx.setLineDash([]);}
+    if(active){ctx.strokeStyle=`rgba(95,208,104,${recommended ? .28 : .16})`;ctx.lineWidth=(recommended?1.6:1.1)/cam.zoom;ctx.setLineDash([5/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.moveTo(rocket.x,rocket.y);ctx.lineTo(g.x,g.y);ctx.stroke();ctx.setLineDash([]);}
   }
   ctx.fillStyle='rgba(255,255,255,.62)';ctx.beginPath();ctx.arc(center.x,center.y,5/cam.zoom,0,TAU);ctx.fill();ctx.textAlign='left';
 }
@@ -181,10 +215,12 @@ function drawBlackHoleZones(){
   const invalidExit=mission.blackHoleInvalidExitT>0;
   ctx.strokeStyle=invalidExit?'rgba(239,71,111,.92)':m.energy>0?'rgba(95,208,104,.92)':'rgba(95,208,104,.36)';ctx.lineWidth=5/cam.zoom;ctx.setLineDash([17/cam.zoom,12/cam.zoom]);
   ctx.beginPath();ctx.arc(0,0,BH_ESCAPE_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  drawZoneEncoding(0,0,BH_ESCAPE_R,invalidExit?'danger':'safe');
   ctx.fillStyle=invalidExit?'rgba(255,120,145,.96)':'rgba(95,208,104,.9)';ctx.font=`900 ${15/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(invalidExit?'能量不足 · 仍会返回':'远方救援门 · 需正逃逸能量',0,-BH_ESCAPE_R-18/cam.zoom);
-  ctx.strokeStyle='rgba(174,104,255,.22)';ctx.lineWidth=BH_BURN_R-BH_BURN_IN;ctx.beginPath();ctx.arc(0,0,(BH_BURN_R+BH_BURN_IN)/2,0,TAU);ctx.stroke();
-  ctx.strokeStyle='rgba(210,157,255,.78)';ctx.lineWidth=2.5/cam.zoom;ctx.beginPath();ctx.arc(0,0,BH_BURN_R,0,TAU);ctx.stroke();
-  if(W>=760){ctx.fillStyle='#d9a6ff';ctx.font=`800 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText('深渊点火区',0,-BH_BURN_R-14/cam.zoom);}
+  ctx.strokeStyle='rgba(95,208,104,.18)';ctx.lineWidth=BH_BURN_R-BH_BURN_IN;ctx.beginPath();ctx.arc(0,0,(BH_BURN_R+BH_BURN_IN)/2,0,TAU);ctx.stroke();
+  ctx.strokeStyle='rgba(95,208,104,.82)';ctx.lineWidth=2.5/cam.zoom;ctx.beginPath();ctx.arc(0,0,BH_BURN_R,0,TAU);ctx.stroke();
+  drawZoneEncoding(0,0,BH_BURN_R,'target',0,TAU,BH_BURN_IN);
+  if(W>=760){ctx.fillStyle='#5fd068';ctx.font=`800 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText('深渊点火区',0,-BH_BURN_R-14/cam.zoom);}
 
   // 极轴喷流保持很淡，只给黑洞增加层次，不抢占炽白吸积盘的视觉中心。
   if(!lowPowerMode){
@@ -240,12 +276,13 @@ function drawMissionZones(){
   if(level===8){ drawBinaryZones(); return; }
   if(level===9){ drawBlackHoleZones(); return; }
   const slot = padAngle();
-  // 同步轨道环形带（金色）
-  ctx.strokeStyle='rgba(255,209,102,.35)'; ctx.lineWidth=GEO_BAND*2;
+  // 绿色表示安全区与任务区；黄色只用于未来预测轨迹。
+  ctx.strokeStyle='rgba(95,208,104,.25)'; ctx.lineWidth=GEO_BAND*2;
   ctx.beginPath(); ctx.arc(EARTH.x, EARTH.y, R_GEO, 0, TAU); ctx.stroke();
-  ctx.strokeStyle='rgba(255,209,102,.8)'; ctx.lineWidth=2.5/cam.zoom;
+  ctx.strokeStyle='rgba(95,208,104,.82)'; ctx.lineWidth=2.5/cam.zoom;
   ctx.beginPath(); ctx.arc(EARTH.x, EARTH.y, R_GEO-GEO_BAND, 0, TAU); ctx.stroke();
   ctx.beginPath(); ctx.arc(EARTH.x, EARTH.y, R_GEO+GEO_BAND, 0, TAU); ctx.stroke();
+  drawZoneEncoding(EARTH.x,EARTH.y,R_GEO,'target');
   // 定点扇形（绿色，随地球自转）
   ctx.fillStyle='rgba(95,208,104,.28)';
   ctx.beginPath();
@@ -255,6 +292,7 @@ function drawMissionZones(){
   ctx.closePath(); ctx.fill();
   ctx.strokeStyle='rgba(95,208,104,.9)'; ctx.lineWidth=2.5/cam.zoom;
   ctx.beginPath(); ctx.arc(EARTH.x, EARTH.y, R_GEO, slot-SLOT_HALF, slot+SLOT_HALF); ctx.stroke();
+  drawZoneEncoding(EARTH.x,EARTH.y,R_GEO,'safe',slot-SLOT_HALF,slot+SLOT_HALF);
   ctx.strokeStyle='rgba(95,208,104,.4)'; ctx.lineWidth=1.5/cam.zoom; ctx.setLineDash([4,6]);
   ctx.beginPath();
   ctx.moveTo(EARTH.x + Math.cos(slot)*EARTH.r, EARTH.y + Math.sin(slot)*EARTH.r);
@@ -279,6 +317,8 @@ function drawLunarFarSideZone(){
   ctx.beginPath(); ctx.arc(MOON.x,MOON.y,r,a-Math.PI/2,a+Math.PI/2); ctx.stroke();
   ctx.strokeStyle='rgba(95,208,104,.98)'; ctx.lineWidth=17/cam.zoom;
   ctx.beginPath(); ctx.arc(MOON.x,MOON.y,r,a-MOON_TARGET_HALF,a+MOON_TARGET_HALF); ctx.stroke();
+  drawZoneEncoding(MOON.x,MOON.y,r,'safe',a-Math.PI/2,a+Math.PI/2);
+  drawZoneEncoding(MOON.x,MOON.y,r,'target',a-MOON_TARGET_HALF,a+MOON_TARGET_HALF);
   const grad=ctx.createLinearGradient(MOON.x+Math.cos(a)*r,MOON.y+Math.sin(a)*r,MOON.x+Math.cos(a)*(r+800),MOON.y+Math.sin(a)*(r+800));
   grad.addColorStop(0,'rgba(95,208,104,.42)'); grad.addColorStop(1,'rgba(95,208,104,0)'); ctx.fillStyle=grad;
   ctx.beginPath();
@@ -300,8 +340,9 @@ function drawStationOrbitZone(){
   if(mission.stage>=1){
     ctx.strokeStyle='rgba(95,208,104,.52)'; ctx.lineWidth=1.8/cam.zoom; ctx.setLineDash([5/cam.zoom,7/cam.zoom]);
     ctx.beginPath(); ctx.moveTo(rocket.x,rocket.y); ctx.lineTo(station.x,station.y); ctx.stroke(); ctx.setLineDash([]);
-    ctx.strokeStyle=mission.stage===3?'rgba(95,208,104,.88)':'rgba(255,209,102,.52)'; ctx.lineWidth=2/cam.zoom;
+    ctx.strokeStyle='rgba(95,208,104,.78)'; ctx.lineWidth=2/cam.zoom;
     ctx.beginPath(); ctx.arc(station.x,station.y,mission.stage===3?42:120,0,TAU); ctx.stroke();
+    drawZoneEncoding(station.x,station.y,mission.stage===3?42:120,'target');
   }
 }
 // 第二关：着陆区（绿色地表弧段，随地球自转）
@@ -310,6 +351,7 @@ function drawLandingZone(){
   // 地表绿色弧段
   ctx.strokeStyle='rgba(95,208,104,.9)'; ctx.lineWidth=14;
   ctx.beginPath(); ctx.arc(EARTH.x, EARTH.y, EARTH.r, lz-LAND_HALF, lz+LAND_HALF); ctx.stroke();
+  drawZoneEncoding(EARTH.x,EARTH.y,EARTH.r,'safe',lz-LAND_HALF,lz+LAND_HALF);
   // 引导光柱（从地表向上延伸，便于远处看到）
   const grad = ctx.createLinearGradient(
     EARTH.x+Math.cos(lz)*EARTH.r, EARTH.y+Math.sin(lz)*EARTH.r,
@@ -404,11 +446,8 @@ function draw(){
 
   // 航线轨迹
   if(trail.length>1){
-    ctx.strokeStyle='rgba(120,200,255,.5)'; ctx.lineWidth=1.6/cam.zoom; ctx.setLineDash([6,6]);
     const trailStep=trail.length>450?2:1;
-    ctx.beginPath(); ctx.moveTo(trail[0].x, trail[0].y);
-    for(let i=trailStep;i<trail.length;i+=trailStep) ctx.lineTo(trail[i].x,trail[i].y);
-    ctx.stroke(); ctx.setLineDash([]);
+    drawSpeedTrail(trail,Math.hypot(rocket.vx,rocket.vy),'rgba(120,200,255,.62)',1.6/cam.zoom,trailStep);
   }
 
   if(level===9||level===10)drawMissionZones();
@@ -423,6 +462,7 @@ function draw(){
       ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
       for(const p of pts) ctx.lineTo(p.x, p.y);
       ctx.stroke(); ctx.setLineDash([]);
+      drawPredictionEndpoint(pts,'target');
     }
     // 近/远地点标记（子弹时间发生处）
     const fs = 13/cam.zoom;

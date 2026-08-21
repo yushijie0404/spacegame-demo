@@ -107,7 +107,7 @@ function tryDeploy(){
   if(level!==1 || !mission || mission.done || !mission.deployReady || state!=='fly' || rocket.landed) return;
   const releaseStatus=directSyncStatus(rocket,1);
   if(!releaseStatus.ok){
-    mission.toast=releaseStatus.inBand?'⚠️ 仍在同步带内，但速度或升降率还不稳定':'⚠️ 已离开黄色同步带，返回带内稳定后再释放';
+    mission.toast=releaseStatus.inBand?'⚠️ 仍在同步带内，但速度或升降率还不稳定':'⚠️ 已离开绿色同步带，返回带内稳定后再释放';
     mission.toastT=3; mission.deployReady=false; syncUI(); return;
   }
   const d = Math.hypot(rocket.x-EARTH.x, rocket.y-EARTH.y);
@@ -373,14 +373,14 @@ function updateMission(dt){
     const direct=directSyncStatus(rocket,1),sync=direct.sync;
     ok=direct.ok;
     if(!sync.directionOk) dyn='方向反了｜改为顺行';
-    else if(!direct.inBand) dyn='当前高度不在黄色同步带内';
+    else if(!direct.inBand) dyn='当前高度不在绿色同步带内';
     else if(!sync.radiusOk&&!direct.ok) dyn='蓝 '+(sync.ap.rp-EARTH.r).toFixed(0)+'｜橙 '+(sync.ap.ra-EARTH.r).toFixed(0)+'｜目标金带';
     else dyn='保持 '+Math.max(0,need-mission.holdT).toFixed(1)+' 秒';
   }else if(mission.stage===3){
     const direct=directSyncStatus(rocket,1);
     if(!direct.ok){
       if(mission.deployReady){ mission.deployReady=false; mission.finalHoldT=0; syncUI(); }
-      mission.dynHint=direct.inBand?'带内但速度未稳定':'返回黄色同步带内';
+      mission.dynHint=direct.inBand?'带内但速度未稳定':'返回绿色同步带内';
     }else if(!mission.deployReady){
       mission.finalHoldT+=dt;
       mission.dynHint='重新稳定 '+Math.max(0,1.5-mission.finalHoldT).toFixed(1)+' 秒';

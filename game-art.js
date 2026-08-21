@@ -9,6 +9,25 @@ const hyperionSprite=new Image();
 hyperionSprite.decoding='async';
 hyperionSprite.src='./assets/ships/hyperion-cartoon-overhead.png';
 
+// Historical trails are solid and have an explicit world-space length tied to
+// current absolute speed. Predictors use their own dashed rendering elsewhere.
+function speedTrailWorldLength(speed){
+  return 120+Math.min(600,Math.max(0,Number(speed)||0))*3.2;
+}
+function speedTrailStartIndex(points,speed){
+  if(!points||points.length<2)return 0;
+  const wanted=speedTrailWorldLength(speed);let distance=0,index=points.length-1;
+  for(;index>0;index--){const a=points[index],b=points[index-1];distance+=Math.hypot(a.x-b.x,a.y-b.y);if(distance>=wanted)break;}
+  return index;
+}
+function drawSpeedTrail(points,speed,color,width,step=1){
+  if(!points||points.length<2)return;
+  const start=speedTrailStartIndex(points,speed),stride=Math.max(1,step|0);
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(points[start].x,points[start].y);
+  for(let i=start+stride;i<points.length;i+=stride)ctx.lineTo(points[i].x,points[i].y);
+  const last=points[points.length-1];ctx.lineTo(last.x,last.y);ctx.stroke();ctx.restore();
+}
+
 function drawStylizedStar(b,core,mid,edge,phase=0){
   ctx.save();
   if(!lowPowerMode){ctx.shadowColor=mid;ctx.shadowBlur=Math.max(16,b.r*.12*cam.zoom);const g=ctx.createRadialGradient(b.x-b.r*.3,b.y-b.r*.34,b.r*.05,b.x,b.y,b.r);g.addColorStop(0,core);g.addColorStop(.46,mid);g.addColorStop(1,edge);ctx.fillStyle=g;}
@@ -165,12 +184,7 @@ function drawGuideRocket(ship,label){
 function drawGuideGhost(){
   if(!guideGhostVisible()||!ghostShip||!ghostTrail) return;
   ctx.save(); ctx.globalAlpha=.24;
-  if(ghostTrail.length>1){
-    ctx.strokeStyle='#80e6ff'; ctx.lineWidth=2.2/cam.zoom; ctx.setLineDash([8/cam.zoom,10/cam.zoom]);
-    ctx.beginPath(); ctx.moveTo(ghostTrail[0].x,ghostTrail[0].y);
-    for(let i=1;i<ghostTrail.length;i++) ctx.lineTo(ghostTrail[i].x,ghostTrail[i].y);
-    ctx.stroke(); ctx.setLineDash([]);
-  }
+  drawSpeedTrail(ghostTrail,Math.hypot(ghostShip.vx,ghostShip.vy),'#80e6ff',2.2/cam.zoom);
   ctx.restore();
   const ghostLabel=level===5
     ? (!ghostShip.started?'示范：等待首次推进 · 世界暂停':ghostShip.complete?'示范完成：已逃逸':ghostShip.thrusting?(ghostShip.turning?'示范：推进 + 右转':'示范：只按推进'):'示范：滑行')
@@ -179,15 +193,21 @@ function drawGuideGhost(){
 }
 function drawThreeBodyTimelines(){
   if(level!==10||!threeBody||mission.hintsHidden||!showPred||state!=='fly')return;
-  const result=getThreeBodyTimelines();
-  for(const branch of result.branches){
-    if(branch.pts.length<2)continue;
-    ctx.save();ctx.strokeStyle=branch.color;ctx.lineWidth=(branch.id==='coast'?1.7:2.1)/cam.zoom;ctx.setLineDash(branch.id==='coast'?[4/cam.zoom,7/cam.zoom]:[8/cam.zoom,7/cam.zoom]);
-    ctx.beginPath();ctx.moveTo(branch.pts[0].x,branch.pts[0].y);for(let i=1;i<branch.pts.length;i++)ctx.lineTo(branch.pts[i].x,branch.pts[i].y);ctx.stroke();ctx.setLineDash([]);
-    const a=Math.atan2(branch.vy,branch.vx),size=8/cam.zoom;ctx.translate(branch.x,branch.y);ctx.rotate(a);ctx.globalAlpha=.58;ctx.fillStyle=branch.color;ctx.beginPath();ctx.moveTo(size*1.5,0);ctx.lineTo(-size,size*.72);ctx.lineTo(-size,-size*.72);ctx.closePath();ctx.fill();ctx.restore();
+  const result=getThreeBodyTimelines(),left=result.branches.find(branch=>branch.id==='left'),right=result.branches.find(branch=>branch.id==='right');
+  if(!left||!right)return;
+  const count=Math.min(left.pts.length,right.pts.length);if(count<2)return;
+  const start=left.pts[0],endLeft=left.pts[count-1],endRight=right.pts[count-1],endX=(endLeft.x+endRight.x)/2,endY=(endLeft.y+endRight.y)/2;
+  ctx.save();
+  const predictionColor='rgba(255,209,102,.9)',corridor=ctx.createLinearGradient(start.x,start.y,endX,endY);corridor.addColorStop(0,'rgba(255,209,102,.025)');corridor.addColorStop(1,'rgba(255,209,102,.18)');ctx.fillStyle=corridor;
+  ctx.beginPath();ctx.moveTo(left.pts[0].x,left.pts[0].y);for(let i=1;i<count;i++)ctx.lineTo(left.pts[i].x,left.pts[i].y);for(let i=count-1;i>=0;i--)ctx.lineTo(right.pts[i].x,right.pts[i].y);ctx.closePath();ctx.fill();
+  if(colorAssistEnabled){ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1.2/cam.zoom;ctx.setLineDash([]);for(let i=8;i<count;i+=12){ctx.beginPath();ctx.moveTo(left.pts[i].x,left.pts[i].y);ctx.lineTo(right.pts[i].x,right.pts[i].y);ctx.stroke();}}
+  for(const branch of [left,right]){
+    ctx.strokeStyle=predictionColor;ctx.lineWidth=2.1/cam.zoom;ctx.setLineDash([8/cam.zoom,7/cam.zoom]);ctx.beginPath();ctx.moveTo(branch.pts[0].x,branch.pts[0].y);for(let i=1;i<count;i++)ctx.lineTo(branch.pts[i].x,branch.pts[i].y);ctx.stroke();ctx.setLineDash([]);
+    const end=branch.pts[count-1],prev=branch.pts[Math.max(0,count-3)],a=Math.atan2(end.y-prev.y,end.x-prev.x),size=8/cam.zoom;ctx.save();ctx.translate(end.x,end.y);ctx.rotate(a);ctx.globalAlpha=.72;ctx.fillStyle=predictionColor;ctx.beginPath();ctx.moveTo(size*1.5,0);ctx.lineTo(-size,size*.72);ctx.lineTo(-size,-size*.72);ctx.closePath();ctx.fill();ctx.restore();
     if(branch.impact){const s=8/cam.zoom;ctx.strokeStyle='#ef476f';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.moveTo(branch.impact.x-s,branch.impact.y-s);ctx.lineTo(branch.impact.x+s,branch.impact.y+s);ctx.moveTo(branch.impact.x+s,branch.impact.y-s);ctx.lineTo(branch.impact.x-s,branch.impact.y+s);ctx.stroke();}
-    if(W>=760){ctx.fillStyle=branch.color;ctx.font=`800 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(branch.impact?`${branch.label} · 终止`:branch.label,branch.x,branch.y-14/cam.zoom);}
+    if(W>=760){ctx.fillStyle=predictionColor;ctx.font=`800 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(branch.impact?`${branch.label} · 终止`:branch.label,end.x,end.y-14/cam.zoom);}
   }
+  ctx.restore();
   ctx.textAlign='left';
 }
 

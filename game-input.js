@@ -39,7 +39,7 @@
   addEventListener('wheel', e=>{ cam.zoom = Math.min(6, Math.max(0.02, cam.zoom * (e.deltaY>0?0.9:1.12))); }, {passive:true});
 
   const ACTION_HANDLERS={
-    prediction:()=>setPrediction(),camera:()=>toggleCameraMode(),radar:()=>cycleRadar(),attitude:()=>cycleAttitude(),
+    prediction:()=>setPrediction(),colorassist:()=>toggleColorAssist(),hudtelemetry:()=>toggleHudInfo('telemetry'),hudgravity:()=>toggleHudInfo('gravity'),hudradar:()=>toggleHudInfo('radar'),hudguidance:()=>toggleHudInfo('guidance'),hudtargets:()=>toggleHudInfo('targets'),camera:()=>toggleCameraMode(),radar:()=>cycleRadar(),attitude:()=>cycleAttitude(),
     dial:()=>cycleDial(),guide:()=>toggleGuide(),briefing:()=>openBriefing(),science:()=>openSciencePage(false),concept:()=>reviewConceptCard(),conceptcards:()=>toggleConceptCards(),assist:()=>toggleAssist(),sound:()=>toggleSound(),orientation:()=>cycleScreenOrientation(),language:()=>globalThis.SpaceGameI18n?.cycle?.(),
     level:()=>openLevelSelect(),rewind:()=>rewindStage(),restart:()=>resetGame(),pause:()=>togglePause(),
     mission:()=>tryMissionAction(),threeseed:()=>toggleThreeBodySeedMode(),copyseed:()=>copyThreeBodySeed(),copyperf:()=>copyPerformanceReport()
@@ -94,10 +94,16 @@
   // 指针被目录捕获后 click 的目标可能变成 levelGrid，因此用坐标重新确认玩家点中的卡片。
   levelGrid.addEventListener('click',e=>{
     if(suppressLevelClick) return;
+    if(document.getElementById('levelSelect')?.dataset.catalogMode==='novice')return;
     const direct=e.target.closest&&e.target.closest('[data-level-card]');
     const hit=document.elementFromPoint(e.clientX,e.clientY);
     const card=direct||(hit&&hit.closest&&hit.closest('[data-level-card]'));
     if(card) startLevel(card.dataset.levelCard);
+  });
+  const freeTaskGrid=document.getElementById('freeTaskGrid');
+  if(freeTaskGrid)freeTaskGrid.addEventListener('click',e=>{
+    const card=e.target.closest&&e.target.closest('[data-level-card]');
+    if(card)startLevel(card.dataset.levelCard);
   });
   document.getElementById('achievementDetail').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAchievementDetail();});
   document.getElementById('achievementCollection').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAchievementCollection();});
