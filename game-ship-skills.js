@@ -179,8 +179,8 @@
     if(current.used||current.uses>=current.maxUses)return {ok:false,reason:'used',message:t('本关技能次数已用完')};
     const result=typeof def.activate==='function'?(def.activate(context(extra))||{}):{ok:true};
     if(result.ok===false){sync();return result;}
-    if(!result.deferConsume){current.uses=Math.min(current.maxUses,current.uses+1);current.used=current.uses>=current.maxUses;}
-    current.cooldown=Math.max(0,Number(result.cooldown??def.cooldown)||0);current.active=!!result.active;
+    if(!result.deferConsume){current.uses=Math.min(current.maxUses,current.uses+1);current.used=current.uses>=current.maxUses;current.cooldown=Math.max(0,Number(result.cooldown??def.cooldown)||0);}
+    current.active=!!result.active;
     current.remaining=Math.max(0,Number(result.duration)||0);
     if(result.payload)current.payload={...current.payload,...clone(result.payload)};
     global.SpaceGameAudio?.sfx?.(result.sound||'skill');sync();

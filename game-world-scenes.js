@@ -373,7 +373,18 @@ function drawGroundRing(b){
 }
 
 function drawSpaceWarpEffect(){
-  const fx=globalThis.SpaceGameShipSkills?.visualState?.()?.warpFx;
+  const payload=globalThis.SpaceGameShipSkills?.visualState?.()||{},charge=payload.warpChargeFx,fx=payload.warpFx;
+  if(charge&&rocket?.alive){
+    const duration=Math.max(.001,Number(charge.duration)||.1),p=Math.max(0,Math.min(1,1-charge.remaining/duration));
+    const nose={x:rocket.x+Math.cos(rocket.a)*34,y:rocket.y+Math.sin(rocket.a)*34},side=rocket.a+Math.PI/2;
+    ctx.save();ctx.strokeStyle='#a9f7ff';ctx.fillStyle='#efffff';ctx.lineCap='round';
+    if(!lowPowerMode){ctx.shadowColor='#66e8ff';ctx.shadowBlur=18/cam.zoom;}
+    for(let i=0;i<3;i++){
+      const distance=(44-i*11)*(1-p*.72)/cam.zoom,half=(18+i*5)*(1-p*.28)/cam.zoom,cx=nose.x+Math.cos(rocket.a)*distance,cy=nose.y+Math.sin(rocket.a)*distance;
+      ctx.globalAlpha=.28+i*.19+.22*p;ctx.lineWidth=(1.8+i*.45)/cam.zoom;ctx.beginPath();ctx.moveTo(cx+Math.cos(side)*half,cy+Math.sin(side)*half);ctx.lineTo(cx-Math.cos(side)*half,cy-Math.sin(side)*half);ctx.stroke();
+    }
+    ctx.globalAlpha=.82+.18*p;ctx.beginPath();ctx.arc(nose.x,nose.y,(4+7*p)/cam.zoom,0,TAU);ctx.fill();ctx.restore();
+  }
   if(!fx||fx.remaining<=0||!fx.start||!fx.end)return;
   const life=Math.max(0,Math.min(1,fx.remaining/Math.max(.001,fx.duration||.78)));
   ctx.save();ctx.globalAlpha=.3+.65*life;ctx.strokeStyle='#a9f7ff';ctx.lineWidth=(lowPowerMode?2.2:3.2)/cam.zoom;

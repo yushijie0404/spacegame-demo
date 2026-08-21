@@ -439,6 +439,9 @@
       case 'skill':
         relayClick(.028);glassNote(392,.035,.025,.16);glassNote(587.33,.12,.028,.3);
         break;
+      case 'space_warp_charge':
+        relayClick(.018);filteredNoise({duration:.1,from:180,to:1450,volume:.025,q:2.2,attack:.003});glassNote(330,.025,.02,.07);
+        break;
       case 'space_warp':
         relayClick(.022);filteredNoise({duration:.22,from:260,to:2400,volume:.035,q:1.25});
         glassNote(440,.035,.025,.08);glassNote(880,.16,.038,.18);glassNote(1318.51,.22,.028,.31);

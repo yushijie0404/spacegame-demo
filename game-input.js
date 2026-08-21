@@ -56,6 +56,9 @@
   }
   document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.action!=='skill')dispatchAction(btn.dataset.action);}));
   document.querySelectorAll('[data-menu-action]').forEach(btn=>btn.addEventListener('click',()=>dispatchAction(btn.dataset.menuAction,true)));
+  document.getElementById('pauseMenu').addEventListener('click',e=>{
+    if(e.target===e.currentTarget&&paused) togglePause();
+  });
   const skillButton=document.getElementById('shipSkillButton');
   let skillPointerId=null,skillKeyboardHeld=false;
   const releaseSkillPointer=e=>{
@@ -77,9 +80,6 @@
     e.preventDefault();e.stopPropagation();skillKeyboardHeld=false;releaseShipSkill();
   });
   holdResetters.push(()=>{skillPointerId=null;skillKeyboardHeld=false;releaseShipSkill(true);});
-  document.getElementById('pauseMenu').addEventListener('click',e=>{
-    if(e.target===e.currentTarget&&paused) togglePause();
-  });
   document.getElementById('sciencePage').addEventListener('click',e=>{
     if(e.target===e.currentTarget)closeSciencePage();
   });
