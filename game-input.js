@@ -30,10 +30,11 @@
     if(e.code==='KeyC') cycleAttitude();
     if(e.code==='KeyP') togglePause();
   });
-  addEventListener('keyup', e=> keys[e.code]=false);
+  addEventListener('keyup', e=>{keys[e.code]=false;if(e.code==='KeyF')releaseShipSkill();});
   const holdResetters=[];
   function clearFlightInputs(){
     keys['Space']=keys['KeyA']=keys['KeyD']=keys['KeyW']=keys['ArrowUp']=keys['ArrowLeft']=keys['ArrowRight']=false;
+    releaseShipSkill(true);
     holdResetters.forEach(reset=>reset());
     if(typeof SG_AUDIO!=='undefined') SG_AUDIO.stopAll();
   }
@@ -53,8 +54,29 @@
     else{const handler=ACTION_HANDLERS[action];if(handler)handler();}
     if(fromMenu)syncUI();
   }
-  document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',()=>dispatchAction(btn.dataset.action)));
+  document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.action!=='skill')dispatchAction(btn.dataset.action);}));
   document.querySelectorAll('[data-menu-action]').forEach(btn=>btn.addEventListener('click',()=>dispatchAction(btn.dataset.menuAction,true)));
+  const skillButton=document.getElementById('shipSkillButton');
+  let skillPointerId=null,skillKeyboardHeld=false;
+  const releaseSkillPointer=e=>{
+    if(skillPointerId===null||(e?.pointerId!==undefined&&e.pointerId!==skillPointerId))return;
+    skillPointerId=null;releaseShipSkill();
+  };
+  skillButton?.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    e.preventDefault();e.stopPropagation();skillPointerId=e.pointerId;skillButton.setPointerCapture?.(e.pointerId);tryShipSkill();
+  });
+  skillButton?.addEventListener('pointerup',releaseSkillPointer);skillButton?.addEventListener('pointercancel',releaseSkillPointer);skillButton?.addEventListener('lostpointercapture',releaseSkillPointer);
+  addEventListener('pointerup',releaseSkillPointer,true);addEventListener('pointercancel',releaseSkillPointer,true);
+  skillButton?.addEventListener('keydown',e=>{
+    if((e.code!=='Space'&&e.code!=='Enter')||e.repeat)return;
+    e.preventDefault();e.stopPropagation();skillKeyboardHeld=true;tryShipSkill();
+  });
+  skillButton?.addEventListener('keyup',e=>{
+    if((e.code!=='Space'&&e.code!=='Enter')||!skillKeyboardHeld)return;
+    e.preventDefault();e.stopPropagation();skillKeyboardHeld=false;releaseShipSkill();
+  });
+  holdResetters.push(()=>{skillPointerId=null;skillKeyboardHeld=false;releaseShipSkill(true);});
   document.getElementById('pauseMenu').addEventListener('click',e=>{
     if(e.target===e.currentTarget&&paused) togglePause();
   });

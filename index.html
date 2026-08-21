@@ -145,11 +145,12 @@
   }
   @media (max-width:355px){.achievement-grid{grid-template-columns:1fr}.achievement-card{min-height:230px}.medal{transform:scale(.92)}}
   @media (orientation:portrait){
-    #levelSelect{align-items:stretch;overflow:hidden}
-    .level-shell{height:100%;display:flex;flex-direction:column;margin:0 auto}
-    .level-head,.level-footer{flex:0 0 auto}
-    .catalog-content{display:flex;min-height:0;flex:1;flex-direction:column}.campaign-path{display:flex;min-height:0;flex:1;flex-direction:column}.level-grid{flex:1;min-height:0;flex-direction:column;overflow-x:hidden;overflow-y:auto;scroll-snap-type:y proximity;touch-action:pan-y;overscroll-behavior-y:contain;padding:5px 3px 20px}.free-task-section{flex:0 0 auto}.free-task-panel{max-height:48vh;overflow:auto}
-    .level-card{flex:0 0 auto;width:100%;min-height:220px;scroll-snap-align:start}
+    #levelSelect{align-items:flex-start;overflow-x:hidden;overflow-y:auto}
+    .level-shell{height:auto;min-height:100%;display:block;margin:0 auto}
+    .catalog-content{display:flex;min-height:0;flex-direction:column}.campaign-path{display:block;min-height:0}.level-grid{display:flex;min-height:0;flex-direction:row;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;touch-action:pan-x;overscroll-behavior-x:contain;padding:5px 3px 16px}
+    .level-card{flex:0 0 min(84vw,310px);width:auto;min-height:235px;scroll-snap-align:center}
+    .level-footer{order:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.level-footer button{width:100%;min-width:0;min-height:44px;padding:7px 8px;font-size:12px}.level-footer .ship-skin-entry{justify-content:center;flex-wrap:wrap;gap:4px}
+    .free-task-section{order:2;margin-top:10px}.free-task-panel{max-height:none;overflow:visible}.reward-direction{order:3}
   }
   @media (pointer:coarse) and (min-width:761px){
     .tool-rail{grid-template-columns:repeat(4,54px)}.icon-btn{width:54px;height:54px}
@@ -183,7 +184,8 @@
     #levelSelect{align-items:stretch;overflow:hidden;padding:max(6px,env(safe-area-inset-top)) max(9px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(9px,env(safe-area-inset-left))}
     .level-shell{height:100%;min-height:0;display:flex;flex-direction:column;margin:0 auto}.level-head{flex:0 0 auto;margin-bottom:6px}.level-kicker{display:none}.product-lockup{gap:3px 8px;margin:0}.game-title{font-size:clamp(20px,7vh,29px)}.product-subtitle{padding:2px 8px;font-size:clamp(9px,3vh,12px)}.catalog-heading-row{gap:4px 8px;margin-top:2px}.level-select-heading{font-size:clamp(12px,4vh,16px)}.game-type-line{font-size:clamp(10px,3.2vh,12px)}.save-note{display:none}
     .level-grid{flex:1;min-height:0;gap:9px;padding:2px 3px 4px;overflow-x:auto;overflow-y:hidden;touch-action:pan-x}.level-card{height:100%;min-height:0;flex:0 0 min(42vw,270px);padding:9px 12px;border-radius:17px}.level-number{font-size:9px}.level-icon{margin:2px 0;font-size:24px}.level-card h2{margin:0 0 3px;font-size:16px}.level-card p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:11px;line-height:1.35}.level-meta{padding-top:3px}.level-stars{font-size:16px}.level-score{font-size:9px}.level-score strong{font-size:15px}.level-play{min-height:34px;margin-top:4px;border-radius:9px;font-size:12px}
-    .level-footer{flex:0 0 auto;margin-top:5px}.level-footer button{min-height:36px;padding:6px 14px;font-size:11px}
+    .catalog-content{display:flex;min-height:0;flex:1;flex-direction:column}.campaign-path{order:0;display:flex;min-height:0;flex:1;flex-direction:column}.reward-direction{display:none}.free-task-section{order:2;flex:0 0 auto;margin-top:4px;padding:4px 6px}.free-task-toggle{min-height:31px;padding:4px 8px;font-size:10px}.free-task-panel{position:absolute;z-index:3;left:9px;right:9px;bottom:46px;max-height:62vh;overflow:auto;padding:7px;background:#0b173d;border:1px solid rgba(255,255,255,.18);border-radius:12px}
+    .level-footer{order:1;flex:0 0 auto;flex-wrap:nowrap;justify-content:flex-start;gap:7px;margin-top:5px;padding:0 0 3px;overflow-x:auto}.level-footer button{flex:0 0 auto;min-height:36px;padding:6px 12px;font-size:11px}
     .concept-card{padding:8px 12px}.concept-card h2{margin:1px 0;font-size:17px}.concept-pause-note{font-size:9px}.concept-content{grid-template-columns:1.05fr .95fr;gap:8px;margin-top:3px}.concept-figure{padding:4px}.concept-figure svg{max-height:150px}.concept-copy p{font-size:11.5px;line-height:1.35}.concept-copy ul{margin-top:3px;font-size:9.5px;line-height:1.35}.concept-actions{margin-top:3px}.concept-actions button{min-height:32px;padding:4px 10px;font-size:11px}
   }
   @media (orientation:landscape) and (max-height:360px){.level-head{margin-bottom:3px}.game-title{font-size:19px}.product-subtitle{font-size:9px}.catalog-heading-row{margin-top:0}.level-select-heading,.game-type-line{font-size:10px}.level-footer{margin-top:3px}.level-footer button{min-height:32px;padding:4px 12px}}
@@ -1389,7 +1391,9 @@ function shipSkillRuntimeContext(){
   const worldBounds={x:boundaryCenter.x,y:boundaryCenter.y,radius:level===10?30000:level===8?80000:150000};
   const warpBodies=asteroid?.alive?[...BODIES,asteroid]:BODIES;
   return {rocket,mission,level,challengeMode,bodies:warpBodies,worldBounds,ringOut:RING_OUT,trail,asteroid,station,binary,blackHole,threeBody,
-    yamatoTargets:currentYamatoTargets(),onWarp:markSkillWorldStarted,
+    yamatoTargets:currentYamatoTargets(),onWarp(warp,message){
+      markSkillWorldStarted();mission.toast='✦ '+message;mission.toastT=2.8;
+    },
     onYamatoFire(shot){
       markSkillWorldStarted();shake=Math.max(shake,shot.destruction?11:7);
       const message=shot.destruction?`${SG_I18N.t('大和炮击碎小行星')} · ${shot.destruction.fragments} ${SG_I18N.t('块')}`:
@@ -1406,8 +1410,15 @@ function shipSkillRuntimeContext(){
 function tryShipSkill(){
   if(!mission||paused||state!=='fly')return {ok:false,reason:'inactive'};
   const result=SG_SKILLS.use(shipSkillRuntimeContext());
+  if(result.ok&&result.payload?.yamatoFx?.phase==='charging')markSkillWorldStarted();
   if(result.message){mission.toast=(result.ok?'✦ ':'⚠️ ')+result.message;mission.toastT=2.8;}
   syncUI();return result;
+}
+function releaseShipSkill(silent=false){
+  if(!mission)return {ok:false,reason:'inactive'};
+  const result=SG_SKILLS.release(shipSkillRuntimeContext());
+  if(result.ok&&result.cancelled&&!silent&&result.message){mission.toast='◇ '+result.message;mission.toastT=1.8;}
+  if(result.ok)syncUI();return result;
 }
 
 function cueTurnTo(target,tolerance=0.24){

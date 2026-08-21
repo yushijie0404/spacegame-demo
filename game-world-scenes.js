@@ -394,16 +394,16 @@ function drawSpaceWarpEffect(){
 }
 
 function drawYamatoAimGuide(){
-  const system=globalThis.SpaceGameShipSkills,status=system?.status?.(),fx=system?.visualState?.()?.yamatoFx;
-  if(!rocket?.alive||status?.shipId!=='hyperion'||status.kind!=='active'||(status.used&&fx?.phase!=='charging')||fx?.phase==='beam')return;
-  const shot=fx?.phase==='charging'?fx:system.resolveYamatoShot({x:rocket.x,y:rocket.y,heading:rocket.a,range:2000,targets:typeof currentYamatoTargets==='function'?currentYamatoTargets():[]});
+  const fx=globalThis.SpaceGameShipSkills?.visualState?.()?.yamatoFx;
+  if(!rocket?.alive||fx?.phase!=='charging')return;
+  const shot=fx;
   if(!shot?.start||!shot?.end)return;
-  const charging=fx?.phase==='charging',nose={x:shot.start.x+Math.cos(shot.heading)*38,y:shot.start.y+Math.sin(shot.heading)*38},color=shot.hit?'#7df6ff':'#72b8d8';
-  ctx.save();ctx.lineCap='round';ctx.globalAlpha=charging ? .9 : .58;ctx.strokeStyle=color;ctx.lineWidth=(charging?3.5:2.2)/cam.zoom;ctx.setLineDash(charging?[10/cam.zoom,5/cam.zoom]:[7/cam.zoom,9/cam.zoom]);
+  const nose={x:shot.start.x+Math.cos(shot.heading)*38,y:shot.start.y+Math.sin(shot.heading)*38},color=shot.hit?'#7df6ff':'#72b8d8';
+  ctx.save();ctx.lineCap='round';ctx.globalAlpha=.9;ctx.strokeStyle=color;ctx.lineWidth=3.5/cam.zoom;ctx.setLineDash([10/cam.zoom,5/cam.zoom]);
   ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(shot.end.x,shot.end.y);ctx.stroke();ctx.setLineDash([]);
-  const radius=(shot.hit?13:8)/cam.zoom;ctx.globalAlpha=charging?1:.72;ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(shot.end.x,shot.end.y,radius,0,TAU);ctx.stroke();
+  const radius=(shot.hit?13:8)/cam.zoom;ctx.globalAlpha=1;ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(shot.end.x,shot.end.y,radius,0,TAU);ctx.stroke();
   if(shot.hit){ctx.beginPath();ctx.moveTo(shot.end.x-radius*1.45,shot.end.y);ctx.lineTo(shot.end.x+radius*1.45,shot.end.y);ctx.moveTo(shot.end.x,shot.end.y-radius*1.45);ctx.lineTo(shot.end.x,shot.end.y+radius*1.45);ctx.stroke();}
-  ctx.fillStyle=color;ctx.font=`900 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(charging?'大和炮聚能锁定':shot.hit?`锁定：${shot.targetName||'目标'}`:'大和炮瞄准线',shot.end.x,shot.end.y-18/cam.zoom);ctx.restore();ctx.textAlign='left';
+  ctx.fillStyle=color;ctx.font=`900 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(shot.hit?`聚能锁定：${shot.targetName||'目标'}`:'大和炮聚能瞄准线',shot.end.x,shot.end.y-18/cam.zoom);ctx.restore();ctx.textAlign='left';
 }
 
 function drawYamatoEffect(){

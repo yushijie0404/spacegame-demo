@@ -144,11 +144,18 @@
     gain.gain.exponentialRampToValueAtTime(volume,start+attack);
     gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
     source.connect(filter).connect(gain).connect(sfxBus);
-    source.start(start);source.stop(start+duration+.03);
+    source.start(start,Math.max(0,Math.min(.95,Number(options.offset)||0)));source.stop(start+duration+.03);
   }
   function airJet(volume=.035,duration=.1,delay=0){
     filteredNoise({duration,delay,volume,type:'bandpass',from:2100,to:720,q:.65,attack:.003});
     filteredNoise({duration:duration*.82,delay,volume:volume*.34,type:'lowpass',from:520,to:190,q:.6,attack:.002});
+  }
+  function rcsJet(volume=.05,duration=.18,delay=0){
+    const offset=Math.random()*.75;
+    // Cold-gas attitude thruster: an immediate high-pressure hiss followed by
+    // a short, broader exhaust puff. No pitched oscillator is used.
+    filteredNoise({duration,delay,volume,type:'highpass',from:5200,to:1100,q:.28,attack:.0015,offset});
+    filteredNoise({duration:duration*.78,delay:delay+.006,volume:volume*.44,type:'lowpass',from:1050,to:280,q:.45,attack:.002,offset:offset+.13});
   }
   function lowThump(volume=.07,duration=.18,delay=0,from=78,to=36){
     oscillatorPartial(from,duration,volume,delay,to,'sine',.002);
@@ -246,8 +253,8 @@
   function createVoice(trackId,startOffset=MUSIC_HEAD_SKIP){
     const track=MUSIC_TRACKS[trackId];
     if(!track||!context||!musicBus||typeof global.Audio!=='function')return null;
-    const audio=new global.Audio();audio.preload='auto';audio.src=musicUrl(track.file);audio.playsInline=true;
     const direct=global.location?.protocol==='file:';
+    const audio=new global.Audio();audio.preload='auto';if(!direct)audio.crossOrigin='anonymous';audio.src=musicUrl(track.file);audio.playsInline=true;
     const source=direct?null:context.createMediaElementSource(audio),gain=direct?null:context.createGain();if(gain)gain.gain.value=.0001;
     if(source&&gain)source.connect(gain).connect(musicBus);
     const voice={trackId,track,audio,source,gain,direct,envelope:0,fadeTimer:null,level:dbToGain(track.trimDb),released:false,looping:false,releaseTimer:null,playPromise:null};
@@ -382,7 +389,7 @@
     remember(name);duckForCriticalSfx(name);
     switch(name){
       case 'turn':
-        lastTurnAt=now;airJet(.032,.105);break;
+        lastTurnAt=now;rcsJet(.052,.18);break;
       case 'chute':
         lowThump(.07,.2,0,68,42);
         filteredNoise({duration:.62,volume:.085,type:'bandpass',from:1850,to:460,q:.38,attack:.018});
