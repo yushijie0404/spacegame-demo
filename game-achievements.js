@@ -26,6 +26,7 @@ const ACHIEVEMENTS=[
   {id:'kinetic_answer',title:'以舰作锤',icon:'asteroid',accent:'#ef476f',accent2:'#ffb142',method:'使用动能撞击路线完成第七关。',joke:'任务书写着“改变轨道”，你选择了最有标点的一种。'},
   {id:'clean_run',title:'不读档的人',icon:'crown',accent:'#f4f7ff',accent2:'#7de3ff',method:'在挑战模式中不使用阶段回退完成任意任务。',joke:'时间线只有一条，因为你没给宇宙反悔的机会。'},
   {id:'prisoner_7251',title:'囚犯7251的狱牌',icon:'prison',accent:'#d4d8df',accent2:'#ef6f4b',method:'使用休伯利安号的大和炮击毁友方空间站。',joke:'他说是猫碰撒了咖啡让发射按钮短路了，猫听了也直摇头。'},
+  {id:'double_birds',title:'一箭双雕',icon:'double',accent:'#69eaff',accent2:'#ffb866',method:'用一发大和炮同时击毁第十关两艘求救飞船。',joke:'任务写的是营救两艘。你只看见了“两艘”。'},
   {id:'inertia_pilot',title:'惯性很有主见',icon:'satellite',accent:'#c99cff',accent2:'#4cc9f0',method:'在纯惯性姿态下累计飞行至少 30 秒并完成挑战任务。',joke:'飞船不替你转弯。它只是安静地尊重你的决定。'}
 ];
 globalThis.SpaceGameAchievementContent=ACHIEVEMENTS;
@@ -48,7 +49,8 @@ function achievementIconSvg(kind){
     bolt:'<path d="M36 6 16 35h14l-3 23 21-32H34l2-20Z" class="fill"/>',
     star:'<path d="m32 7 7 16 18 2-14 12 4 18-15-9-15 9 4-18L7 25l18-2 7-16Z"/>',
     crown:'<path d="m9 19 12 10 11-18 11 18 12-10-5 31H14L9 19Z"/><path d="M15 42h34M20 50v5m12-5v5m12-5v5"/>',
-    prison:'<path d="M15 8h29l8 8v40H15Z"/><circle cx="43" cy="17" r="3"/><path d="M22 25h23M22 46h23M23 30v11m7-11v11m7-11v11m7-11v11"/><text x="32" y="53" text-anchor="middle" class="fill" style="font:900 8px sans-serif">7251</text>'
+    prison:'<path d="M15 8h29l8 8v40H15Z"/><circle cx="43" cy="17" r="3"/><path d="M22 25h23M22 46h23M23 30v11m7-11v11m7-11v11m7-11v11"/><text x="32" y="53" text-anchor="middle" class="fill" style="font:900 8px sans-serif">7251</text>',
+    double:'<path d="M7 32h27m0 0 12-14m-12 14 12 14"/><path d="m25 25 10 7-10 7" class="fill"/><circle cx="51" cy="15" r="7"/><circle cx="51" cy="49" r="7"/><circle cx="51" cy="15" r="2" class="fill"/><circle cx="51" cy="49" r="2" class="fill"/>'
   };
   return `<svg viewBox="0 0 64 64" aria-hidden="true">${paths[kind]||paths.star}</svg>`;
 }

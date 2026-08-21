@@ -9,7 +9,8 @@
   const SKINS=[
     {id:'rocket',name:'星际快递号',tag:'经典火箭',description:'白色装甲、青色座舱与红色短翼；皮实耐用，送货与着陆容错高。',unlock:{type:'default'}},
     {id:'swordwing',name:'飞天一号',tag:'剑形飞行器',description:'按参考图制作的白色双剑机首俯视外形。',unlock:{type:'stars',value:12,text:'累计获得 12 星解锁'}},
-    {id:'hyperion',name:'休伯利安号',tag:'人族战列巡航舰',description:'横向重装舰首、细长中轴、双圆主翼与短促推进器尾段。',unlock:{type:'achievement',value:'challenge_ace',text:'获得“挑战王牌”勋章解锁'}}
+    {id:'hyperion',name:'休伯利安号',tag:'人族战列巡航舰',description:'横向重装舰首、细长中轴、双圆主翼与短促推进器尾段。',unlock:{type:'achievement',value:'challenge_ace',text:'获得“挑战王牌”勋章解锁'}},
+    {id:'waterdrop',name:'水滴号',tag:'强相互作用力探测器',description:'浑圆舰首、极尖尾部与映照星海的完美镜面外壳。',unlock:{type:'stars',value:18,text:'累计获得 18 星解锁'}}
   ];
   function loadOwned(){
     try{

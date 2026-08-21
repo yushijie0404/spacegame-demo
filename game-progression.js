@@ -76,7 +76,7 @@ function scoreBenchmarkText(benchmark){return benchmark.next?`${progressionText(
 function rewardDirectionState(progress=loadProgress()){
   const totalStars=totalCampaignStars(progress),completedActs=SpaceGameCampaign.completedActs(progress).length;
   let totalBestScore=0;for(let i=1;i<=10;i++)totalBestScore+=Math.max(0,Number(progress?.[i]?.score||0));
-  const nextStarMilestone=totalStars<12?12:null;
+  const nextStarMilestone=[12,18].find(value=>totalStars<value)||null;
   return {totalStars,completedActs,totalBestScore,nextStarMilestone};
 }
 function campaignCatalogState(progress=loadProgress()){
@@ -127,10 +127,11 @@ function updateRewardDirection(progress=loadProgress()){
   const state=rewardDirectionState(progress),t=progressionText,set=(id,text)=>{const node=document.getElementById(id);if(node)node.textContent=text;};
   set('rewardStarTotal',`${state.totalStars} / 30 ${t('星')}`);
   set('rewardActProgress',`${state.completedActs} / 4 ${t('幕已完成')}`);
-  set('rewardNextUnlock',state.nextStarMilestone?`${t('再获得')} ${state.nextStarMilestone-state.totalStars} ${t('星解锁飞天一号')}`:t('飞天一号已达到星级条件'));
+  const ships=globalThis.SpaceGameShipSkins?.list?.()||[],nextStarShip=ships.filter(item=>item.unlock?.type==='stars'&&Number(item.unlock.value)>state.totalStars).sort((a,b)=>a.unlock.value-b.unlock.value)[0];
+  set('rewardNextUnlock',nextStarShip?`${t('再获得')} ${nextStarShip.unlock.value-state.totalStars} ${t('星解锁')} ${t(nextStarShip.name)}`:t('全部星级外观已达到条件'));
   set('rewardScoreTotal',`${t('十关最高分合计')} ${state.totalBestScore}`);
-  const unlocked=globalThis.SpaceGameShipSkins?.list?.().filter(item=>globalThis.SpaceGameShipSkins.isUnlocked(item.id)).length||1;
-  set('rewardSkinProgress',`${unlocked} / 3 ${t('外观已解锁')}`);
+  const unlocked=ships.filter(item=>globalThis.SpaceGameShipSkins.isUnlocked(item.id)).length||1;
+  set('rewardSkinProgress',`${unlocked} / ${Math.max(1,ships.length)} ${t('外观已解锁')}`);
 }
 function challengeLifeEnabled(){ return challengeMode&&(level===2||level===3); }
 function challengeRemainingFuel(){ return Math.max(0,(mission?.fuelBudget||0)-(mission?.fuelUsed||0)); }

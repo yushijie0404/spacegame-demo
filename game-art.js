@@ -11,6 +11,9 @@ feitianOneSprite.src='./assets/ships/feitian-one-overhead.png';
 const hyperionSprite=new Image();
 hyperionSprite.decoding='async';
 hyperionSprite.src='./assets/ships/hyperion-cartoon-overhead.png';
+const waterdropSprite=new Image();
+waterdropSprite.decoding='async';
+waterdropSprite.src='./assets/ships/waterdrop-overhead.png';
 
 // Historical trails are solid and have an explicit world-space length tied to
 // current absolute speed. Predictors use their own dashed rendering elsewhere.
@@ -227,18 +230,21 @@ function drawThreeBodyTimelines(){
   ctx.textAlign='left';
 }
 
-function drawShipFlame(x,y,width,length,redshift,phase=0){
+function drawShipFlame(x,y,width,length,redshift,phase=0,palette='warm'){
   const flicker=length+Math.random()*7;
   ctx.save();ctx.translate(x,y);
-  ctx.fillStyle=redshift>0?`rgb(255,${Math.round(177-82*redshift)},${Math.round(66-38*redshift)})`:'#ffb142';
+  const blue=palette==='blue';
+  if(blue&&!lowPowerMode){ctx.shadowColor='#39c8ff';ctx.shadowBlur=7/cam.zoom;}
+  ctx.fillStyle=blue?'#269dff':redshift>0?`rgb(255,${Math.round(177-82*redshift)},${Math.round(66-38*redshift)})`:'#ffb142';
   ctx.beginPath();ctx.moveTo(-width,0);ctx.quadraticCurveTo(Math.sin(phase)*1.6,flicker,width,0);ctx.closePath();ctx.fill();
-  ctx.fillStyle=redshift>0?'#ffe2a8':'#fff3b0';ctx.beginPath();ctx.moveTo(-width*.48,0);ctx.quadraticCurveTo(0,flicker*.58,width*.48,0);ctx.closePath();ctx.fill();ctx.restore();
+  ctx.shadowBlur=0;ctx.fillStyle=blue?'#dffbff':redshift>0?'#ffe2a8':'#fff3b0';ctx.beginPath();ctx.moveTo(-width*.48,0);ctx.quadraticCurveTo(0,flicker*.58,width*.48,0);ctx.closePath();ctx.fill();ctx.restore();
 }
 
 function drawClassicRocketSkin(redshift,thrusting){
   if(starCourierSprite.complete&&starCourierSprite.naturalWidth){
-    if(thrusting){for(const x of [-5.8,0,5.8])drawShipFlame(x,31,2.2,15,redshift,x*.2);}
-    ctx.drawImage(starCourierSprite,-25,-32,50,64);return;
+    ctx.drawImage(starCourierSprite,-25,-32,50,64);
+    if(thrusting){for(const x of [-4,0,4])drawShipFlame(x,22,1.9,15,redshift,x*.2);}
+    return;
   }
   if(thrusting)drawShipFlame(0,14,5,22,redshift);
   const wingColor=redshift>0?`rgb(239,${Math.round(71-42*redshift)},${Math.round(111-62*redshift)})`:'#ef476f';
@@ -253,16 +259,41 @@ function drawClassicRocketSkin(redshift,thrusting){
 
 function drawSwordwingSkin(redshift,thrusting){
   if(!feitianOneSprite.complete||!feitianOneSprite.naturalWidth){drawClassicRocketSkin(redshift,thrusting);return;}
-  if(thrusting){drawShipFlame(-8.8,29,2.7,17,redshift,.4);drawShipFlame(0,30,2.4,15,redshift);drawShipFlame(8.8,29,2.7,17,redshift,-.4);}
   // 参考图的正俯视透明贴图。只放大视觉轮廓，不改物理碰撞半径。
   ctx.drawImage(feitianOneSprite,-34,-34,68,68);
+  if(thrusting){drawShipFlame(-7.4,28.8,2.7,17,redshift,.4,'blue');drawShipFlame(0,28.8,2.4,15,redshift,0,'blue');drawShipFlame(7.4,28.8,2.7,17,redshift,-.4,'blue');}
 }
 
 function drawHyperionSkin(redshift,thrusting){
   if(!hyperionSprite.complete||!hyperionSprite.naturalWidth){drawClassicRocketSkin(redshift,thrusting);return;}
-  if(thrusting){for(const x of [-6,0,6])drawShipFlame(x,36,2.2,14,redshift,x*.16);}
   // 素材按用户参考图保留“舰首在下、推进器在上”；飞行时旋转半周，让舰首对准既有前向坐标。
   ctx.save();ctx.rotate(Math.PI);ctx.drawImage(hyperionSprite,-36,-38,72,76);ctx.restore();
+  if(thrusting){for(const x of [-5.5,0,5.5])drawShipFlame(x,30.2,2.35,16,redshift,x*.16,'blue');}
+}
+
+function traceWaterdropHull(){
+  ctx.beginPath();ctx.moveTo(0,-34);ctx.bezierCurveTo(13,-34,18,-23,17,-10);ctx.bezierCurveTo(16,5,7,23,0,35);ctx.bezierCurveTo(-7,23,-16,5,-17,-10);ctx.bezierCurveTo(-18,-23,-13,-34,0,-34);ctx.closePath();
+}
+function drawWaterdropFallback(redshift){
+  const gradient=ctx.createLinearGradient(-17,-26,15,24);gradient.addColorStop(0,redshift>0?'#8b6870':'#f8fdff');gradient.addColorStop(.2,redshift>0?'#552f42':'#9eefff');gradient.addColorStop(.48,'#112b55');gradient.addColorStop(.76,redshift>0?'#7a3540':'#408ecc');gradient.addColorStop(1,'#edfaff');
+  ctx.fillStyle=gradient;ctx.strokeStyle=redshift>0?'#e99b91':'#dffcff';ctx.lineWidth=1.4;traceWaterdropHull();ctx.fill();ctx.stroke();
+  ctx.globalAlpha=.8;ctx.strokeStyle='#ffffff';ctx.lineWidth=2.1;ctx.beginPath();ctx.moveTo(-8,-25);ctx.bezierCurveTo(-13,-12,-8,5,-2,18);ctx.stroke();ctx.globalAlpha=1;
+}
+function drawWaterdropSkin(redshift,thrusting){
+  if(lowPowerMode||!waterdropSprite.complete||!waterdropSprite.naturalWidth)drawWaterdropFallback(redshift);
+  else{
+    ctx.drawImage(waterdropSprite,-17.3,-35.5,34.6,72);
+    const nearest=(BODIES||[]).reduce((best,body)=>{
+      if(!body||!Number.isFinite(body.x)||!Number.isFinite(body.y))return best;const distance=(body.x-rocket.x)**2+(body.y-rocket.y)**2;
+      return !best||distance<best.distance?{body,distance}:best;
+    },null)?.body;
+    if(nearest){
+      const localAngle=Math.atan2(nearest.y-rocket.y,nearest.x-rocket.x)-(rocket.a+Math.PI/2),rx=Math.cos(localAngle)*9,ry=Math.sin(localAngle)*17;
+      ctx.save();traceWaterdropHull();ctx.clip();const reflection=ctx.createRadialGradient(rx,ry,0,rx,ry,18);reflection.addColorStop(0,nearest.isStar?'rgba(255,245,190,.64)':'rgba(113,218,255,.55)');reflection.addColorStop(.34,'rgba(185,242,255,.22)');reflection.addColorStop(1,'rgba(95,205,255,0)');ctx.fillStyle=reflection;ctx.fillRect(-20,-38,40,76);ctx.restore();
+    }
+  }
+  // The canonical hull has no visible nozzle; keep thrust feedback as a compact wake touching the needle tip.
+  if(thrusting)drawShipFlame(0,34.2,1.45,8.5,redshift,0,'blue');
 }
 
 function drawRocket(){
@@ -298,6 +329,7 @@ function drawRocket(){
   const skin=globalThis.SpaceGameShipSkins?.current?.()||'rocket';
   if(skin==='swordwing')drawSwordwingSkin(redshift,thrusting);
   else if(skin==='hyperion')drawHyperionSkin(redshift,thrusting);
+  else if(skin==='waterdrop')drawWaterdropSkin(redshift,thrusting);
   else drawClassicRocketSkin(redshift,thrusting);
   ctx.restore();
 }

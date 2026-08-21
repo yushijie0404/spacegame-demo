@@ -279,7 +279,13 @@ function finishThreeBodyCrossing(m=threeBodyMetrics()){
 function failThreeBodyRescue(){
   if(level!==10||mission.done||state==='dead')return;
   state='dead';mission.failed=true;syncUI();
-  showMsg('☀️','两艘求救飞船均已坠毁',`三颗恒星的引力吞没了最后的求救信号。<br><span style="color:#888">按 R 回到本阶段，或在暂停菜单重新开始整关。</span>`);
+  if(mission.yamatoDoubleRescue){
+    if(typeof unlockAchievement==='function')unlockAchievement('double_birds');
+    showMsg('🎯','牛啊，一箭双雕',`一发大和炮，同时处理两艘求救飞船。任务控制中心正在努力理解你对“营救”的定义。<br><span style="color:#888">按 R 回到本阶段，或在暂停菜单重新开始整关。</span>`);
+    return;
+  }
+  const yamatoLoss=threeBody?.rescueShips?.some(ship=>ship?.yamatoDestroyed);
+  showMsg(yamatoLoss?'☄️':'☀️',yamatoLoss?'救援目标已被大和炮清空':'两艘求救飞船均已坠毁',`${yamatoLoss?'任务控制中心提醒：营救名单通常不是射击清单。':'三颗恒星的引力吞没了最后的求救信号。'}<br><span style="color:#888">按 R 回到本阶段，或在暂停菜单重新开始整关。</span>`);
 }
 function beginThreeBodyEscapePhase(message){
   if(mission.stage<2){mission.stage=2;saveCheckpoint();}
@@ -299,7 +305,10 @@ function updateMissionL10(dt){
     }
   }
   const destroyedCount=mission.threeDestroyed.filter(Boolean).length,rescuedCount=(mission.threeRescued||[]).filter(Boolean).length;
-  if(destroyedCount>=2){failThreeBodyRescue();return;}
+  if(destroyedCount>=2){
+    if(mission.yamatoDoubleRescue){mission.yamatoDoubleFailT=(mission.yamatoDoubleFailT||0)+dt;mission.dynHint=`一箭双雕｜爆炸记录回放 ${Math.min(1.6,mission.yamatoDoubleFailT).toFixed(1)} / 1.6s`;if(mission.yamatoDoubleFailT<1.6)return;}
+    failThreeBodyRescue();return;
+  }
   if(mission.stage<2){
     if(!Array.isArray(mission.threeRescued))mission.threeRescued=[false,false];
     if(!Array.isArray(mission.threeRescueOrder))mission.threeRescueOrder=[];

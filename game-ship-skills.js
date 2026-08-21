@@ -5,12 +5,25 @@
 (function createShipSkillSystem(global){
   const INTRO_KEY='spacegame-ship-skill-intros-v1';
   const SPACE_WARP_DISTANCE=150,SPACE_WARP_CLEARANCE=5,SPACE_WARP_MAX_USES=3,SPACE_WARP_FUEL_COST=5,SPACE_WARP_COOLDOWN=5,SPACE_WARP_CHARGE_DURATION=.1;
-  const YAMATO_RANGE=2000,YAMATO_CHARGE_DURATION=.9,YAMATO_BEAM_DURATION=1.55,YAMATO_IMPACT_DURATION=1.35;
+  const YAMATO_RANGE=2000,YAMATO_CHARGE_DURATION=.9,YAMATO_BEAM_DURATION=1.55,YAMATO_IMPACT_DURATION=1.35,YAMATO_RESCUE_CORRIDOR=480;
+  const SHARP_TURN_DV=15,SHARP_TURN_IMPULSE_WINDOW=.25,SHARP_TURN_FX_DURATION=.95,SHARP_TURN_COOLDOWN=.2,SHARP_TURN_FUEL_COST=1,SHARP_TURN_MIN_ANGLE=.012;
   const planned=new Map([
     ['rocket',{shipId:'rocket',id:'buffer_fork',icon:'🛬',name:'缓冲货叉',kind:'passive',summary:'安全着陆速度上限提高 15%。',specialty:'擅长：返回与着陆任务',available:false}],
     ['swordwing',{shipId:'swordwing',id:'space_warp',icon:'✦',name:'空间折跃',kind:'active',holdToCharge:true,maxUses:SPACE_WARP_MAX_USES,cooldown:SPACE_WARP_COOLDOWN,fuelCost:SPACE_WARP_FUEL_COST,summary:'按住聚能 0.1 秒后沿机头折跃 150u，松手取消；每关 3 次，挑战模式每次消耗 5% 燃料，冷却 5 秒。',specialty:'擅长：连续交会与路径修正',available:false}],
-    ['hyperion',{shipId:'hyperion',id:'yamato_cannon',icon:'☄',name:'大和炮',kind:'active',holdToCharge:true,summary:'按住聚能 0.9 秒后发射，松手取消；命中小行星会将其击碎，命中友方空间站会导致任务失败。',specialty:'擅长：小行星防御 · 每关一次',available:false}]
+    ['hyperion',{shipId:'hyperion',id:'yamato_cannon',icon:'☄',name:'大和炮',kind:'active',holdToCharge:true,summary:'按住聚能 0.9 秒后发射，松手取消；小行星、友方空间站和求救飞船都会被击毁。',specialty:'擅长：小行星防御 · 每关一次',available:false}],
+    ['waterdrop',{shipId:'waterdrop',id:'sharp_angle_maneuver',icon:'⌁',name:'锐角机动',kind:'passive',summary:'转向时自动将速度矢量拉向机头，速率不变；冷却 0.2 秒，挑战模式每次消耗 1% 燃料。',specialty:'擅长：连续锐角变轨 · 被动',available:false}]
   ]);
+  function normalizeSignedAngle(value){
+    let angle=Number(value)||0;while(angle>Math.PI)angle-=Math.PI*2;while(angle<-Math.PI)angle+=Math.PI*2;return angle;
+  }
+  function resolveSharpAngleManeuver(input={}){
+    const vx=Number(input.vx)||0,vy=Number(input.vy)||0,heading=Number(input.heading)||0,speed=Math.hypot(vx,vy);
+    if(speed<=1e-7)return {ok:false,reason:'stationary',speed,vx,vy,maxAngle:0,turnAngle:0,deltaV:0};
+    const beforeAngle=Math.atan2(vy,vx),maxAngle=2*Math.asin(Math.min(1,SHARP_TURN_DV/(2*speed))),requestedAngle=normalizeSignedAngle(heading-beforeAngle);
+    const turnAngle=Math.max(-maxAngle,Math.min(maxAngle,requestedAngle)),afterAngle=beforeAngle+turnAngle;
+    const nextVx=Math.cos(afterAngle)*speed,nextVy=Math.sin(afterAngle)*speed,deltaV=Math.hypot(nextVx-vx,nextVy-vy);
+    return {ok:true,speed,vx:nextVx,vy:nextVy,beforeAngle,afterAngle,maxAngle,requestedAngle,turnAngle,deltaV};
+  }
   function resolveWarpPath(input={}){
     const start={x:Number(input.x)||0,y:Number(input.y)||0},heading=Number(input.heading)||0;
     const dir={x:Math.cos(heading),y:Math.sin(heading)};
@@ -66,7 +79,21 @@
       distance=candidate;hit={target,kind:entry?.kind||target?.yamatoKind||'body',name:entry?.name||target?.name||'',collider};
     }
     const end={x:start.x+dir.x*distance,y:start.y+dir.y*distance};
-    return {start,end,impact:{...end},heading,dir,range,distance,hit:!!hit,target:hit?.target||null,targetKind:hit?.kind||'',targetName:hit?.name||''};
+    return {start,end,impact:{...end},heading,dir,range,distance,hit:!!hit,target:hit?.target||null,targetKind:hit?.kind||'',targetName:hit?.name||'',
+      targetX:Number(hit?.collider?.x),targetY:Number(hit?.collider?.y),targetRadius:Math.max(0,Number(hit?.collider?.r)||0)};
+  }
+  function resolveYamatoRescueCollateral(input={}){
+    const start={x:Number(input.x)||0,y:Number(input.y)||0},heading=Number(input.heading)||0;
+    const dir=input.dir&&Number.isFinite(Number(input.dir.x))&&Number.isFinite(Number(input.dir.y))?input.dir:{x:Math.cos(heading),y:Math.sin(heading)};
+    const length=Math.hypot(dir.x,dir.y)||1,ux=dir.x/length,uy=dir.y/length,range=Math.max(0,Number(input.range)||YAMATO_RANGE),corridor=Math.max(0,Number(input.corridor)||YAMATO_RESCUE_CORRIDOR);
+    const hits=[];
+    for(const entry of Array.isArray(input.targets)?input.targets:[]){
+      const target=entry?.ref||entry;if((entry?.kind||target?.yamatoKind)!=='rescue'||!target||target.destroyed||target.rescued||target.alive===false)continue;
+      const x=Number(entry?.x??target.x),y=Number(entry?.y??target.y),radius=Math.max(0,Number(entry?.r??target.r)||0);if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+      const dx=x-start.x,dy=y-start.y,along=dx*ux+dy*uy;if(along<-radius||along>range+radius)continue;
+      const perpendicular=Math.abs(dx*uy-dy*ux);if(perpendicular<=corridor+radius)hits.push({target,along,perpendicular});
+    }
+    return hits.sort((a,b)=>a.along-b.along).map(hit=>hit.target);
   }
   const installed=new Map([
     ['rocket',{...planned.get('rocket'),available:true,landingMultiplier:1.15}],
@@ -103,15 +130,17 @@
       if(!rocket||rocket.alive===false)return {ok:false,reason:'inactive',message:t('飞船状态不允许开炮')};
       const preview=resolveYamatoShot({x:rocket.x,y:rocket.y,heading:rocket.a,range:YAMATO_RANGE,targets:yamatoTargets});
       const fx={phase:'charging',start:preview.start,end:preview.end,impact:preview.impact,heading:preview.heading,hit:preview.hit,targetKind:preview.targetKind,targetName:preview.targetName,
+        targetX:preview.targetX,targetY:preview.targetY,targetRadius:preview.targetRadius,
         chargeRemaining:YAMATO_CHARGE_DURATION,chargeDuration:YAMATO_CHARGE_DURATION,remaining:YAMATO_CHARGE_DURATION,beamDuration:YAMATO_BEAM_DURATION,impactDuration:YAMATO_IMPACT_DURATION};
       return {ok:true,deferConsume:true,sound:'yamato_charge',message:t('大和炮开始聚能 · 按住并保持瞄准'),preview,payload:{yamatoFx:fx}};
-    },update({state,dtReal,rocket,yamatoTargets,asteroid,station,onYamatoFire,onYamatoAsteroidHit,onYamatoStationHit}){
+    },update({state,dtReal,rocket,yamatoTargets,asteroid,station,onYamatoFire,onYamatoAsteroidHit,onYamatoStationHit,onYamatoRescueHit}){
       const fx=state.payload?.yamatoFx;if(!fx)return;
       const step=Math.max(0,Number(dtReal)||0);
       if(fx.phase==='charging'){
         if(!rocket||rocket.alive===false){delete state.payload.yamatoFx;return;}
         const shot=resolveYamatoShot({x:rocket.x,y:rocket.y,heading:rocket.a,range:YAMATO_RANGE,targets:yamatoTargets});
-        Object.assign(fx,{start:shot.start,end:shot.end,impact:shot.impact,heading:shot.heading,hit:shot.hit,targetKind:shot.targetKind,targetName:shot.targetName});
+        Object.assign(fx,{start:shot.start,end:shot.end,impact:shot.impact,heading:shot.heading,hit:shot.hit,targetKind:shot.targetKind,targetName:shot.targetName,
+          targetX:shot.targetX,targetY:shot.targetY,targetRadius:shot.targetRadius});
         const chargeTick=Math.ceil(fx.chargeRemaining*10);fx.chargeRemaining=Math.max(0,fx.chargeRemaining-step);fx.remaining=fx.chargeRemaining;
         if(Math.ceil(fx.chargeRemaining*10)!==chargeTick)sync();
         if(fx.chargeRemaining>0)return;
@@ -119,16 +148,41 @@
         let destruction=null;
         if(asteroid&&shot.hit&&shot.target===asteroid&&typeof onYamatoAsteroidHit==='function')destruction=onYamatoAsteroidHit(shot)||null;
         else if(station&&shot.hit&&shot.target===station&&typeof onYamatoStationHit==='function')destruction=onYamatoStationHit(shot)||null;
-        Object.assign(fx,{phase:'beam',remaining:YAMATO_BEAM_DURATION,hit:shot.hit,targetKind:shot.targetKind,targetName:shot.targetName});
+        else if(shot.hit&&shot.targetKind==='rescue'&&typeof onYamatoRescueHit==='function'){
+          const rescueHits=resolveYamatoRescueCollateral({x:shot.start.x,y:shot.start.y,dir:shot.dir,range:shot.range,targets:yamatoTargets});
+          destruction=onYamatoRescueHit(shot,rescueHits)||null;
+        }
+        const effectDuration=shot.targetKind==='body'?2.7:shot.targetKind==='black-hole'?2.25:destruction?.double?2.6:shot.targetKind==='rescue'?2.1:YAMATO_BEAM_DURATION;
+        const planetDebris=shot.hit&&shot.targetKind==='body'?[{side:-.72,speed:35,size:8,spin:-2.4},{side:.54,speed:27,size:6,spin:1.9}]:[];
+        Object.assign(fx,{phase:'beam',remaining:effectDuration,effectDuration,beamElapsed:0,hit:shot.hit,targetKind:shot.targetKind,targetName:shot.targetName,planetDebris});
         if(typeof onYamatoFire==='function')onYamatoFire({...shot,destruction});
         global.SpaceGameAudio?.sfx?.('yamato_cannon');sync();return;
       }
-      fx.remaining=Math.max(0,fx.remaining-Math.max(0,Number(dtReal)||0));
+      fx.beamElapsed=(Number(fx.beamElapsed)||0)+step;
+      fx.remaining=Math.max(0,fx.remaining-step);
       if(fx.remaining===0)delete state.payload.yamatoFx;
     },cancel({state}){
       if(state.payload?.yamatoFx?.phase!=='charging')return {ok:false,reason:'not-charging'};
       delete state.payload.yamatoFx;
       return {ok:true,cancelled:true,message:t('已取消大和炮聚能')};
+    }}],
+    ['waterdrop',{...planned.get('waterdrop'),available:true,cooldown:SHARP_TURN_COOLDOWN,fuelCost:SHARP_TURN_FUEL_COST,update({state,dtReal,rocket,mission,challengeMode,turnInput,trail,onSharpTurn}){
+      const step=Math.max(0,Number(dtReal)||0),fx=state.payload?.sharpTurnFx;
+      if(fx){fx.remaining=Math.max(0,fx.remaining-step);if(fx.remaining===0)delete state.payload.sharpTurnFx;}
+      if(!rocket||rocket.alive===false||rocket.landed||!Number(turnInput)){state.passiveState='ready';return;}
+      if(state.cooldown>0){state.passiveState='cooldown';return;}
+      if(challengeMode&&Number(rocket.fuel)<SHARP_TURN_FUEL_COST){state.passiveState='fuel';return;}
+      const maneuver=resolveSharpAngleManeuver({vx:rocket.vx,vy:rocket.vy,heading:rocket.a});
+      if(!maneuver.ok||Math.abs(maneuver.turnAngle)<SHARP_TURN_MIN_ANGLE){state.passiveState='ready';return;}
+      const origin={x:Number(rocket.x)||0,y:Number(rocket.y)||0};
+      rocket.vx=maneuver.vx;rocket.vy=maneuver.vy;rocket.launchGrace=Math.max(.25,Number(rocket.launchGrace)||0);
+      rocket.skillImpulseG=Math.max(Number(rocket.skillImpulseG)||0,maneuver.deltaV/SHARP_TURN_IMPULSE_WINDOW);
+      if(challengeMode){rocket.fuel=Math.max(0,Number(rocket.fuel)-SHARP_TURN_FUEL_COST);if(mission)mission.fuelUsed=(Number(mission.fuelUsed)||0)+SHARP_TURN_FUEL_COST;}
+      if(Array.isArray(trail))trail.push({...origin,sharpTurn:true,beforeAngle:maneuver.beforeAngle,afterAngle:maneuver.afterAngle});
+      state.cooldown=SHARP_TURN_COOLDOWN;state.passiveState='cooldown';state.payload.sharpTurnCount=(Number(state.payload.sharpTurnCount)||0)+1;
+      state.payload.sharpTurnFx={...origin,beforeAngle:maneuver.beforeAngle,afterAngle:maneuver.afterAngle,turnAngle:maneuver.turnAngle,maxAngle:maneuver.maxAngle,deltaV:maneuver.deltaV,remaining:SHARP_TURN_FX_DURATION,duration:SHARP_TURN_FX_DURATION};
+      if(typeof onSharpTurn==='function')onSharpTurn(maneuver,challengeMode?SHARP_TURN_FUEL_COST:0);
+      global.SpaceGameAudio?.sfx?.('sharp_angle_maneuver');
     }}]
   ]);
   let state=null;
@@ -205,7 +259,11 @@
   }
   function statusLabel(current=ensure()){
     if(!current.available)return t('待安装');
-    if(current.kind==='passive')return t(current.passiveState==='broken'?'已碎裂':'被动');
+    if(current.kind==='passive'){
+      if(current.shipId==='waterdrop'&&current.passiveState==='fuel')return `${t('被动')} · ${t('燃料不足')}`;
+      if(current.shipId==='waterdrop'&&current.cooldown>0)return `${t('被动')} · ${t('冷却')} ${current.cooldown.toFixed(1)}s`;
+      return t(current.passiveState==='broken'?'已碎裂':'被动');
+    }
     if(current.payload?.yamatoFx?.phase==='charging')return `${t('聚能')} ${Math.max(0,current.payload.yamatoFx.chargeRemaining).toFixed(1)}s`;
     if(current.payload?.warpChargeFx)return `${t('折跃聚能')} ${Math.max(0,current.payload.warpChargeFx.remaining).toFixed(1)}s`;
     if(current.payload?.yamatoFx?.phase==='beam')return t('发射中');
@@ -245,7 +303,7 @@
   function plannedList(){return [...new Set([...planned.keys(),...installed.keys()])].map(id=>clone(definition(id)));}
   function visualState(){return clone(ensure().payload||{});}
 
-  global.SpaceGameShipSkills={register,definition,plannedList,landingMultiplier,resolveWarpPath,resolveYamatoShot,visualState,beginMission,snapshot,restore,use,release,update,sync,status:()=>clone(ensure()),statusLabel,resultText,closeIntro,disableIntro};
+  global.SpaceGameShipSkills={register,definition,plannedList,landingMultiplier,resolveWarpPath,resolveYamatoShot,resolveYamatoRescueCollateral,resolveSharpAngleManeuver,visualState,beginMission,snapshot,restore,use,release,update,sync,status:()=>clone(ensure()),statusLabel,resultText,closeIntro,disableIntro};
   global.useShipSkill=()=>global.SpaceGameShipSkills.use();
   global.closeShipSkillIntro=closeIntro;global.disableShipSkillIntro=disableIntro;
 })(globalThis);

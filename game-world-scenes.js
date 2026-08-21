@@ -404,6 +404,18 @@ function drawSpaceWarpEffect(){
   ctx.restore();
 }
 
+function drawSharpAngleManeuverEffect(){
+  const fx=globalThis.SpaceGameShipSkills?.visualState?.()?.sharpTurnFx;if(!fx||fx.remaining<=0)return;
+  const duration=Math.max(.001,Number(fx.duration)||.95),life=Math.max(0,Math.min(1,fx.remaining/duration)),progress=1-life;
+  const arm=(lowPowerMode?62:86)/cam.zoom,ripple=(10+42*progress)/cam.zoom;
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.globalAlpha=.3+.7*life;ctx.strokeStyle='#bdfaff';ctx.lineWidth=(lowPowerMode?2.4:3.8)/cam.zoom;
+  if(!lowPowerMode){ctx.shadowColor='#58e7ff';ctx.shadowBlur=17/cam.zoom;}
+  ctx.beginPath();ctx.moveTo(fx.x-Math.cos(fx.beforeAngle)*arm,fx.y-Math.sin(fx.beforeAngle)*arm);ctx.lineTo(fx.x,fx.y);ctx.lineTo(fx.x+Math.cos(fx.afterAngle)*arm,fx.y+Math.sin(fx.afterAngle)*arm);ctx.stroke();
+  ctx.shadowBlur=0;ctx.globalAlpha=.15+.55*life;ctx.lineWidth=2.2/cam.zoom;ctx.beginPath();ctx.arc(fx.x,fx.y,ripple,0,TAU);ctx.stroke();
+  if(!lowPowerMode){ctx.globalAlpha=.18+.42*life;ctx.beginPath();ctx.arc(fx.x,fx.y,ripple*.62,0,TAU);ctx.stroke();ctx.fillStyle='#efffff';ctx.globalAlpha=.8*life;ctx.beginPath();ctx.arc(fx.x,fx.y,3.4/cam.zoom,0,TAU);ctx.fill();}
+  ctx.restore();
+}
+
 function drawYamatoAimGuide(){
   const fx=globalThis.SpaceGameShipSkills?.visualState?.()?.yamatoFx;
   if(!rocket?.alive||fx?.phase!=='charging')return;
@@ -415,6 +427,75 @@ function drawYamatoAimGuide(){
   const radius=(shot.hit?13:8)/cam.zoom;ctx.globalAlpha=1;ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(shot.end.x,shot.end.y,radius,0,TAU);ctx.stroke();
   if(shot.hit){ctx.beginPath();ctx.moveTo(shot.end.x-radius*1.45,shot.end.y);ctx.lineTo(shot.end.x+radius*1.45,shot.end.y);ctx.moveTo(shot.end.x,shot.end.y-radius*1.45);ctx.lineTo(shot.end.x,shot.end.y+radius*1.45);ctx.stroke();}
   ctx.fillStyle=color;ctx.font=`900 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(shot.hit?`聚能锁定：${shot.targetName||'目标'}`:'大和炮聚能瞄准线',shot.end.x,shot.end.y-18/cam.zoom);ctx.restore();ctx.textAlign='left';
+}
+
+function yamatoBlackHolePathPoint(fx,nose,t,strength=1){
+  t=Math.max(0,Math.min(1,Number(t)||0));
+  const impact=fx.impact||fx.end,base={x:nose.x+(impact.x-nose.x)*t,y:nose.y+(impact.y-nose.y)*t},cx=Number(fx.targetX),cy=Number(fx.targetY),horizon=Math.max(1,Number(fx.targetRadius)||1);
+  if(!Number.isFinite(cx)||!Number.isFinite(cy))return base;
+  const gx=cx-base.x,gy=cy-base.y,distance=Math.hypot(gx,gy);
+  if(distance<=horizon||distance<1e-7){
+    if(t>=1)return {...impact};
+    const ix=impact.x-cx,iy=impact.y-cy,id=Math.max(1e-7,Math.hypot(ix,iy)),ux=distance>1e-7?-gx/distance:ix/id,uy=distance>1e-7?-gy/distance:iy/id;
+    return {x:cx+ux*(horizon+1e-4),y:cy+uy*(horizon+1e-4)};
+  }
+  const gap=distance-horizon;
+  // Every layer bends only toward the gravity centre. The gap cap guarantees r > horizon for t < 1; only the endpoint may touch it.
+  const pull=Math.min(gap*.72,horizon*.62*Math.max(0,Number(strength)||0)*Math.pow(t,2.35));
+  return {x:base.x+gx/distance*pull,y:base.y+gy/distance*pull};
+}
+
+function traceBlackHoleYamatoPath(fx,nose,strength){
+  const segments=lowPowerMode?12:26;ctx.beginPath();ctx.moveTo(nose.x,nose.y);
+  for(let i=1;i<=segments;i++){const point=yamatoBlackHolePathPoint(fx,nose,i/segments,strength);ctx.lineTo(point.x,point.y);}ctx.stroke();
+}
+
+function drawBlackHoleYamatoBeam(fx,nose,elapsed){
+  const impact=fx.impact||fx.end,cx=Number(fx.targetX),cy=Number(fx.targetY),horizon=Math.max(1,Number(fx.targetRadius)||1),clipExtent=Math.max(W,H)/Math.max(.02,cam.zoom)*2+horizon*4;
+  const life=Math.max(0,1-elapsed/Math.max(.001,Number(fx.effectDuration)||2.25));
+  ctx.save();
+  if(Number.isFinite(cx)&&Number.isFinite(cy)){
+    // Cut the entire event-horizon disk out of the beam layer, including stroke thickness and packet radii.
+    ctx.beginPath();ctx.rect(cx-clipExtent,cy-clipExtent,clipExtent*2,clipExtent*2);ctx.arc(cx,cy,horizon,0,TAU);ctx.clip('evenodd');
+  }
+  // Three nearby trajectories emulate the different lensing across a finite-width beam, as seen around an accretion disk.
+  ctx.globalAlpha=.28+.32*life;ctx.strokeStyle='#506dff';ctx.lineWidth=(lowPowerMode?13:18)/cam.zoom;
+  if(!lowPowerMode){ctx.shadowColor='#6d7dff';ctx.shadowBlur=18/cam.zoom;}
+  traceBlackHoleYamatoPath(fx,nose,.58);ctx.globalAlpha=.48+.34*life;ctx.strokeStyle='#56dcff';ctx.lineWidth=(lowPowerMode?8:12)/cam.zoom;traceBlackHoleYamatoPath(fx,nose,.82);ctx.shadowBlur=0;
+  ctx.globalAlpha=.68+.28*life;ctx.strokeStyle='#eefcff';ctx.lineWidth=(lowPowerMode?3.6:5.2)/cam.zoom;traceBlackHoleYamatoPath(fx,nose,1);
+  // Energy packets use an ease-out curve: they travel quickly at first, then visibly crowd and slow near the horizon.
+  const packetCount=lowPowerMode?5:9;
+  for(let i=0;i<packetCount;i++){
+    const raw=(elapsed*.62+i/packetCount)%1,p=1-Math.pow(1-raw,3),point=yamatoBlackHolePathPoint(fx,nose,p,.58+(i%3)*.21),fade=Math.max(.08,1-p*.84);
+    ctx.globalAlpha=(.32+.58*life)*fade;ctx.fillStyle=i%2?'#a6eeff':'#ffffff';ctx.beginPath();ctx.arc(point.x,point.y,(2.2+2.2*fade)/cam.zoom,0,TAU);ctx.fill();
+  }
+  ctx.restore();
+  const tx=Number(fx.targetX),ty=Number(fx.targetY),normal=Number.isFinite(tx)&&Number.isFinite(ty)?Math.atan2(impact.y-ty,impact.x-tx):fx.heading+Math.PI;
+  ctx.save();ctx.translate(impact.x,impact.y);ctx.rotate(normal);ctx.globalAlpha=.28+.42*life;ctx.strokeStyle='#8d7dff';ctx.lineWidth=2.4/cam.zoom;
+  for(const rr of [10,17]){ctx.beginPath();ctx.arc(0,0,rr/cam.zoom,-Math.PI/2,Math.PI/2);ctx.stroke();}ctx.restore();
+}
+
+function drawYamatoSurfaceImpact(fx,impactLife,isStar){
+  const impact=fx.impact||fx.end,tx=Number(fx.targetX),ty=Number(fx.targetY),normal=Number.isFinite(tx)&&Number.isFinite(ty)?Math.atan2(impact.y-ty,impact.x-tx):fx.heading+Math.PI;
+  const radius=(26+54*(1-impactLife))*(isStar?1.3:1)/cam.zoom,extent=Math.max(180/cam.zoom,radius*3);
+  ctx.save();ctx.translate(impact.x,impact.y);ctx.rotate(normal);
+  // Clip to the outward half-space so the celestial disk occludes the inward half of every flash and ring.
+  ctx.beginPath();ctx.rect(-1/cam.zoom,-extent,extent+1/cam.zoom,extent*2);ctx.clip();
+  ctx.globalAlpha=.32+.58*impactLife;ctx.fillStyle=isStar?'#fff3b0':'#f7ffff';ctx.beginPath();ctx.arc(0,0,Math.max(5,radius*.28),-Math.PI/2,Math.PI/2);ctx.closePath();ctx.fill();
+  ctx.strokeStyle=isStar?'#ffd166':'#69eaff';ctx.lineWidth=3.2/cam.zoom;
+  for(const scale of [1,.64]){ctx.globalAlpha=(.25+.62*impactLife)*scale;ctx.beginPath();ctx.arc(0,0,radius*(1.5-scale*.45),-Math.PI/2,Math.PI/2);ctx.stroke();}
+  if(!lowPowerMode){ctx.strokeStyle=isStar?'#fff0a8':'#eaffff';ctx.lineWidth=2/cam.zoom;for(let i=0;i<7;i++){const a=-1.34+i*.45,inner=radius*.25,outer=radius*(.88+(i%2)*.24);ctx.globalAlpha=.25+.55*impactLife;ctx.beginPath();ctx.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);ctx.lineTo(Math.cos(a)*outer,Math.sin(a)*outer);ctx.stroke();}}
+  ctx.restore();
+}
+
+function drawYamatoPlanetDebris(fx,elapsed){
+  const pieces=fx.planetDebris||[],impact=fx.impact||fx.end,tx=Number(fx.targetX),ty=Number(fx.targetY),normal=Number.isFinite(tx)&&Number.isFinite(ty)?Math.atan2(impact.y-ty,impact.x-tx):fx.heading+Math.PI;
+  const duration=Math.max(.001,Number(fx.effectDuration)||2.7),life=Math.max(0,1-elapsed/duration);if(life<=0)return;
+  for(let i=0;i<pieces.length;i++){
+    const piece=pieces[i],angle=normal+piece.side*.58,nudge=8+piece.speed*elapsed,x=impact.x+Math.cos(angle)*nudge,y=impact.y+Math.sin(angle)*nudge;
+    ctx.save();ctx.translate(x,y);ctx.rotate(piece.spin*elapsed+i*.8);ctx.globalAlpha=Math.min(1,life*1.35);ctx.fillStyle=i?'#80685d':'#9a7964';ctx.strokeStyle='#ffb866';ctx.lineWidth=1.4/cam.zoom;
+    const size=piece.size*(.72+.28*life)/cam.zoom;ctx.beginPath();for(let p=0;p<5;p++){const a=p*TAU/5,r=size*(p%2?.72:1);if(p)ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);else ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r);}ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+  }
 }
 
 function drawYamatoEffect(){
@@ -430,16 +511,24 @@ function drawYamatoEffect(){
     ctx.globalAlpha=.35+.55*p;ctx.lineWidth=2/cam.zoom;for(let i=0;i<(lowPowerMode?6:10);i++){const a=i*TAU/(lowPowerMode?6:10)+p*1.8,outer=radius*(3.8+(i%2)*.45),inner=radius*.72;ctx.beginPath();ctx.moveTo(nose.x+Math.cos(a)*outer,nose.y+Math.sin(a)*outer);ctx.lineTo(nose.x+Math.cos(a)*inner,nose.y+Math.sin(a)*inner);ctx.stroke();}
     ctx.globalAlpha=.95;ctx.fillStyle='#dffcff';ctx.font=`900 ${12/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(`聚能 ${Math.round(p*100)}%`,nose.x,nose.y-34/cam.zoom);
   }else{
-    const beamDuration=Math.max(.001,Number(fx.beamDuration)||1.55),beamLife=Math.max(0,Math.min(1,fx.remaining/beamDuration));
-    ctx.globalAlpha=.78+.22*beamLife;ctx.strokeStyle=lowPowerMode?'#5ee7ff':'#31d9ff';ctx.lineWidth=(lowPowerMode?18:22)/cam.zoom;if(!lowPowerMode){ctx.shadowColor='#42dfff';ctx.shadowBlur=22/cam.zoom;}
-    ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(fx.end.x,fx.end.y);ctx.stroke();ctx.shadowBlur=0;ctx.globalAlpha=.94+.06*beamLife;ctx.strokeStyle='#f5ffff';ctx.lineWidth=(lowPowerMode?5.5:6.5)/cam.zoom;ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(fx.end.x,fx.end.y);ctx.stroke();
-    ctx.globalAlpha=.9;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(nose.x,nose.y,(lowPowerMode?7:9)/cam.zoom,0,TAU);ctx.fill();
-    if(fx.hit){
-      const impactDuration=Math.max(.001,Number(fx.impactDuration)||1.35),impactLife=Math.max(0,Math.min(1,fx.remaining/impactDuration)),bodyScale=fx.targetKind==='body'||fx.targetKind==='star'||fx.targetKind==='black-hole'?1.45:fx.targetKind==='asteroid'?1.25:1,radius=(26+62*(1-impactLife))*bodyScale/cam.zoom;
-      ctx.globalAlpha=.5+.5*impactLife;ctx.fillStyle='#f7ffff';ctx.strokeStyle='#69eaff';ctx.lineWidth=3.5/cam.zoom;ctx.beginPath();ctx.arc(fx.impact.x,fx.impact.y,Math.max(5,radius*.24),0,TAU);ctx.fill();
-      for(const scale of [1,.62]){ctx.globalAlpha=(.3+.68*impactLife)*scale;ctx.beginPath();ctx.arc(fx.impact.x,fx.impact.y,radius*(2-scale),0,TAU);ctx.stroke();}
-      if(!lowPowerMode){ctx.strokeStyle='#eaffff';ctx.lineWidth=2.2/cam.zoom;ctx.globalAlpha=.4+.6*impactLife;for(let i=0;i<12;i++){const a=i*TAU/12+(beamDuration-fx.remaining)*.8,inner=radius*.3,outer=radius*(1.08+(i%2)*.34);ctx.beginPath();ctx.moveTo(fx.impact.x+Math.cos(a)*inner,fx.impact.y+Math.sin(a)*inner);ctx.lineTo(fx.impact.x+Math.cos(a)*outer,fx.impact.y+Math.sin(a)*outer);ctx.stroke();}}
+    const beamDuration=Math.max(.001,Number(fx.beamDuration)||1.55),elapsed=Math.max(0,Number(fx.beamElapsed)||0),beamActive=elapsed<=beamDuration,beamLife=Math.max(0,1-elapsed/beamDuration);
+    if(fx.targetKind==='black-hole')drawBlackHoleYamatoBeam(fx,nose,elapsed);
+    else if(beamActive){
+      ctx.globalAlpha=.78+.22*beamLife;ctx.strokeStyle=lowPowerMode?'#5ee7ff':'#31d9ff';ctx.lineWidth=(lowPowerMode?18:22)/cam.zoom;if(!lowPowerMode){ctx.shadowColor='#42dfff';ctx.shadowBlur=22/cam.zoom;}
+      ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(fx.end.x,fx.end.y);ctx.stroke();ctx.shadowBlur=0;ctx.globalAlpha=.94+.06*beamLife;ctx.strokeStyle='#f5ffff';ctx.lineWidth=(lowPowerMode?5.5:6.5)/cam.zoom;ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(fx.end.x,fx.end.y);ctx.stroke();
+      ctx.globalAlpha=.9;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(nose.x,nose.y,(lowPowerMode?7:9)/cam.zoom,0,TAU);ctx.fill();
     }
+    if(fx.hit&&fx.targetKind!=='black-hole'){
+      const impactDuration=Math.max(.001,Number(fx.impactDuration)||1.35),impactLife=Math.max(0,1-elapsed/impactDuration);
+      if(impactLife>0&&(fx.targetKind==='body'||fx.targetKind==='star'))drawYamatoSurfaceImpact(fx,impactLife,fx.targetKind==='star');
+      else if(impactLife>0){
+        const bodyScale=fx.targetKind==='asteroid'?1.25:1,radius=(26+62*(1-impactLife))*bodyScale/cam.zoom;
+        ctx.globalAlpha=.5+.5*impactLife;ctx.fillStyle='#f7ffff';ctx.strokeStyle='#69eaff';ctx.lineWidth=3.5/cam.zoom;ctx.beginPath();ctx.arc(fx.impact.x,fx.impact.y,Math.max(5,radius*.24),0,TAU);ctx.fill();
+        for(const scale of [1,.62]){ctx.globalAlpha=(.3+.68*impactLife)*scale;ctx.beginPath();ctx.arc(fx.impact.x,fx.impact.y,radius*(2-scale),0,TAU);ctx.stroke();}
+        if(!lowPowerMode){ctx.strokeStyle='#eaffff';ctx.lineWidth=2.2/cam.zoom;ctx.globalAlpha=.4+.6*impactLife;for(let i=0;i<12;i++){const a=i*TAU/12+elapsed*.8,inner=radius*.3,outer=radius*(1.08+(i%2)*.34);ctx.beginPath();ctx.moveTo(fx.impact.x+Math.cos(a)*inner,fx.impact.y+Math.sin(a)*inner);ctx.lineTo(fx.impact.x+Math.cos(a)*outer,fx.impact.y+Math.sin(a)*outer);ctx.stroke();}}
+      }
+    }
+    if(fx.targetKind==='body')drawYamatoPlanetDebris(fx,elapsed);
   }
   ctx.restore();ctx.textAlign='left';
 }
@@ -515,6 +604,7 @@ function draw(){
     drawSpeedTrail(trail,Math.hypot(rocket.vx,rocket.vy),'rgba(120,200,255,.62)',1.6/cam.zoom,trailStep);
   }
   drawSpaceWarpEffect();
+  drawSharpAngleManeuverEffect();
 
   if(level===9||level===10)drawMissionZones();
   if(level===10)drawThreeBodyTimelines();

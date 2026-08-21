@@ -492,6 +492,10 @@
         lowThump(.12,.28,0,88,34);filteredNoise({duration:.11,from:5200,to:680,volume:.12,q:.75,attack:.001});
         filteredNoise({duration:.52,from:1100,to:160,volume:.065,q:1.25,delay:.025});glassNote(880,.08,.035,.01);
         break;
+      case 'sharp_angle_maneuver':
+        filteredNoise({duration:.18,from:260,to:2800,volume:.045,q:2.4,attack:.002});
+        glassNote(659.25,.01,.032,.08);glassNote(987.77,.075,.036,.22);lowThump(.038,.13,.02,96,54);
+        break;
       default:
         relayClick(.022);
         break;
