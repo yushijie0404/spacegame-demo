@@ -79,7 +79,7 @@ function asteroidContactCheck(){
   mission.asteroidMountAngle=Math.atan2(dy,dx);
   mission.asteroidMountLocal=normalizeAngle(mission.asteroidMountAngle-asteroid.angle);
   if(relSpeed<=ASTEROID_SOFT_SPEED){
-    mission.asteroidContact=true;mission.asteroidAnchored=false;mission.hingeAngle=0;
+    mission.asteroidContact=true;mission.asteroidSoftContact=true;mission.asteroidAnchored=false;mission.hingeAngle=0;
     rocket.landed=true;rocket.body=asteroid;rocket.vx=asteroid.vx;rocket.vy=asteroid.vy;rocket.av=0;
     rocket.x=asteroid.x+ux*(asteroid.r+17);rocket.y=asteroid.y+uy*(asteroid.r+17);
     if(mission.stage<2)unlockFinalStage(2,'✅ 已在小行星表面软着陆！可以锚定，也可以直接推');
@@ -260,7 +260,9 @@ function updateFlightPhysics(dt,dtReal,observationDt){
   applyLagrangeAssist(dt);
 
   // 过载监测：点火时的推进加速度（点火期间重力被发动机抵消，不计入体感过载）
-  const gNow = rocket.thrusting ? THRUST/Math.max(1,rocket.mass||1)*rocket.thrustPower : 0;
+  const skillImpulseG=Math.max(0,Number(rocket.skillImpulseG)||0);
+  const gNow = Math.max(rocket.thrusting ? THRUST/Math.max(1,rocket.mass||1)*rocket.thrustPower : 0,skillImpulseG);
+  rocket.skillImpulseG=0;
   if(!rocket.landed) rocket.lastG = gNow; // 着陆时保留冲击读数
   rocket.maxG = Math.max(rocket.maxG, gNow);
   if(gNow >= G_BREAK){
@@ -334,7 +336,8 @@ function updateFlightPhysics(dt,dtReal,observationDt){
     const surfaceV=surfaceVelocity(b,dx,dy);
     let groundVx = rocket.vx-surfaceV.vx, groundVy = rocket.vy-surfaceV.vy;
     const vRel = Math.hypot(groundVx, groundVy);
-    const landingLimit=b.landMax*SG_UPGRADES.landingMultiplier(challengeMode);
+    const hullLandingMultiplier=globalThis.SpaceGameShipSkills?.landingMultiplier?.()||1;
+    const landingLimit=b.landMax*SG_UPGRADES.landingMultiplier(challengeMode)*hullLandingMultiplier;
 
     // 恒星不是可着陆天体：进入光球表面立即判定烧毁，避免低速时被通用着陆逻辑“停”在太阳上。
     if((level===8||level===10)&&b.isStar&&alt<=RING_OUT){

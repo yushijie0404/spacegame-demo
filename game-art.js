@@ -2,6 +2,9 @@
 // Loaded as a classic script so render functions can use the live game state
 // without duplicating physics, mission, or input ownership.
 
+const starCourierSprite=new Image();
+starCourierSprite.decoding='async';
+starCourierSprite.src='./assets/ships/star-courier-overhead.png';
 const feitianOneSprite=new Image();
 feitianOneSprite.decoding='async';
 feitianOneSprite.src='./assets/ships/feitian-one-overhead.png';
@@ -220,6 +223,10 @@ function drawShipFlame(x,y,width,length,redshift,phase=0){
 }
 
 function drawClassicRocketSkin(redshift,thrusting){
+  if(starCourierSprite.complete&&starCourierSprite.naturalWidth){
+    if(thrusting){for(const x of [-5.8,0,5.8])drawShipFlame(x,31,2.2,15,redshift,x*.2);}
+    ctx.drawImage(starCourierSprite,-25,-32,50,64);return;
+  }
   if(thrusting)drawShipFlame(0,14,5,22,redshift);
   const wingColor=redshift>0?`rgb(239,${Math.round(71-42*redshift)},${Math.round(111-62*redshift)})`:'#ef476f';
   ctx.fillStyle=wingColor;
@@ -240,9 +247,9 @@ function drawSwordwingSkin(redshift,thrusting){
 
 function drawHyperionSkin(redshift,thrusting){
   if(!hyperionSprite.complete||!hyperionSprite.naturalWidth){drawClassicRocketSkin(redshift,thrusting);return;}
-  if(thrusting){for(const x of [-13,-4.4,4.4,13])drawShipFlame(x,31,2.15,14,redshift,x*.12);}
-  // 休伯利安号的卡通俯视贴图；显示更宽，碰撞盒仍沿用小火箭。
-  ctx.drawImage(hyperionSprite,-22,-32,44,64);
+  if(thrusting){for(const x of [-6,0,6])drawShipFlame(x,36,2.2,14,redshift,x*.16);}
+  // 素材按用户参考图保留“舰首在下、推进器在上”；飞行时旋转半周，让舰首对准既有前向坐标。
+  ctx.save();ctx.rotate(Math.PI);ctx.drawImage(hyperionSprite,-36,-38,72,76);ctx.restore();
 }
 
 function drawRocket(){

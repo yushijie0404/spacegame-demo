@@ -372,6 +372,61 @@ function drawGroundRing(b){
   ctx.beginPath(); ctx.arc(b.x, b.y, b.r + (RING_OUT-RING_IN)/2, 0, TAU); ctx.stroke();
 }
 
+function drawSpaceWarpEffect(){
+  const fx=globalThis.SpaceGameShipSkills?.visualState?.()?.warpFx;
+  if(!fx||fx.remaining<=0||!fx.start||!fx.end)return;
+  const life=Math.max(0,Math.min(1,fx.remaining/Math.max(.001,fx.duration||.78)));
+  ctx.save();ctx.globalAlpha=.3+.65*life;ctx.strokeStyle='#a9f7ff';ctx.lineWidth=(lowPowerMode?2.2:3.2)/cam.zoom;
+  if(!lowPowerMode){ctx.shadowColor='#66e8ff';ctx.shadowBlur=15/cam.zoom;ctx.setLineDash([14/cam.zoom,5/cam.zoom,3/cam.zoom,5/cam.zoom]);}
+  ctx.beginPath();ctx.moveTo(fx.start.x,fx.start.y);ctx.lineTo(fx.end.x,fx.end.y);ctx.stroke();ctx.setLineDash([]);
+  if(!lowPowerMode){
+    const dx=fx.end.x-fx.start.x,dy=fx.end.y-fx.start.y;
+    ctx.shadowBlur=0;
+    for(let i=0;i<3;i++){
+      const mix=.7+i*.1;
+      ctx.save();ctx.translate(fx.start.x+dx*mix,fx.start.y+dy*mix);ctx.rotate(fx.heading+Math.PI/2);ctx.scale(.88,.88);
+      ctx.globalAlpha=life*(.12+i*.07);if(typeof drawSwordwingSkin==='function')drawSwordwingSkin(0,false);ctx.restore();
+    }
+    ctx.globalAlpha=.25+.55*life;ctx.strokeStyle='#e8fdff';ctx.lineWidth=2/cam.zoom;
+    for(const radius of [12,22]){ctx.beginPath();ctx.arc(fx.end.x,fx.end.y,radius*(1.25-life*.25)/cam.zoom,0,TAU);ctx.stroke();}
+  }
+  ctx.restore();
+}
+
+function drawYamatoEffect(){
+  const fx=globalThis.SpaceGameShipSkills?.visualState?.()?.yamatoFx;
+  if(!fx||fx.remaining<=0||!fx.start||!fx.end)return;
+  const duration=Math.max(.001,Number(fx.duration)||.86),elapsed=duration-fx.remaining,charge=Math.max(.001,Number(fx.chargeDuration)||.6);
+  const nose={x:fx.start.x+Math.cos(fx.heading)*38,y:fx.start.y+Math.sin(fx.heading)*38};
+  ctx.save();ctx.lineCap='round';
+  if(elapsed<charge){
+    const p=Math.max(0,Math.min(1,elapsed/charge)),pulse=.75+.25*Math.sin(elapsed*52),radius=(4+p*10)*pulse/cam.zoom;
+    ctx.globalAlpha=.48+.5*p;ctx.fillStyle='#dffcff';
+    if(!lowPowerMode){ctx.shadowColor='#69eaff';ctx.shadowBlur=(10+18*p)/cam.zoom;}
+    ctx.beginPath();ctx.arc(nose.x,nose.y,radius,0,TAU);ctx.fill();
+    ctx.strokeStyle='#77efff';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(nose.x,nose.y,radius*1.8,0,TAU);ctx.stroke();
+  }else{
+    const afterCharge=elapsed-charge,beamDuration=Math.max(.001,Number(fx.beamDuration)||1.2),beamLife=Math.max(0,Math.min(1,1-afterCharge/beamDuration));
+    ctx.globalAlpha=.78+.22*beamLife;ctx.strokeStyle=lowPowerMode?'#5ee7ff':'#31d9ff';ctx.lineWidth=(lowPowerMode?18:22)/cam.zoom;
+    if(!lowPowerMode){ctx.shadowColor='#42dfff';ctx.shadowBlur=22/cam.zoom;}
+    ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(fx.end.x,fx.end.y);ctx.stroke();
+    ctx.shadowBlur=0;ctx.globalAlpha=.94+.06*beamLife;ctx.strokeStyle='#f5ffff';ctx.lineWidth=(lowPowerMode?5.5:6.5)/cam.zoom;ctx.beginPath();ctx.moveTo(nose.x,nose.y);ctx.lineTo(fx.end.x,fx.end.y);ctx.stroke();
+    ctx.globalAlpha=.82;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(nose.x,nose.y,(lowPowerMode?6:8)/cam.zoom,0,TAU);ctx.fill();
+    if(fx.hit){
+      const impactDuration=Math.max(.001,Number(fx.impactDuration)||1),impactLife=Math.max(0,Math.min(1,1-afterCharge/impactDuration));
+      const bodyScale=fx.targetKind==='body'||fx.targetKind==='star'||fx.targetKind==='black-hole'?1.45:1,radius=(22+52*(1-impactLife))*bodyScale/cam.zoom;
+      ctx.globalAlpha=.4+.6*impactLife;ctx.fillStyle='#f7ffff';ctx.strokeStyle='#69eaff';ctx.lineWidth=3.5/cam.zoom;
+      ctx.beginPath();ctx.arc(fx.impact.x,fx.impact.y,Math.max(4,radius*.24),0,TAU);ctx.fill();
+      for(const scale of [1,.62]){ctx.globalAlpha=(.25+.65*impactLife)*scale;ctx.beginPath();ctx.arc(fx.impact.x,fx.impact.y,radius*(2-scale),0,TAU);ctx.stroke();}
+      if(!lowPowerMode){
+        ctx.strokeStyle='#eaffff';ctx.lineWidth=2.2/cam.zoom;ctx.globalAlpha=.35+.6*impactLife;
+        for(let i=0;i<10;i++){const a=i*TAU/10+elapsed*.7,inner=radius*.35,outer=radius*(1.05+(i%2)*.28);ctx.beginPath();ctx.moveTo(fx.impact.x+Math.cos(a)*inner,fx.impact.y+Math.sin(a)*inner);ctx.lineTo(fx.impact.x+Math.cos(a)*outer,fx.impact.y+Math.sin(a)*outer);ctx.stroke();}
+      }
+    }
+  }
+  ctx.restore();
+}
+
 function drawBlackHoleStarfield(t){
   const cx=(EARTH.x-cam.x)*cam.zoom+W/2,cy=(EARTH.y-cam.y)*cam.zoom+H/2,einstein=Math.max(42,BH_PHOTON_RING*cam.zoom*1.08);
   const step=lowPowerMode?(mobileEconomy?3:2):1;
@@ -441,6 +496,7 @@ function draw(){
     const trailStep=trail.length>450?2:1;
     drawSpeedTrail(trail,Math.hypot(rocket.vx,rocket.vy),'rgba(120,200,255,.62)',1.6/cam.zoom,trailStep);
   }
+  drawSpaceWarpEffect();
 
   if(level===9||level===10)drawMissionZones();
   if(level===10)drawThreeBodyTimelines();
@@ -514,6 +570,7 @@ function draw(){
   ctx.globalAlpha = 1;
 
   drawRocket();
+  drawYamatoEffect();
   ctx.restore();
   SG_HUD.draw(worldDrawStarted);
 }

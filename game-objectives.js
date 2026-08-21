@@ -47,7 +47,7 @@ function handleTouchdownOutcome(b,dx,dy,vRel){
           state='win'; mission.done=true;
           const remaining=challengeRemainingFuel(),starResult=evaluateStars([
             {ok:perfect,label:'精确落入绿色月背中央区'},
-            {ok:remaining>=CHALLENGE_CONFIG[4].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[4].fuelStar}%`}
+            {ok:mission.longestCoast>=25,label:'单次无动力滑行至少 25 秒'}
           ]);
           const result=saveLevelResult(4,performanceScore(),starResult.stars);
           showMsg(perfect?'🌟':'🌘',perfect?'月背中央精准着陆！':'月背着陆成功！',
@@ -81,7 +81,7 @@ function finishDocking(){
   if(level===8){
     const remaining=challengeRemainingFuel(),starResult=evaluateStars([
       {ok:!mission.binaryHeatViolated,label:'全程避开两颗恒星的高温区'},
-      {ok:remaining>=CHALLENGE_CONFIG[8].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[8].fuelStar}%`}
+      {ok:mission.burnCount<=8,label:'点火段不超过 8 次'}
     ]);
     const result=saveLevelResult(8,performanceScore(),starResult.stars),bm=binaryMetrics();
     syncUI();
@@ -94,7 +94,7 @@ function finishDocking(){
   }
   const remaining=challengeRemainingFuel(),starResult=evaluateStars([
     {ok:true,label:'重载货运火箭完成对接：挑战奖励星'},
-    {ok:remaining>=CHALLENGE_CONFIG[3].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[3].fuelStar}%`}
+    {ok:mission.rewindCount===0,label:'无阶段回退完成'}
   ]);
   const result=saveLevelResult(3,performanceScore(),starResult.stars);
   syncUI();
@@ -122,7 +122,7 @@ function tryDeploy(){
   syncUI();
   const remaining=challengeRemainingFuel(),starResult=evaluateStars([
     {ok:inSlot,label:'在绿色目标经度内释放'},
-    {ok:remaining>=CHALLENGE_CONFIG[1].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[1].fuelStar}%`}
+    {ok:mission.burnCount<=6,label:'点火段不超过 6 次'}
   ]);
   const result=saveLevelResult(1,performanceScore(),starResult.stars);
   showMsg(inSlot?'🛰️':'🎉',
@@ -217,7 +217,7 @@ function finishBlackHoleEscape(m=blackHoleMetrics()){
   const remaining=challengeRemainingFuel(),deep=mission.blackHoleDeepBurn&&mission.blackHoleMinR<=270&&mission.blackHoleMinR>BH_HORIZON+12;
   const starResult=evaluateStars([
     {ok:deep,label:'在半径 270 u 内完成深渊点火'},
-    {ok:remaining>=CHALLENGE_CONFIG[9].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[9].fuelStar}%`}
+    {ok:mission.burnCount<=3,label:'点火段不超过 3 次'}
   ]);
   const result=saveLevelResult(9,performanceScore(),starResult.stars),vInf=Math.sqrt(Math.max(0,2*m.energy));
   syncUI();showMsg('🌌','已从黑洞深渊返回！',
@@ -267,7 +267,7 @@ function finishThreeBodyCrossing(m=threeBodyMetrics()){
   const remaining=challengeRemainingFuel(),safe=!mission.threeDangerViolated,rescuedCount=(mission.threeRescued||[]).filter(Boolean).length,destroyedCount=(mission.threeDestroyed||[]).filter(Boolean).length;
   const starResult=evaluateStars([
     {ok:safe,label:'全程没有进入红色潮汐危险圈'},
-    {ok:remaining>=CHALLENGE_CONFIG[10].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[10].fuelStar}%`}
+    {ok:mission.rewindCount===0,label:'无阶段回退完成'}
   ]);
   const result=saveLevelResult(10,performanceScore(),starResult.stars,{saveScore:threeBodySeedMode==='random'}),seed=formatThreeBodySeed(mission.threeSeed);
   const restartNote=threeBodySeedMode==='fixed'?'固定种子练习：整关重来保持同一宇宙；本局星级正常结算，分数不计入最高分。':'随机种子模式：整关重来会扰动三颗恒星的初始条件，本局成绩可计入最高分。';
@@ -632,12 +632,12 @@ function finishAsteroidDefense(forecast=getAsteroidForecast(true)){
   mission.done=true;state='complete';rocket.thrusting=false;
   const survived=rocket.alive,remaining=challengeRemainingFuel(),starResult=evaluateStars([
     {ok:survived,label:'飞船没有在撞击中损毁'},
-    {ok:remaining>=CHALLENGE_CONFIG[7].fuelStar,label:`燃料剩余至少 ${CHALLENGE_CONFIG[7].fuelStar}%`}
+    {ok:mission.longestCoast>=20,label:'单次无动力滑行至少 20 秒'}
   ]);
   const result=saveLevelResult(7,performanceScore(),starResult.stars);
   syncUI();
   showMsg(survived?'🛡️':'💥','行星防御成功！',
-    resultLine(result)+`${mission.asteroidImpact?'动能撞击':'持续推力'}已改变小行星轨道<br>`+
+    resultLine(result)+`${mission.asteroidYamato?'大和炮定向冲量':mission.asteroidImpact?'动能撞击':'持续推力'}已改变小行星轨道<br>`+
     `预计最近地球表面 ${Math.max(0,forecast.minEarth-EARTH.r-asteroid.r).toFixed(0)} u · 月球表面 ${Math.max(0,forecast.minMoon-MOON.r-asteroid.r).toFixed(0)} u<br>`+
     `小行星自转 ${(asteroid.av*180/Math.PI).toFixed(2)}°/s · ${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
     `<span style="color:#888">无论软着陆、持续推离还是牺牲飞船撞击，只要最终轨道同时避开地球和月球就算成功。</span>`);

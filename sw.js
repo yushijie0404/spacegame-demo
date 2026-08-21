@@ -1,5 +1,6 @@
-const CACHE_NAME='spacegame-v1.38.0';
-const APP_SHELL=['./','./index.html','./runtime-performance.js','./game-audio.js','./game-missions.js','./game-orbit.js','./game-upgrades.js','./game-progression.js','./game-achievements.js','./game-i18n.js','./game-display.js','./game-ship-skins.js','./game-special-worlds.js','./game-guides.js','./game-flight-physics.js','./game-objectives.js','./game-input.js','./game-art.js','./game-world-scenes.js','./game-hud.js','./manifest.webmanifest','./assets/ships/feitian-one-overhead.png','./assets/ships/hyperion-cartoon-overhead.png','./icons/app-icon.svg','./icons/app-icon-180.png','./icons/app-icon-192.png','./icons/app-icon-512.png'];
+const CACHE_NAME='spacegame-v1.44.2';
+const MUSIC_CACHE_NAME='spacegame-music-runtime-v1';
+const APP_SHELL=['./','./index.html','./runtime-performance.js','./game-audio.js','./game-missions.js','./game-orbit.js','./game-upgrades.js','./game-progression.js','./game-achievements.js','./game-i18n.js','./game-display.js','./game-ship-skins.js','./game-ship-skills.js','./game-special-worlds.js','./game-guides.js','./game-flight-physics.js','./game-objectives.js','./game-input.js','./game-art.js','./game-world-scenes.js','./game-hud.js','./manifest.webmanifest','./assets/ships/star-courier-overhead.png','./assets/ships/feitian-one-overhead.png','./assets/ships/hyperion-cartoon-overhead.png','./icons/app-icon.svg','./icons/app-icon-180.png','./icons/app-icon-192.png','./icons/app-icon-512.png'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL)));
@@ -9,18 +10,29 @@ self.addEventListener('install',event=>{
 self.addEventListener('activate',event=>{
   event.waitUntil(
     caches.keys()
-      .then(keys=>Promise.all(keys.filter(key=>key!==CACHE_NAME).map(key=>caches.delete(key))))
+      .then(keys=>Promise.all(keys.filter(key=>key!==CACHE_NAME&&key!==MUSIC_CACHE_NAME).map(key=>caches.delete(key))))
       .then(()=>self.clients.claim())
   );
 });
 
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET' || new URL(event.request.url).origin!==self.location.origin) return;
+  const url=new URL(event.request.url),isMusic=/\/music\/[^/]+\.mp3$/i.test(url.pathname);
+  if(isMusic){
+    event.respondWith(
+      fetch(event.request)
+        .then(response=>{
+          if(response.ok){const copy=response.clone();caches.open(MUSIC_CACHE_NAME).then(cache=>cache.put(event.request,copy));}
+          return response;
+        })
+        .catch(()=>caches.match(event.request).then(cached=>cached||Response.error()))
+    );
+    return;
+  }
   event.respondWith(
     fetch(event.request)
       .then(response=>{
-        const copy=response.clone();
-        caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy));
+        if(response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy));}
         return response;
       })
       .catch(()=>caches.match(event.request).then(cached=>cached||caches.match('./index.html')))

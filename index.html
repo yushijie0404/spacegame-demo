@@ -28,6 +28,7 @@
   .hud .title{font-size:20px;font-weight:800;letter-spacing:.5px;line-height:1.15}
   .hud .sub{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35}
   .mode-badge{display:inline-flex;max-width:100%;margin-top:7px;padding:3px 8px;color:#17213c;background:#9fe8ff;border-radius:999px;font-size:10px;font-weight:900;text-shadow:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mode-badge.challenge{background:#ffb142}
+  .ship-skill-hud{display:flex;align-items:center;gap:7px;margin-top:7px;padding:5px 8px;color:#dce8ff;background:rgba(6,12,34,.5);border:1px solid rgba(159,232,255,.22);border-radius:10px;text-shadow:none}.ship-skill-hud[hidden]{display:none}.ship-skill-hud .skill-icon{font-size:16px}.ship-skill-hud strong{font-size:11px}.ship-skill-hud small{margin-left:auto;color:#9fe8ff;font-size:10px;font-weight:900}
   .key-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
   .pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:3px 9px;font-size:11px;color:#dbe7ff}
   kbd{min-width:20px;padding:1px 5px;text-align:center;color:#152044;background:#fff;border-radius:6px;box-shadow:0 2px 0 #8e9abc;font-family:inherit;font-size:10px;font-weight:800;text-shadow:none}
@@ -47,6 +48,7 @@
   .flight-controls .icon-btn{width:58px;height:58px;border-radius:18px;background:rgba(11,20,51,.78);backdrop-filter:blur(6px)}
   .flight-controls .thrust{width:68px;height:76px;color:#1d2233;background:linear-gradient(#ffe48f,#ffb142);border:2px solid #fff0b5;border-radius:22px}
   .flight-controls .thrust .ico{font-size:25px}
+  .flight-controls .skill{width:64px;height:70px;color:#eaf7ff;background:linear-gradient(155deg,#3158a7,#182b66);border:2px solid #8ddfff;border-radius:21px}.flight-controls .skill[hidden]{display:none}.flight-controls .skill.is-ready{animation:actionPulse 1.45s ease-in-out infinite}.flight-controls .skill.is-used{opacity:.46;filter:saturate(.3)}.flight-controls .skill:disabled{cursor:not-allowed}
   .flight-controls .turn{overflow:visible;color:#dff8ff;background:radial-gradient(circle at 50% 28%,rgba(67,178,228,.28),rgba(11,20,51,.9) 68%);border:2px solid rgba(119,220,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 -8px 18px rgba(3,8,28,.28)}
   .flight-controls .turn .lbl{position:relative;z-index:2;min-width:max-content;white-space:nowrap}
   .flight-controls .turn::after{content:'';position:absolute;inset:5px;border:1px solid rgba(159,232,255,.16);border-radius:14px;pointer-events:none}
@@ -72,6 +74,7 @@
   .pause-card h2{margin:0 42px 4px 0;font-size:24px}.pause-card p{margin:0 0 16px;color:#aebde0;font-size:13px}.pause-close{position:absolute;top:12px;right:12px;width:40px;height:40px;padding:0;color:#eef4ff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;font-size:24px;font-weight:800;line-height:1;cursor:pointer}.pause-close:hover{background:rgba(255,255,255,.2)}.pause-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}.pause-actions button{min-height:52px;padding:10px;border:1px solid rgba(255,255,255,.28);border-radius:14px;font-size:16px;font-weight:900;cursor:pointer}.pause-resume{color:#17213c;background:#ffd166;border-color:#fff1b2}.pause-restart{color:#281704;background:#ff9f43;border-color:#ffd0a3}.pause-home{grid-column:1/-1;color:#10203c;background:#4cc9f0;border-color:#bff3ff}.pause-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pause-grid button{min-height:48px;padding:9px 10px;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:13px;font-weight:800;cursor:pointer}.pause-grid button[hidden]{display:none}.pause-grid button.is-on{color:#14203c;background:#4cc9f0}.pause-grid #menuAssist,.pause-grid #menuThreeSeed,.pause-grid #menuThreeSeedCopy{grid-column:1/-1}.pause-grid #menuThreeSeedCopy{color:#17213c;background:#d9c6ff}
   #perfStatus{margin:8px 0 14px;padding:9px 11px;white-space:pre-line;color:#c8d7f3;background:rgba(5,10,30,.38);border:1px solid rgba(255,255,255,.12);border-radius:12px;font-size:12px;line-height:1.5;font-variant-numeric:tabular-nums}
   .pause-grid #menuPerf{grid-column:1/-1;color:#17213c;background:#9fe8ff}
+  .music-volume-setting{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(120px,1fr) 44px;align-items:center;gap:10px;min-height:48px;padding:9px 12px;color:#eaf1ff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:13px;font-size:12px;font-weight:850}.music-volume-setting input{width:100%;accent-color:#4cc9f0}.music-volume-setting output{color:#9fe8ff;text-align:right;font-variant-numeric:tabular-nums}
   .pause-grid #menuCampaignLog{grid-column:1/-1;color:#17213c;background:#ffd166;border-color:#fff1b2}
   #campaignLog,#campaignSummary{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(4,8,24,.86);backdrop-filter:blur(8px)}
   #campaignLog.is-visible,#campaignSummary.is-visible{display:flex}#campaignLog{z-index:18}#campaignSummary{z-index:19;cursor:pointer}
@@ -97,17 +100,21 @@
   .brief-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:18px}.brief-actions button{padding:9px 18px;border:2px solid #17213c;border-radius:12px;background:#fff;font-weight:800;cursor:pointer}.brief-actions .primary{background:#ffd166;box-shadow:0 4px 0 #17213c}.brief-actions .science-link{color:#153c70;background:#dceeff;border-color:#5c91c9}
   .science-card{position:relative;width:min(820px,100%);max-height:min(760px,calc(100vh - 36px));overflow:auto;padding:25px;color:#17213c;background:#f8fbff;border:3px solid #17213c;border-radius:24px;box-shadow:0 14px 0 rgba(0,0,0,.3)}.science-card h2{margin:5px 44px 7px 0;font-size:26px}.science-intro{margin:0 0 15px;color:#53617c;font-size:15px;line-height:1.6}.science-sections{display:grid;gap:10px}.science-section{padding:14px 16px;background:#fff6dc;border:1px solid #efd58d;border-radius:15px}.science-section h3{margin:0 0 6px;color:#755300;font-size:15px}.science-section p{margin:0;color:#4e4b43;font-size:14px;line-height:1.65}.science-close{position:absolute;top:12px;right:12px;width:40px;height:40px;padding:0;color:#17213c;background:#edf3ff;border:2px solid #17213c;border-radius:12px;font-size:24px;font-weight:900;cursor:pointer}.science-actions{display:flex;justify-content:flex-end;margin-top:16px}.science-actions button{min-height:44px;padding:9px 18px;color:#17213c;background:#ffd166;border:2px solid #17213c;border-radius:12px;font-weight:900;cursor:pointer}
   #conceptCard{position:fixed;z-index:11;top:max(72px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));display:none;width:min(430px,calc(100vw - 28px));pointer-events:none}#conceptCard.is-visible{display:block}.concept-card{width:100%;overflow:hidden;padding:14px;color:#17213c;background:rgba(248,251,255,.97);border:2px solid #17213c;border-radius:18px;box-shadow:0 12px 34px rgba(0,0,0,.4);pointer-events:auto;animation:conceptCardLife 2.8s ease both}.concept-card h2{margin:2px 0;font-size:20px}.concept-auto-note{margin:0;color:#5570ad;font-size:11px;font-weight:900}.concept-content{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:12px;margin-top:9px}.concept-figure{display:none;margin:0;padding:7px;background:radial-gradient(circle at 50% 50%,#172a62,#07112f 72%);border:1px solid #4265a3;border-radius:13px}.concept-figure svg{display:block;width:100%;height:auto}.concept-earth{fill:#4da3ff;stroke:#d8f3ff;stroke-width:3}.concept-orbit-before{fill:none;stroke:#ffb142;stroke-width:5;stroke-dasharray:10 8;opacity:.82}.concept-orbit-after{fill:none;stroke:#65e4ff;stroke-width:6;stroke-linecap:round}.concept-burn{transform-origin:422px 130px;animation:conceptBurn .9s ease-in-out 3}.concept-spin{fill:none;stroke:#ffd166;stroke-width:5;stroke-linecap:round;stroke-dasharray:125;animation:conceptSpin 1.4s linear infinite}.concept-label{fill:#eef7ff;font:800 14px 'Microsoft YaHei','Segoe UI',sans-serif}.concept-arrow{fill:none;stroke:#ffd166;stroke-width:4;stroke-linecap:round;marker-end:url(#conceptArrow)}#conceptCard[data-concept="periapsis"] [data-concept-figure="periapsis"],#conceptCard[data-concept="synchronous"] [data-concept-figure="synchronous"]{display:block}.concept-copy p{margin:0;color:#3f4d69;font-size:14px;font-weight:750;line-height:1.5}.concept-copy ul{margin:6px 0 0;padding-left:18px;color:#59657e;font-size:11px;line-height:1.45}.concept-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:9px}.concept-actions button{min-height:36px;padding:6px 10px;color:#17213c;background:#fff;border:1px solid #17213c;border-radius:10px;font-size:12px;font-weight:900;cursor:pointer}.concept-actions .primary{background:#ffd166}@keyframes conceptCardLife{0%{opacity:0;transform:translateY(-8px)}8%,88%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-4px)}}@keyframes conceptBurn{0%,100%{opacity:.45;transform:scale(.8)}50%{opacity:1;transform:scale(1.16)}}@keyframes conceptSpin{to{stroke-dashoffset:-125}}@media (prefers-reduced-motion:reduce){.concept-card,.concept-burn,.concept-spin{animation:none}}
+  #shipSkillIntro{position:fixed;z-index:12;top:max(82px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));width:min(390px,calc(100vw - 28px));padding:14px;color:#17213c;background:rgba(248,251,255,.98);border:2px solid #17213c;border-radius:18px;box-shadow:0 14px 38px rgba(0,0,0,.42)}#shipSkillIntro[hidden]{display:none}.ship-skill-intro-head{display:flex;align-items:center;gap:9px}.ship-skill-intro-head span{font-size:28px}.ship-skill-intro-head h2{margin:0;font-size:19px}.ship-skill-intro-copy{margin:8px 0 5px;color:#3f4d69;font-size:13px;line-height:1.5}.ship-skill-intro-kind{color:#5570ad;font-size:11px;font-weight:900}
   #levelSelect{position:fixed;inset:0;z-index:12;display:none;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 20%,rgba(44,72,145,.72),rgba(5,9,27,.96) 64%);color:#eef4ff;overflow:auto}
   #levelSelect.is-visible{display:flex}
   .level-shell{width:min(1100px,100%);margin:auto}.level-head{text-align:center;margin-bottom:20px}.level-kicker{color:var(--cyan);font-size:12px;font-weight:900;letter-spacing:2px}.product-lockup{display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:4px 12px;margin-top:4px}.game-title{margin:0;font-size:clamp(30px,5vw,46px);line-height:1.12}.product-subtitle{padding:4px 10px;color:#17213c;background:#9fe8ff;border-radius:999px;font-size:clamp(12px,1.8vw,16px);font-weight:950;line-height:1.35}.catalog-heading-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px 10px;margin-top:9px}.level-select-heading{margin:0;color:#eef4ff;font-size:clamp(16px,2.4vw,21px)}.game-type-line{margin:0;color:#ffd166;font-size:clamp(13px,2vw,16px);font-weight:850;line-height:1.4}.save-note{margin:5px 0 0;color:#aebde0;font-size:13px;line-height:1.4}
   .level-grid{display:flex;gap:15px;overflow-x:auto;overflow-y:hidden;padding:5px 5px 9px;scroll-snap-type:x mandatory;scrollbar-width:none;cursor:grab;touch-action:pan-x}.level-grid::-webkit-scrollbar{display:none}.level-grid.is-dragging{cursor:grabbing;scroll-snap-type:none}.level-grid.is-dragging .level-card{pointer-events:none}.level-card{flex:0 0 300px;min-height:250px;padding:18px;display:flex;flex-direction:column;scroll-snap-align:start;text-align:left;color:#eef4ff;background:linear-gradient(155deg,rgba(31,48,100,.96),rgba(13,23,58,.96));border:2px solid rgba(255,255,255,.16);border-radius:22px;box-shadow:0 14px 38px rgba(0,0,0,.3);cursor:pointer;transition:transform .16s,border-color .16s,box-shadow .16s}.level-card:hover{transform:translateY(-5px);border-color:var(--cyan);box-shadow:0 18px 42px rgba(0,0,0,.36),0 0 24px rgba(76,201,240,.18)}.level-card:active{transform:translateY(-1px)}
   .level-number{color:#94a7d5;font-size:11px;font-weight:900;letter-spacing:1.4px}.level-icon{margin:10px 0 7px;font-size:38px}.level-card h2{margin:0 0 7px;font-size:20px}.level-card p{margin:0;color:#b7c5e5;font-size:13px;line-height:1.5}.level-meta{margin-top:auto;padding-top:15px;display:flex;align-items:end;justify-content:space-between;gap:8px}.level-stars{color:#ffd166;font-size:20px;letter-spacing:2px}.level-score{color:#fff;font-size:12px;font-weight:800}.level-score strong{display:block;font-size:19px}.level-play{margin-top:13px;min-height:43px;border:0;border-radius:12px;color:#17213c;background:#ffd166;font-weight:900;cursor:pointer}
   #levelSelect[data-catalog-ready="false"] .catalog-content{visibility:hidden}.catalog-content{visibility:visible}.campaign-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 5px 8px}.campaign-section-head h3{margin:0;color:#dce8ff;font-size:15px}.campaign-route-note{color:#8fa4ce;font-size:11px;font-weight:800}.novice-start{display:none;width:min(520px,calc(100% - 10px));min-height:58px;margin:0 auto 14px;color:#17213c;background:linear-gradient(135deg,#ffe48f,#ffd166);border:2px solid #fff0b5;border-radius:17px;box-shadow:0 7px 0 #17213c,0 14px 30px rgba(0,0,0,.28);font-size:18px;font-weight:950;cursor:pointer}.recommendation-badge{display:inline-flex;align-items:center;min-height:25px;margin:-3px 0 8px;padding:3px 9px;color:#17213c;background:#ffd166;border-radius:999px;font-size:10px;font-weight:950;letter-spacing:.4px}.level-card.is-recommended{border-color:#ffd166;box-shadow:0 0 0 3px rgba(255,209,102,.13),0 16px 40px rgba(0,0,0,.38)}.free-task-section{margin-top:13px;padding:10px 12px;background:rgba(5,10,30,.28);border:1px solid rgba(255,255,255,.1);border-radius:16px}.free-task-section[hidden]{display:none}.free-task-toggle{width:100%;min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;text-align:left;color:#b9c8e6;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.12);border-radius:12px;font-weight:900;cursor:pointer}.free-task-toggle small{color:#7f91b8;font-weight:750}.free-task-panel[hidden]{display:none}.free-task-grid.level-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:9px;overflow:visible;margin-top:9px;padding:0;scroll-snap-type:none;cursor:default;touch-action:auto}.free-task-grid .level-card{width:auto;min-height:205px;padding:13px 14px;opacity:.62;filter:saturate(.72);cursor:pointer}.free-task-grid .level-card:hover{opacity:.95;filter:none}.free-task-grid .level-icon{margin:3px 0;font-size:28px}.free-task-grid .level-card h2{font-size:16px}.free-task-grid .level-card p{font-size:11px}.free-task-grid .level-meta{padding-top:7px}.free-task-grid .level-play{min-height:37px;margin-top:7px;font-size:11px}#levelSelect[data-catalog-mode="novice"] .novice-start{display:block}#levelSelect[data-catalog-mode="novice"] .campaign-section-head{justify-content:center}#levelSelect[data-catalog-mode="novice"] .campaign-route-note{display:none}#levelSelect[data-catalog-mode="novice"] #recommendedLevelGrid{justify-content:center;overflow:visible;cursor:default}#levelSelect[data-catalog-mode="novice"] #recommendedLevelGrid .level-card{flex-basis:340px;cursor:default}#levelSelect[data-catalog-mode="novice"] #recommendedLevelGrid .level-card:hover{transform:none;border-color:rgba(255,255,255,.16);box-shadow:0 14px 38px rgba(0,0,0,.3)}#levelSelect[data-catalog-mode="novice"] #recommendedLevelGrid .level-play{display:none}#levelSelect[data-catalog-mode="novice"] .level-footer{opacity:.56}#levelSelect[data-catalog-mode="novice"] .level-footer button{background:rgba(255,255,255,.045)!important;border-color:rgba(255,255,255,.14)!important}
-  .level-footer{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:18px}.level-footer button{min-height:45px;padding:9px 18px;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);border-radius:12px;font-weight:800;cursor:pointer}.level-footer button[hidden]{display:none}
-  .ship-skin-entry{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(76,201,240,.2),rgba(150,119,255,.14))!important;border-color:rgba(76,201,240,.48)!important}.ship-skin-entry span{padding:2px 8px;color:#dff8ff;background:rgba(5,14,40,.58);border-radius:999px;font-size:11px}
+  .level-score::after{content:attr(data-rank);display:block;margin-top:2px;color:#8fa4ce;font-size:9px;font-weight:850}.reward-direction{margin-top:14px;padding:13px 15px;color:#eaf1ff;background:linear-gradient(135deg,rgba(255,209,102,.1),rgba(76,201,240,.08));border:1px solid rgba(255,255,255,.15);border-radius:17px}.reward-direction-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:10px}.reward-direction-head h3{margin:0;font-size:16px}.reward-direction-head p{margin:0;color:#8fa4ce;font-size:11px}.reward-direction-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.reward-role{min-width:0;padding:9px 10px;background:rgba(6,13,37,.46);border-radius:11px}.reward-role span{display:block;color:#8fa4ce;font-size:10px;font-weight:850}.reward-role strong{display:block;margin:3px 0;color:#fff;font-size:14px}.reward-role small{display:block;color:#b8c8e6;font-size:9.5px;line-height:1.4}.level-footer{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:18px}.level-footer button{min-height:45px;padding:9px 18px;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);border-radius:12px;font-weight:800;cursor:pointer}.level-footer button[hidden]{display:none}#developerModeToggle.is-on{color:#07152c;background:linear-gradient(135deg,#9fe8ff,#67e8c3);border-color:#dffcff;box-shadow:0 0 0 3px rgba(103,232,195,.16)}
+  .main-settings-entry{color:#17213c!important;background:linear-gradient(135deg,#9fe8ff,#67e8c3)!important;border-color:#dffcff!important}.ship-skin-entry{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(76,201,240,.2),rgba(150,119,255,.14))!important;border-color:rgba(76,201,240,.48)!important}.ship-skin-entry span{padding:2px 8px;color:#dff8ff;background:rgba(5,14,40,.58);border-radius:999px;font-size:11px}
+  #mainSettings{position:fixed;inset:0;z-index:24;display:none;align-items:center;justify-content:center;padding:20px;color:#eef4ff;background:rgba(3,7,24,.88);backdrop-filter:blur(8px)}#mainSettings.is-visible{display:flex}.main-settings-card{position:relative;width:min(760px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:24px;background:linear-gradient(155deg,rgba(25,47,91,.99),rgba(8,18,47,.99));border:2px solid rgba(159,232,255,.55);border-radius:24px;box-shadow:0 22px 70px rgba(0,0,0,.55)}.main-settings-card h1{margin:4px 50px 4px 0;font-size:clamp(25px,4vw,34px)}.main-settings-lead{margin:0 0 16px;color:#b9c8e8;font-size:13px;line-height:1.5}.main-settings-close{position:absolute;top:14px;right:14px;width:44px;height:44px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.28);border-radius:13px;font-size:25px;font-weight:900;cursor:pointer}.main-settings-section{margin-top:13px;padding:14px;background:rgba(5,12,35,.42);border:1px solid rgba(255,255,255,.14);border-radius:16px}.main-settings-section h2{margin:0 0 10px;font-size:15px}.main-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.main-settings-grid button{min-height:46px;padding:8px 10px;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:12px;font-weight:850;cursor:pointer}.main-settings-grid button.is-on{color:#14203c;background:#4cc9f0}.main-volume-setting{grid-column:1/-1;display:grid;grid-template-columns:88px minmax(120px,1fr) 46px;align-items:center;gap:10px;min-height:45px;padding:8px 11px;background:rgba(255,255,255,.055);border-radius:11px;font-size:12px;font-weight:850}.main-volume-setting input{width:100%;accent-color:#67e8c3}.main-volume-setting output{color:#9fe8ff;text-align:right}.main-music-status{grid-column:1/-1;margin:0;padding:9px 11px;color:#cbeeff;background:rgba(76,201,240,.08);border-left:3px solid #4cc9f0;border-radius:8px;font-size:11px;line-height:1.5}#developerModeToggle{grid-column:1/-1}#developerModeToggle.is-on{color:#07152c;background:linear-gradient(135deg,#9fe8ff,#67e8c3);border-color:#dffcff;box-shadow:0 0 0 3px rgba(103,232,195,.16)}@media(max-width:620px){.main-settings-card{padding:19px 14px}.main-settings-grid{grid-template-columns:1fr}.main-volume-setting,.main-music-status,#developerModeToggle{grid-column:1}.main-volume-setting{grid-template-columns:78px minmax(90px,1fr) 42px}}
   #shipSkinPicker{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:22px;color:#eef4ff;background:rgba(3,7,24,.86);backdrop-filter:blur(8px)}#shipSkinPicker.is-visible{display:flex}
   .ship-skin-shell{position:relative;width:min(940px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:24px;background:linear-gradient(155deg,rgba(28,43,91,.98),rgba(8,17,47,.99));border:2px solid rgba(137,220,255,.48);border-radius:24px;box-shadow:0 22px 65px rgba(0,0,0,.5)}.ship-skin-head{padding-right:54px}.ship-skin-head h1{margin:4px 0 5px;font-size:clamp(25px,4vw,36px)}.ship-skin-head p{margin:0;color:#b9c8e8}.ship-skin-close{position:absolute;top:16px;right:16px;width:44px;height:44px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.28);border-radius:13px;font-size:25px;font-weight:900;cursor:pointer}
-  .ship-skin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}.ship-skin-card{min-width:0;padding:14px;text-align:left;color:#eef4ff;background:linear-gradient(160deg,rgba(36,54,105,.86),rgba(13,25,61,.94));border:2px solid rgba(255,255,255,.15);border-radius:19px;cursor:pointer;transition:transform .16s,border-color .16s,box-shadow .16s}.ship-skin-card:hover{transform:translateY(-3px);border-color:#7de3ff}.ship-skin-card.is-selected{border-color:#ffd166;box-shadow:0 0 0 3px rgba(255,209,102,.16),0 14px 30px rgba(0,0,0,.3)}.ship-skin-preview{height:150px;display:grid;place-items:center;margin-bottom:11px;overflow:hidden;background:radial-gradient(circle at 50% 42%,rgba(75,124,208,.32),rgba(5,12,36,.7) 66%);border-radius:14px}.ship-skin-preview svg,.ship-skin-preview img{width:92%;height:92%;object-fit:contain;filter:drop-shadow(0 8px 7px rgba(0,0,0,.48))}.ship-skin-card h2{margin:0 0 3px;font-size:19px}.ship-skin-tag{color:#76e4ff;font-size:11px;font-weight:900;letter-spacing:1px}.ship-skin-card p{margin:8px 0 0;color:#b8c7e5;font-size:12px;line-height:1.5}.ship-skin-note{margin:15px 0 0;padding:10px 13px;color:#cceeff;background:rgba(76,201,240,.09);border:1px solid rgba(76,201,240,.25);border-radius:12px;font-size:12px}
+  .ship-skin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}.ship-skin-card{min-width:0;padding:14px;text-align:left;color:#eef4ff;background:linear-gradient(160deg,rgba(36,54,105,.86),rgba(13,25,61,.94));border:2px solid rgba(255,255,255,.15);border-radius:19px;cursor:pointer;transition:transform .16s,border-color .16s,box-shadow .16s}.ship-skin-card:hover{transform:translateY(-3px);border-color:#7de3ff}.ship-skin-card.is-selected{border-color:#ffd166;box-shadow:0 0 0 3px rgba(255,209,102,.16),0 14px 30px rgba(0,0,0,.3)}.ship-skin-card.is-locked{filter:saturate(.28);border-style:dashed}.ship-skin-card.is-locked .ship-skin-preview{opacity:.46}.ship-skin-unlock{display:inline-block;margin:7px 0 2px;padding:4px 8px;color:#ffd166;background:rgba(5,12,36,.62);border-radius:999px;font-size:10px;font-weight:900}.ship-skin-card:not(.is-locked) .ship-skin-unlock{color:#8be39a}.ship-skin-preview{height:150px;display:grid;place-items:center;margin-bottom:11px;overflow:hidden;background:radial-gradient(circle at 50% 42%,rgba(75,124,208,.32),rgba(5,12,36,.7) 66%);border-radius:14px}.ship-skin-preview svg,.ship-skin-preview img{width:92%;height:92%;object-fit:contain;filter:drop-shadow(0 8px 7px rgba(0,0,0,.48))}.ship-skin-card h2{margin:0 0 3px;font-size:19px}.ship-skin-tag{color:#76e4ff;font-size:11px;font-weight:900;letter-spacing:1px}.ship-skin-card p{margin:8px 0 0;color:#b8c7e5;font-size:12px;line-height:1.5}.ship-skin-note{margin:15px 0 0;padding:10px 13px;color:#cceeff;background:rgba(76,201,240,.09);border:1px solid rgba(76,201,240,.25);border-radius:12px;font-size:12px}.ship-skin-dev-hint{margin:10px 0 0;padding:9px 12px;color:#07152c;background:#9fe8ff;border-radius:11px;font-size:12px;font-weight:900}.ship-skin-dev-hint[hidden]{display:none}.ship-skin-status{min-height:19px;margin:8px 2px 0;color:#ffd166;font-size:12px;font-weight:850}
+  .ship-skin-card[data-ship-skin="rocket"] .ship-skin-preview img{width:76%;height:76%}
+  .ship-skill-block{margin-top:10px;padding:9px 10px;background:rgba(4,10,31,.48);border:1px solid rgba(159,232,255,.18);border-radius:11px}.ship-skill-block-head{display:flex;align-items:center;gap:6px}.ship-skill-block-head strong{font-size:12px}.ship-skill-kind{margin-left:auto;padding:2px 6px;color:#17213c;background:#9fe8ff;border-radius:999px;font-size:9px;font-style:normal;font-weight:950}.ship-skill-summary,.ship-skill-specialty{display:block;margin-top:5px;color:#b8c7e5;font-size:10px;line-height:1.4}.ship-skill-specialty{color:#ffd166;font-weight:850}
   .achievement-entry{display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,rgba(255,209,102,.2),rgba(76,201,240,.12))!important;border-color:rgba(255,209,102,.48)!important}.achievement-count{min-width:42px;padding:2px 7px;color:#17213c;background:#ffd166;border-radius:999px;font-size:11px}
   .upgrade-entry{display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,rgba(95,208,104,.2),rgba(76,201,240,.14))!important;border-color:rgba(95,208,104,.5)!important}.upgrade-points{min-width:42px;padding:2px 8px;color:#13253b;background:#8be39a;border-radius:999px;font-size:11px}
   #upgradeBay{position:fixed;inset:0;z-index:19;display:none;align-items:center;justify-content:center;padding:22px;color:#eef4ff;background:rgba(3,7,24,.9);backdrop-filter:blur(8px)}#upgradeBay.is-visible{display:flex}.upgrade-shell{position:relative;width:min(820px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:25px;background:linear-gradient(155deg,rgba(25,51,82,.99),rgba(8,19,47,.99));border:2px solid rgba(139,227,154,.55);border-radius:24px;box-shadow:0 22px 65px rgba(0,0,0,.5)}.upgrade-close{position:absolute;top:15px;right:15px;width:44px;height:44px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.28);border-radius:13px;font-size:25px;font-weight:900;cursor:pointer}.upgrade-head{padding-right:54px}.upgrade-head h1{margin:4px 0 5px;font-size:clamp(25px,4vw,36px)}.upgrade-head p{margin:0;color:#b9c8e8}.upgrade-balance{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding:13px 15px;color:#dfffe5;background:rgba(95,208,104,.1);border:1px solid rgba(139,227,154,.35);border-radius:14px}.upgrade-balance strong{font-size:25px}.upgrade-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}.upgrade-card{padding:18px;background:linear-gradient(160deg,rgba(34,64,105,.92),rgba(12,27,62,.96));border:1px solid rgba(255,255,255,.16);border-radius:18px}.upgrade-card h2{margin:0 0 6px;font-size:20px}.upgrade-card p{min-height:42px;margin:0;color:#b8c7e5;font-size:13px;line-height:1.55}.upgrade-level{margin-top:13px;color:#ffd166;font-size:14px;font-weight:900}.upgrade-effect{margin:7px 0 13px;color:#9fe8ff;font-size:16px;font-weight:900}.upgrade-buy{width:100%;min-height:46px;color:#10203c;background:#8be39a;border:0;border-radius:12px;font-weight:950;cursor:pointer}.upgrade-buy:disabled{color:#8190a8;background:#273854;cursor:not-allowed}.upgrade-note{margin:15px 0 0;padding:11px 13px;color:#d5e3fb;background:rgba(255,255,255,.06);border-radius:12px;font-size:12px;line-height:1.5}.upgrade-status{min-height:20px;margin:9px 0 0;color:#ffd166;font-size:12px;font-weight:800}
@@ -126,7 +133,7 @@
   #msg button:active{transform:translateY(4px);box-shadow:0 1px 0 #222}
   .final-exam-result{width:min(430px,100%);margin:13px auto 15px;padding:12px 14px;text-align:left;color:#28324a;background:#f3f1ff;border:1px solid #c9c0ea;border-radius:14px}.final-exam-result>strong{display:block;margin-bottom:8px;color:#41306f;text-align:center}.final-exam-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:7px;padding:6px 4px;border-top:1px solid rgba(65,48,111,.12);font-size:13px;font-weight:850}.final-exam-row:first-of-type{border-top:0}.final-exam-row .exam-mark{font-size:15px}.final-exam-row.is-pass .exam-mark,.final-exam-row.is-pass .exam-state{color:#248347}.final-exam-row.is-fail .exam-mark,.final-exam-row.is-fail .exam-state{color:#c43d58}.final-exam-row.is-pending .exam-mark,.final-exam-row.is-pending .exam-state{color:#9a6b00}.final-exam-row .exam-state{font-size:12px;white-space:nowrap}.final-exam-ships{font-size:11px;color:#65708a}
   @media (max-width:760px){
-    .hud{top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));max-width:none;padding:9px 10px}.brand-mark{width:34px;height:34px}.hud .title{font-size:17px}.hud .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mode-badge{margin-top:5px}.key-strip{display:none}
+    .hud{top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));max-width:none;padding:9px 10px}.brand-mark{width:34px;height:34px}.hud .title{font-size:17px}.hud .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mode-badge{margin-top:5px}.key-strip{display:none}.reward-direction-head{display:block}.reward-direction-head p{margin-top:3px}.reward-direction-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     .tool-rail{top:calc(82px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));grid-template-columns:repeat(4,50px);gap:7px;padding:8px;border-radius:20px}.icon-btn{width:50px;height:50px;border-radius:15px}.icon-btn .ico{font-size:22px}.tool-rail .lbl{display:block}
     .flight-controls{left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));justify-content:space-between;gap:0}.turn-controls{gap:12px}.flight-controls .icon-btn{width:64px;height:64px}.flight-controls .thrust{width:84px;height:92px}.flight-controls .thrust .ico{font-size:34px}.flight-controls .turn .turn-glyph{width:38px;height:38px}.flight-controls .lbl{font-size:10px}
     .mission-action{left:auto;right:max(14px,env(safe-area-inset-right));top:calc(158px + env(safe-area-inset-top));bottom:auto;transform:none;width:104px;height:58px}
@@ -190,6 +197,7 @@
 <div id="orientationHint" role="status" aria-live="polite" aria-hidden="true"><span class="rotate-icon" aria-hidden="true">↻</span><strong>建议横屏游玩</strong><span class="orientation-copy">请转动设备以使用所选布局</span></div>
 <div class="hud">
   <div class="brand-row"><div class="brand-mark" aria-hidden="true">🚀</div><div><div class="title">🛰️ 第一关 · 地球同步卫星</div><div class="sub">目标：进入绿色同步轨道，再释放卫星</div><div id="modeBadge" class="mode-badge">教学模式 · 无限燃料 · 完成得 1 星</div></div></div>
+  <div id="shipSkillHud" class="ship-skill-hud" hidden><span class="skill-icon" data-skill-icon>✦</span><strong data-skill-name>技能</strong><small data-skill-status>就绪</small></div>
 </div>
 <nav class="tool-rail" aria-label="飞船工具栏">
   <button class="icon-btn" data-action="camera" aria-label="切换视角模式" aria-pressed="false" title="视角：跟随飞船 (K)"><span class="ico">⌖</span><span class="lbl">跟随</span></button>
@@ -203,6 +211,7 @@
     <button class="icon-btn turn turn-right" data-hold="KeyD" data-cue="right" aria-label="向右转向"><svg class="turn-glyph" viewBox="0 0 48 48" aria-hidden="true"><path class="turn-arc" d="M13 37A16 16 0 1 0 11 16"/><path class="turn-head" d="M21 13 9 12 10 24Z"/><circle class="turn-core" cx="24" cy="24" r="3.2"/></svg><span class="lbl">右转</span></button>
   </div>
   <button class="icon-btn thrust" data-hold="KeyW" data-cue="thrust" aria-label="推进"><span class="ico">▲</span><span class="lbl">推进</span></button>
+  <button class="icon-btn skill" id="shipSkillButton" data-action="skill" aria-label="使用技能" hidden><span class="ico">✦</span><span class="lbl">就绪</span></button>
 </div>
 <button type="button" id="missionAction" class="icon-btn mission-action" data-action="mission" data-cue="mission" aria-label="执行任务动作"><span class="ico">🛰</span><span class="lbl">释放卫星</span></button>
 <div id="pauseMenu" role="dialog" aria-modal="true" aria-labelledby="pauseTitle"><div class="pause-card">
@@ -225,6 +234,8 @@
     <button data-menu-action="science">📚 航天科普</button>
     <button id="menuOrientation" data-menu-action="orientation">📱 屏幕方向：自动旋转</button>
     <button id="menuSound" data-menu-action="sound">🔊 音效：开启</button>
+    <button id="menuMusic" type="button" onclick="toggleMusic()">🎵 音乐：开启</button>
+    <label class="music-volume-setting" for="menuMusicVolume"><span>音乐音量</span><input id="menuMusicVolume" type="range" min="0" max="100" step="1" value="80" oninput="setMusicVolume(this.value)"><output id="menuMusicVolumeValue" for="menuMusicVolume">80%</output></label>
     <button id="menuLanguage" data-menu-action="language">🌐 中文</button>
     <button id="menuConceptCards" data-menu-action="conceptcards"><span>概念卡片：</span><span id="menuConceptCardsState">开启</span></button>
     <button id="menuConceptReview" data-menu-action="concept" hidden>🪐 回看轨道概念</button>
@@ -245,7 +256,7 @@
   <section class="key-help" aria-label="操作说明">
     <h3>⌨️ 电脑按键</h3>
     <div class="key-help-grid">
-      <span class="pill"><kbd>W</kbd>推进</span><span class="pill"><kbd>A D</kbd>转向</span><span class="pill"><kbd>E</kbd>任务动作</span><span class="pill"><kbd>Space</kbd>8 倍速</span><span class="pill"><kbd>K</kbd>视角</span><span class="pill"><kbd>B</kbd>地图</span><span class="pill"><kbd>C</kbd>姿态</span><span class="pill"><kbd>V</kbd>表盘</span><span class="pill"><kbd>T</kbd>轨迹</span><span class="pill"><kbd>M</kbd>教学/挑战</span><span class="pill"><kbd>N</kbd>音效</span><span class="pill"><kbd>R</kbd>阶段回退</span><span class="pill"><kbd>Shift R</kbd>整关重来</span><span class="pill"><kbd>P</kbd>暂停</span>
+      <span class="pill"><kbd>W</kbd>推进</span><span class="pill"><kbd>A D</kbd>转向</span><span class="pill"><kbd>E</kbd>任务动作</span><span class="pill"><kbd>F</kbd>飞船技能</span><span class="pill"><kbd>Space</kbd>8 倍速</span><span class="pill"><kbd>K</kbd>视角</span><span class="pill"><kbd>B</kbd>地图</span><span class="pill"><kbd>C</kbd>姿态</span><span class="pill"><kbd>V</kbd>表盘</span><span class="pill"><kbd>T</kbd>轨迹</span><span class="pill"><kbd>M</kbd>教学/挑战</span><span class="pill"><kbd>N</kbd>音效</span><span class="pill"><kbd>R</kbd>阶段回退</span><span class="pill"><kbd>Shift R</kbd>整关重来</span><span class="pill"><kbd>P</kbd>暂停</span>
     </div>
     <div class="touch-help">触屏：双指缩放、按住画面拖动视角；点击左侧姿态表或右下角地图可直接切换模式。</div>
   </section>
@@ -269,6 +280,7 @@
   <div class="concept-content"><figure class="concept-figure" data-concept-figure="periapsis" aria-label="近地点顺向点火抬高轨道远端的示意图"><svg viewBox="0 0 520 260" role="img"><defs><marker id="conceptArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#ffd166"/></marker></defs><ellipse class="concept-orbit-before" cx="310" cy="130" rx="112" ry="60"/><ellipse class="concept-orbit-after" cx="270" cy="130" rx="152" ry="94"/><circle class="concept-earth" cx="370" cy="130" r="31"/><text class="concept-label" x="370" y="136" text-anchor="middle">地球</text><g class="concept-burn"><path d="M409 116 L422 130 L409 144 L401 130 Z" fill="#f8fbff" stroke="#17213c" stroke-width="2"/><path d="M422 124 L445 130 L422 136 Z" fill="#ffb142"/></g><path class="concept-arrow" d="M408 96 Q421 76 438 63"/><text class="concept-label" x="449" y="55" text-anchor="end">近地点点火</text><path class="concept-arrow" d="M145 178 Q114 197 91 184"/><text class="concept-label" x="82" y="215">远端抬高</text></svg></figure><figure class="concept-figure" data-concept-figure="synchronous" aria-label="卫星绕行周期匹配地球自转周期的示意图"><svg viewBox="0 0 520 260" role="img"><circle class="concept-orbit-before" cx="260" cy="130" r="92"/><circle class="concept-earth" cx="260" cy="130" r="42"/><path class="concept-spin" d="M235 102 A38 38 0 0 1 290 110"/><path d="M289 100 L302 112 L285 116 Z" fill="#ffd166"/><circle cx="352" cy="130" r="10" fill="#f8fbff" stroke="#17213c" stroke-width="3"/><path class="concept-arrow" d="M354 99 Q372 74 391 66"/><text class="concept-label" x="399" y="58" text-anchor="end">飞船绕行</text><text class="concept-label" x="260" y="136" text-anchor="middle">地球自转</text><text class="concept-label" x="260" y="238" text-anchor="middle">同一周期</text></svg></figure><div class="concept-copy"><p id="conceptCopy">在轨道最低处沿飞行方向增加速度，会把轨道另一端抬得更高。</p><ul><li id="conceptBulletOne">先观察黄色预测线的远端变化</li><li id="conceptBulletTwo">决定点火时机，而不是照固定秒数</li></ul></div></div>
   <div class="concept-actions"><button type="button" onclick="disableConceptCards()">不再显示</button><button type="button" class="primary" onclick="closeConceptCard()">跳过</button></div>
 </div></div>
+<aside id="shipSkillIntro" role="status" aria-live="polite" hidden><div class="ship-skill-intro-head"><span data-skill-intro-icon>✦</span><div><div class="brief-kicker">飞船技能</div><h2 data-skill-intro-name>技能名称</h2></div></div><p class="ship-skill-intro-copy" data-skill-intro-summary></p><p class="ship-skill-intro-kind" data-skill-intro-kind></p><div class="concept-actions"><button type="button" onclick="disableShipSkillIntro()">不再显示</button><button type="button" class="primary" onclick="closeShipSkillIntro()">跳过</button></div></aside>
 <div id="sciencePage" role="dialog" aria-modal="true" aria-labelledby="scienceTitle"><div class="science-card">
   <button class="science-close" onclick="closeSciencePage()" aria-label="关闭科普页面">×</button>
   <div class="brief-kicker" id="scienceKicker">航天知识库</div><h2 id="scienceTitle"></h2><p class="science-intro" id="scienceIntro"></p>
@@ -292,8 +304,22 @@
     <article class="level-card" data-level-card="10" tabindex="0"><div class="level-number">FINAL MISSION</div><div class="level-icon">🆘</div><h2>三体 · 紧急救援</h2><p>营救两艘失去动力的飞船，再带所有人逃离。</p><div class="level-meta"><div class="level-stars" data-level-stars="10">☆☆☆</div><div class="level-score"><strong data-level-score="10">—</strong>最高分</div></div><button class="level-play" data-start-level="10">开始最终任务</button></article>
   </div></section>
   <section id="freeTaskSection" class="free-task-section" aria-labelledby="freeTaskToggle"><button id="freeTaskToggle" class="free-task-toggle" type="button" onclick="toggleFreeTasks()" aria-expanded="false"><span>自由任务 · 9</span><small>全部任务始终可玩</small></button><div id="freeTaskPanel" class="free-task-panel" hidden><div id="freeTaskGrid" class="level-grid free-task-grid"></div></div></section>
-  <div class="level-footer"><button id="menuLanguageHome" onclick="cycleLanguage()">🌐 中文</button><button class="upgrade-entry" onclick="openUpgradeBay()">⚙️ 航天器升级 <span id="upgradePointBadge" class="upgrade-points">0 点</span></button><button class="ship-skin-entry" onclick="openShipSkinPicker()">🚀 飞船外观 <span id="shipSkinCurrent">星际快递号</span></button><button class="achievement-entry" onclick="openAchievementCollection()">🏅 勋章收藏 <span id="achievementCount" class="achievement-count">0/16</span></button><button id="continueLevel" onclick="closeLevelSelect()">继续当前任务</button></div>
+  <section class="reward-direction" aria-labelledby="rewardDirectionTitle"><div class="reward-direction-head"><h3 id="rewardDirectionTitle">🧭 航程奖励方向</h3><p>星星推进战役 · 勋章邀请特殊玩法 · 分数用于高手优化 · 外观记录成长</p></div><div class="reward-direction-grid"><div class="reward-role"><span>战役星星</span><strong id="rewardStarTotal">0 / 30 星</strong><small id="rewardActProgress">0 / 4 幕已完成</small></div><div class="reward-role"><span>下一外观</span><strong id="rewardNextUnlock">再获得 12 星解锁飞天一号</strong><small id="rewardSkinProgress">1 / 3 外观已解锁</small></div><div class="reward-role"><span>特殊勋章</span><strong>不同路线与驾驶限制</strong><small>不作为普通通关门槛</small></div><div class="reward-role"><span>高手纪录</span><strong id="rewardScoreTotal">十关最高分合计 0</strong><small>燃料与时间只在这里拉开差距</small></div></div></section>
+  <div class="level-footer"><button class="main-settings-entry" type="button" onclick="openMainSettings()">⚙️ 游戏设置</button><button class="upgrade-entry" onclick="openUpgradeBay()">⚙️ 航天器升级 <span id="upgradePointBadge" class="upgrade-points">0 点</span></button><button class="ship-skin-entry" onclick="openShipSkinPicker()">🚀 飞船外观 <span id="shipSkinCurrent">星际快递号</span></button><button class="achievement-entry" onclick="openAchievementCollection()">🏅 勋章收藏 <span id="achievementCount" class="achievement-count">0/24</span></button><button id="continueLevel" onclick="closeLevelSelect()">继续当前任务</button></div>
 </div></div></div>
+<div id="mainSettings" role="dialog" aria-modal="true" aria-labelledby="mainSettingsTitle" onclick="if(event.target===this)closeMainSettings()"><div class="main-settings-card">
+  <button class="main-settings-close" type="button" onclick="closeMainSettings()" aria-label="关闭游戏设置">×</button><div class="level-kicker">GAME SETTINGS</div><h1 id="mainSettingsTitle">⚙️ 游戏设置</h1><p class="main-settings-lead">声音、语言、显示和测试选项集中在这里；飞船、勋章与升级仍在任务目录中。</p>
+  <section class="main-settings-section"><h2>🔊 声音</h2><div class="main-settings-grid">
+    <button id="mainMenuSound" type="button" onclick="toggleSound()">🔊 音效：开启</button><button id="mainMenuMusic" type="button" onclick="toggleMusic()">🎵 音乐：开启</button>
+    <label class="main-volume-setting" for="mainMenuSfxVolume"><span>音效音量</span><input id="mainMenuSfxVolume" type="range" min="0" max="100" step="1" value="100" oninput="setSfxVolume(this.value)"><output id="mainMenuSfxVolumeValue" for="mainMenuSfxVolume">100%</output></label>
+    <label class="main-volume-setting" for="mainMenuMusicVolume"><span>音乐音量</span><input id="mainMenuMusicVolume" type="range" min="0" max="100" step="1" value="80" oninput="setMusicVolume(this.value)"><output id="mainMenuMusicVolumeValue" for="mainMenuMusicVolume">80%</output></label>
+    <p id="mainMusicStatus" class="main-music-status" role="status" aria-live="polite">音乐等待首次点击后播放。</p>
+  </div></section>
+  <section class="main-settings-section"><h2>🌐 常规与辅助</h2><div class="main-settings-grid">
+    <button id="menuLanguageHome" type="button" onclick="cycleLanguage()">🌐 中文</button><button id="mainMenuOrientation" type="button" onclick="cycleScreenOrientation()">📱 屏幕方向：自动旋转</button><button id="mainMenuPrediction" type="button" onclick="setPrediction()">轨迹预测：开启</button><button id="mainMenuColorAssist" type="button" onclick="toggleColorAssist()" aria-pressed="false">色觉辅助：关闭</button><button id="mainMenuGuide" type="button" onclick="toggleGuide()">新手指引：开启</button><button id="mainMenuConceptCards" type="button" onclick="toggleConceptCards()">概念卡片：开启</button>
+  </div></section>
+  <section class="main-settings-section"><h2>🧪 测试</h2><div class="main-settings-grid"><button id="developerModeToggle" type="button" onclick="toggleDeveloperMode()" aria-pressed="false">🧪 <span>开发者模式</span> <span id="developerModeState">关闭</span></button></div></section>
+</div></div>
 <div id="upgradeBay" role="dialog" aria-modal="true" aria-labelledby="upgradeTitle" onclick="if(event.target===this)closeUpgradeBay()"><div class="upgrade-shell">
   <header class="upgrade-head"><div class="level-kicker">SPACECRAFT UPGRADES</div><h1 id="upgradeTitle">⚙️ 航天器升级</h1><p>首次通关 +1 点，挑战三星再 +1 点。</p></header><button class="upgrade-close" onclick="closeUpgradeBay()" aria-label="关闭航天器升级">×</button>
   <div class="upgrade-balance"><span>可用升级点</span><strong id="upgradePointTotal">0</strong></div>
@@ -304,15 +330,15 @@
   <p class="upgrade-note">升级只在挑战模式生效；教学模式与示范飞船保持原参数。升级存档与关卡成绩独立保存。</p><p id="upgradeStatus" class="upgrade-status" role="status" aria-live="polite"></p>
 </div></div>
 <div id="shipSkinPicker" role="dialog" aria-modal="true" aria-labelledby="shipSkinTitle" onclick="if(event.target===this)closeShipSkinPicker()"><div class="ship-skin-shell">
-  <header class="ship-skin-head"><div class="level-kicker">SPACECRAFT HANGAR</div><h1 id="shipSkinTitle">选择飞船外观</h1><p>换一副外壳去执行任务，飞行性能完全相同。</p></header><button class="ship-skin-close" onclick="closeShipSkinPicker()" aria-label="关闭飞船外观">×</button>
+  <header class="ship-skin-head"><div class="level-kicker">SPACECRAFT HANGAR</div><h1 id="shipSkinTitle">选择飞船外观</h1><p>选择飞船与配套技能；关卡规则和无技能基础路线保持不变。</p></header><button class="ship-skin-close" onclick="closeShipSkinPicker()" aria-label="关闭飞船外观">×</button>
   <div class="ship-skin-grid">
-    <button class="ship-skin-card" data-ship-skin="rocket" onclick="selectShipSkin('rocket')" aria-pressed="false"><span class="ship-skin-preview"><svg viewBox="0 0 180 150" aria-hidden="true"><path d="M90 16C109 39 111 73 103 105H77C69 73 71 39 90 16Z" fill="#f7f9fc" stroke="#17213c" stroke-width="5"/><path d="M77 74 55 118 80 107M103 74l22 44-25-11" fill="#ef476f" stroke="#17213c" stroke-width="5"/><circle cx="90" cy="64" r="12" fill="#4cc9f0" stroke="#17213c" stroke-width="4"/><path d="M77 96h26v10H77z" fill="#ef476f"/><path d="m79 110 11 28 11-28" fill="#ffb142" stroke="#17213c" stroke-width="4"/></svg></span><span><span class="ship-skin-tag">经典火箭</span><h2>星际快递号</h2><p>熟悉、清晰，适合第一次执行任务。</p></span></button>
-    <button class="ship-skin-card" data-ship-skin="swordwing" onclick="selectShipSkin('swordwing')" aria-pressed="false"><span class="ship-skin-preview"><img src="./assets/ships/feitian-one-overhead.png" alt="飞天一号俯视图"></span><span><span class="ship-skin-tag">剑形飞行器</span><h2>飞天一号</h2><p>双长剑机首、五个圆形顶舱和白色紧凑机身。</p></span></button>
-    <button class="ship-skin-card" data-ship-skin="hyperion" onclick="selectShipSkin('hyperion')" aria-pressed="false"><span class="ship-skin-preview"><img src="./assets/ships/hyperion-cartoon-overhead.png" alt="休伯利安号卡通俯视图"></span><span><span class="ship-skin-tag">人族战列巡航舰</span><h2>休伯利安号</h2><p>卡通简化的厚重装甲、侧舷武装与四组蓝色引擎。</p></span></button>
-  </div><p class="ship-skin-note">只改变外观，不改变碰撞判定、质量、推力、转向或关卡难度。选择会保存在这台设备上。</p>
+    <button class="ship-skin-card" data-ship-skin="rocket" onclick="selectShipSkin('rocket')" aria-pressed="false"><span class="ship-skin-preview"><img src="./assets/ships/star-courier-overhead.png" alt="星际快递号俯视图"></span><span><span class="ship-skin-tag">经典火箭</span><h2>星际快递号</h2><span class="ship-skin-unlock" data-ship-unlock>✓ 已解锁</span><p>白色装甲、青色座舱与红色短翼；皮实耐用，送货与着陆容错高。</p><span class="ship-skill-block"><span class="ship-skill-block-head"><span data-ship-skill-icon>🛬</span><strong data-ship-skill-name>缓冲货叉</strong><em class="ship-skill-kind" data-ship-skill-kind>被动</em></span><small class="ship-skill-summary" data-ship-skill-summary></small><small class="ship-skill-specialty" data-ship-skill-specialty></small></span></span></button>
+    <button class="ship-skin-card" data-ship-skin="swordwing" onclick="selectShipSkin('swordwing')" aria-pressed="false"><span class="ship-skin-preview"><img src="./assets/ships/feitian-one-overhead.png" alt="飞天一号俯视图"></span><span><span class="ship-skin-tag">剑形飞行器</span><h2>飞天一号</h2><span class="ship-skin-unlock" data-ship-unlock>🔒 累计获得 12 星解锁</span><p>双长剑机首、五个圆形顶舱和白色紧凑机身。</p><span class="ship-skill-block"><span class="ship-skill-block-head"><span data-ship-skill-icon>✦</span><strong data-ship-skill-name>空间折跃</strong><em class="ship-skill-kind" data-ship-skill-kind>待安装</em></span><small class="ship-skill-summary" data-ship-skill-summary></small><small class="ship-skill-specialty" data-ship-skill-specialty></small></span></span></button>
+    <button class="ship-skin-card" data-ship-skin="hyperion" onclick="selectShipSkin('hyperion')" aria-pressed="false"><span class="ship-skin-preview"><img src="./assets/ships/hyperion-cartoon-overhead.png" alt="休伯利安号正俯视图"></span><span><span class="ship-skin-tag">人族战列巡航舰</span><h2>休伯利安号</h2><span class="ship-skin-unlock" data-ship-unlock>🔒 获得“挑战王牌”勋章解锁</span><p>横向重装舰首、细长中轴、双圆主翼与短促推进器尾段。</p><span class="ship-skill-block"><span class="ship-skill-block-head"><span data-ship-skill-icon>☄</span><strong data-ship-skill-name>大和炮</strong><em class="ship-skill-kind" data-ship-skill-kind>待安装</em></span><small class="ship-skill-summary" data-ship-skill-summary></small><small class="ship-skill-specialty" data-ship-skill-specialty></small></span></span></button>
+  </div><p id="shipSkinDeveloperHint" class="ship-skin-dev-hint" hidden>🧪 开发者模式已开启：所有飞船可测试，不会写入正式解锁进度。</p><p class="ship-skin-note">飞船由战役星星或特殊勋章解锁；技能提供不同操作工具，但不改变任务成功判定、星级条件或无技能基础通关路线。旧版本已经选用的外观会保留。</p><p id="shipSkinUnlockStatus" class="ship-skin-status" role="status" aria-live="polite"></p>
 </div></div>
 <div id="achievementCollection" role="dialog" aria-modal="true" aria-labelledby="achievementTitle"><div class="achievement-shell">
-  <header class="achievement-head"><div><div class="level-kicker">FLIGHT DECORATIONS</div><h1 id="achievementTitle">🏅 飞行勋章收藏室</h1><p id="achievementSummary">完成飞行壮举，填满属于你的勋章柜。</p></div><button class="achievement-close" onclick="closeAchievementCollection()" aria-label="关闭勋章收藏">×</button></header>
+  <header class="achievement-head"><div><div class="level-kicker">FLIGHT DECORATIONS</div><h1 id="achievementTitle">🏅 飞行勋章收藏室</h1><p id="achievementSummary">勋章邀请你尝试不同路线与驾驶限制，不作为普通通关门槛。</p></div><button class="achievement-close" onclick="closeAchievementCollection()" aria-label="关闭勋章收藏">×</button></header>
   <div id="achievementGrid" class="achievement-grid"></div>
 </div><div id="achievementDetail"><div class="achievement-detail-card"><div id="achievementDetailBadge"></div><h2 id="achievementDetailTitle"></h2><div id="achievementDetailStatus" class="detail-status"></div><p id="achievementDetailQuote" class="achievement-quote"></p><p id="achievementDetailRequirement" class="achievement-requirement"></p><button class="achievement-detail-close" onclick="closeAchievementDetail()">收好勋章</button></div></div></div>
 <div id="msg"><div class="card">
@@ -340,6 +366,7 @@
 <script src="./game-i18n.js"></script>
 <script src="./game-display.js"></script>
 <script src="./game-ship-skins.js"></script>
+<script src="./game-ship-skills.js"></script>
 <script src="./game-special-worlds.js"></script>
 <script src="./game-guides.js"></script>
 <script src="./game-flight-physics.js"></script>
@@ -353,11 +380,12 @@
 const cv = document.getElementById('cv'), hudCv=document.getElementById('hudCv');
 const worldCtx=cv.getContext('2d'),hudCtx=hudCv.getContext('2d');
 const SG_PERF=globalThis.SpaceGamePerformance||{sample(){},frameGap(){},snapshot(){return {physics:{average:0,peak:0},world:{average:0,peak:0},hud:{average:0,peak:0},prediction:{average:0,peak:0},work:{average:0,peak:0},recent:{longFrameRate:0,worstGap:0}};},reset(){}};
-const SG_AUDIO=globalThis.SpaceGameAudio||{unlock(){},sfx(){},setEngine(){},setEnabled(){return false;},toggle(){return false;},stopAll(){},status(){return {enabled:false,supported:false,ready:false};},isEnabled(){return false;}};
+const SG_AUDIO=globalThis.SpaceGameAudio||{unlock(){},sfx(){},setEngine(){},setEnabled(){return false;},setSfxVolume(){return 0;},toggle(){return false;},stopAll(){},status(){return {enabled:false,volume:0,supported:false,ready:false,music:{enabled:false,volume:0,supported:false}};},isEnabled(){return false;},playBgm(){},playLevel(){},playMenu(){},playReading(){},setIntensity(){},setMusicDuck(){},clearMusicDuck(){},setMusicEnabled(){return false;},toggleMusic(){return false;},setMusicVolume(){return 0;},musicStatus(){return {enabled:false,volume:0,supported:false,state:'unsupported'};}};
 const SG_ORBIT=globalThis.SpaceGameOrbit;
 const SG_DISPLAY=globalThis.SpaceGameDisplay||{install(){return {mode:'auto',label:'自动旋转'};},cycle(){return {mode:'auto',label:'自动旋转'};},status(){return {mode:'auto',label:'自动旋转'};}};
 const SG_I18N=globalThis.SpaceGameI18n||{t:value=>value,cycle(){return{locale:'zh',label:'中文',button:'🌐 中文'};},status(){return{locale:'zh',label:'中文',button:'🌐 中文'};},refresh(){}};
 const SG_INPUT=globalThis.SpaceGameInput||{install(){},clear(){},resetCameraGestures(){},isInstalled(){return false;}};
+const SG_SKILLS=globalThis.SpaceGameShipSkills||{beginMission(){},snapshot(){return null;},restore(){},use(){return{ok:false};},update(){},sync(){},resultText(){return'';}};
 const SG_HUD=globalThis.SpaceGameHUD||{draw(){}};
 let ctx=worldCtx;
 const IOS_DEVICE=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -501,6 +529,7 @@ const CHUTE_SLOW_V = 12;               // 低空自动降到安全着陆速度
 let mission;
 
 let rocket, station, asteroid, asteroidTrail, binary, blackHole, threeBody, timelineCache, trail, ghostShip, ghostTrail, stars, cam, camInit, state, flightT, shake, launched, bulletT;
+let musicPressureMode='normal',musicCalmT=0,musicContextObserver=null;
 let threeBodyResetCounter=0;
 let threeBodySeedMode='random',threeBodyPinnedSeed=0,threeBodySeedCopiedUntil=0;
 let challengeMode=false;
@@ -663,6 +692,54 @@ function stationMetrics(){
 // 当前关卡的教学步骤
 function stageInfo(){ return level===1?stageInfoL1:level===2?stageInfoL2:level===3?stageInfoL3:level===4?stageInfoL4:level===5?stageInfoL5:level===6?stageInfoL6:level===7?stageInfoL7:level===8?stageInfoL8:level===9?stageInfoL9:stageInfoL10; }
 
+function syncMusicContext(){
+  const visible=id=>document.getElementById(id)?.classList.contains('is-visible');
+  const menu=visible('levelSelect');
+  const reading=['achievementCollection','shipSkinPicker','upgradeBay','campaignLog','campaignSummary'].some(visible);
+  if(reading){SG_AUDIO.playReading({duration:2.5});SG_AUDIO.clearMusicDuck('overlay',.8);return;}
+  if(menu){
+    SG_AUDIO.playMenu({duration:2.5});
+    SG_AUDIO.clearMusicDuck('overlay',.8);return;
+  }
+  if(!gameStarted)return;
+  SG_AUDIO.playLevel(level,{intensity:musicPressureMode,duration:2.8});
+  const resultOpen=document.getElementById('msg')?.style.display==='flex';
+  const briefingOpen=visible('briefing'),scienceOpen=visible('sciencePage'),conceptOpen=visible('conceptCard');
+  const factor=resultOpen ? .35 : briefingOpen ? .45 : (scienceOpen||conceptOpen||paused) ? .4 : 1;
+  if(factor<1)SG_AUDIO.setMusicDuck('overlay',factor,resultOpen ? .8 : .6);else SG_AUDIO.clearMusicDuck('overlay',.8);
+}
+function installMusicContextObserver(){
+  if(musicContextObserver||typeof MutationObserver!=='function')return;
+  const ids=['levelSelect','mainSettings','achievementCollection','shipSkinPicker','upgradeBay','campaignLog','campaignSummary','briefing','sciencePage','conceptCard','pauseMenu','msg'];
+  musicContextObserver=new MutationObserver(()=>syncMusicContext());
+  for(const id of ids){const node=document.getElementById(id);if(node)musicContextObserver.observe(node,{attributes:true,attributeFilter:['class','style']});}
+}
+function setMusicPressure(mode){
+  if(mode===musicPressureMode)return;
+  musicPressureMode=mode;musicCalmT=0;
+  SG_AUDIO.setIntensity(level,mode,{duration:3.5,phraseBoundary:true});
+}
+function updateMusicPressure(dt){
+  if(!mission||mission.done||state!=='fly'||level<7)return;
+  if(level===7){
+    const forecast=mission.asteroidForecast;
+    const danger=!forecast?.safe&&(!!mission.asteroidContact||!!mission.asteroidAnchored||(mission.stage>=1&&!!forecast?.impact));
+    if(danger){musicCalmT=0;setMusicPressure('high');}
+    else if(musicPressureMode==='high'){musicCalmT+=dt;if(musicCalmT>=5)setMusicPressure('normal');}
+  }else if(level===8&&binary&&station){
+    const bm=binaryMetrics(),sm=stationMetrics();
+    const nearHeat=bm.distA<binary.heatRadiusA+180||bm.distB<binary.heatRadiusB+180;
+    const fastCorridor=mission.stage===1&&bm.gateDistance<1600&&bm.gateRel>100;
+    if(bm.gateDistance<700||nearHeat||fastCorridor)setMusicPressure('high');
+    else if(musicPressureMode==='high'&&mission.stage>=3&&sm.relSpeed<25)setMusicPressure('normal');
+  }else if(level===9&&blackHole){
+    const m=blackHoleMetrics();if(m.r<BH_BURN_R+90||mission.stage>=1||mission.blackHoleDeepBurn||mission.blackHoleEscaping)setMusicPressure('high');
+  }else if(level===10&&threeBody){
+    const rescued=(mission.threeRescued||[]).some(Boolean),serious=threeBodyMetrics().clearance<THREE_DANGER_PAD+100;
+    if(rescued||serious||mission.stage>=2)setMusicPressure('finale');
+  }
+}
+
 function updateModePanel(){
   const teaching=document.getElementById('modeTeaching'),challenge=document.getElementById('modeChallenge');
   if(teaching) teaching.classList.toggle('is-selected',!challengeMode);
@@ -684,6 +761,7 @@ function updateModePanel(){
   if(pauseRules){ pauseRules.replaceChildren(); for(const rule of STAR_RULES[level]){const p=document.createElement('p');p.textContent=rule;pauseRules.appendChild(p);} if(level===2||level===3){const p=document.createElement('p');p.textContent='⚠ 生命维持耗尽：结算 −1 星';pauseRules.appendChild(p);} }
 }
 function openLevelSelect(initial=false){
+  closeMainSettings();
   levelSelectOpen=true; paused=true;
   document.getElementById('briefing').classList.remove('is-visible');
   document.getElementById('sciencePage').classList.remove('is-visible');sciencePageOpen=false;
@@ -692,7 +770,16 @@ function openLevelSelect(initial=false){
   document.getElementById('msg').style.display='none';
   document.getElementById('continueLevel').hidden=initial||!gameStarted;
   document.getElementById('levelSelect').classList.add('is-visible');
-  syncProgressAchievements();updateLevelCards();syncUI();
+  syncProgressAchievements();updateLevelCards();syncUI();syncMusicContext();
+}
+function openMainSettings(){
+  const panel=document.getElementById('mainSettings');if(!panel)return;
+  panel.classList.add('is-visible');syncUI();syncMusicContext();
+  requestAnimationFrame(()=>document.querySelector('.main-settings-close')?.focus());
+}
+function closeMainSettings(){
+  const panel=document.getElementById('mainSettings');if(!panel?.classList.contains('is-visible'))return;
+  panel.classList.remove('is-visible');syncMusicContext();
 }
 function campaignActForLevel(levelId){return CAMPAIGN_ACTS.find(act=>levelId>=act.start&&levelId<=act.end)||CAMPAIGN_ACTS[3];}
 function queueCampaignSummary(levelId,progress=loadProgress()){
@@ -805,6 +892,7 @@ function closeLevelSelect(){
   syncUI();
 }
 function startLevel(levelId){
+  closeMainSettings();
   level=Math.max(1,Math.min(10,Number(levelId)||1));
   challengeMode=false;
   gameStarted=true; levelSelectOpen=false; paused=false; lastBriefedLevel=0;
@@ -826,6 +914,7 @@ function rewindStage(){
   if(!mission||mission.done){ resetGame(); return; }
   const history=mission.checkpointHistory||[];
   if(!history.length){ resetGame(); return; }
+  mission.rewindCount=(mission.rewindCount||0)+1;
   const now=performance.now(),chained=now-rewindClickAt<1200&&rewindHistoryIndex>0;
   rewindHistoryIndex=chained?rewindHistoryIndex-1:history.length-1;
   const cp=history[rewindHistoryIndex];
@@ -843,6 +932,7 @@ function resetGame(){
   SG_PERF.reset();
   if(retryTimer!==null){ clearTimeout(retryTimer); retryTimer=null; }
   rewindClickAt=0; rewindHistoryIndex=-1;
+  musicPressureMode='normal';musicCalmT=0;
   paused = false;
   if(conceptCardTimer!==null){clearTimeout(conceptCardTimer);conceptCardTimer=null;}
   conceptCardOpen=false;document.getElementById('conceptCard').classList.remove('is-visible');
@@ -913,14 +1003,16 @@ function resetGame(){
   actionCue = null;
   mission = {stage:0, holdT:0, finalHoldT:0, hintsHidden:false, assistMode:!challengeMode, conceptCardsSeen:{periapsis:false,synchronous:false}, done:false, worldStarted:false, satReleased:false, satellite:null, deployReady:false, dockReady:false, toast:'', toastT:0, checkpoint:null, checkpointHistory:[], dynHint:'', dockDistance:Infinity, dockRelSpeed:Infinity,
     fuelBudget:challengeCfg.fuel,fuelUsed:0,lifeLimit,lifeExpired:false,usedChute:false,
+    burnCount:0,thrustWasActive:false,currentCoast:0,longestCoast:0,rewindCount:0,predictionUsed:false,inertialTime:0,asteroidSoftContact:false,
     slingInitialEnergy:0,slingEntryEnergy:0,slingClosestDistance:Infinity,slingClosestTrailing:Infinity,
     slingWasInside:false,slingFlybyValid:false,slingGain:0,slingVInf:0,slingFailed:false,
     lagrangeTarget:1,lagrangeDistance:Infinity,lagrangeRelSpeed:Infinity,
     asteroidContact:false,asteroidAnchored:false,asteroidMountAngle:0,hingeAngle:0,
-    asteroidChanged:false,asteroidImpact:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null,
+    asteroidChanged:false,asteroidImpact:false,asteroidYamato:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null,
     binaryHeatViolated:false,binaryCaptured:false,binaryGateCrossed:false,binaryTargetEnergy:Infinity,
     blackHoleMinR:Infinity,blackHoleDeepBurn:false,blackHoleEscaping:false,blackHoleFrozen:false,blackHoleAwaitRelease:false,blackHoleInvalidExitT:0,blackHoleExitFailed:false,
     threeGateIndex:0,threeRescued:[false,false],threeDestroyed:[false,false],threeRescueOrder:[],threeApproachMade:false,threeDangerViolated:false,threeMinClearance:Infinity,threeEscapeT:0,threeSeed:threeBody?.seed||0};
+  SG_AUDIO.playLevel(level,{intensity:'normal',duration:2.8});
   threeBodyExamExpanded=false;threeBodyExamHitBox=null;
   if(level===5){
     mission.slingInitialEnergy=earthSpecificEnergy(rocket);
@@ -936,6 +1028,7 @@ function resetGame(){
   if(level===8) mission.dynHint='两颗太阳都在运动｜按推进后双星世界同步开始';
   if(level===9) mission.dynHint='轻点推进只解除待机｜松手后关机滑向光子环内侧';
   if(level===10) mission.dynHint='轻点推进后，恒星和求救飞船开始运动';
+  SG_SKILLS.beginMission(undefined,{showIntro:gameStarted&&!levelSelectOpen});
   saveCheckpoint();
   camInit = true;
   hideMsg();
@@ -1106,6 +1199,17 @@ function toggleSound(){
   if(mission){mission.toast=enabled?'🔊 音效已开启':'🔇 音效已关闭';mission.toastT=1.8;}
   syncUI();
 }
+function toggleMusic(){
+  const enabled=SG_AUDIO.toggleMusic();
+  if(mission){mission.toast=enabled?'🎵 音乐已开启':'🔇 音乐已关闭';mission.toastT=1.8;}
+  syncUI();syncMusicContext();
+}
+function setMusicVolume(percent){
+  SG_AUDIO.setMusicVolume(Math.max(0,Math.min(100,Number(percent)||0))/100);syncUI();
+}
+function setSfxVolume(percent){
+  SG_AUDIO.setSfxVolume(Math.max(0,Math.min(100,Number(percent)||0))/100);syncUI();
+}
 function toggleGuide(){
   mission.hintsHidden=!mission.hintsHidden;
   mission.toast=mission.hintsHidden?'已隐藏任务提示与示范影子':'任务提示与示范影子已显示'; mission.toastT=2;
@@ -1207,7 +1311,8 @@ function syncUI(){
   const briefingOpen=document.getElementById('briefing').classList.contains('is-visible');
   document.getElementById('pauseMenu').classList.toggle('is-visible',paused&&!levelSelectOpen&&!briefingOpen&&!sciencePageOpen&&!campaignLogOpen);
   const menuPrediction=document.getElementById('menuPrediction'),menuColorAssist=document.getElementById('menuColorAssist'), menuAttitude=document.getElementById('menuAttitude');
-  const menuRadar=document.getElementById('menuRadar'), menuDial=document.getElementById('menuDial'), menuGuide=document.getElementById('menuGuide'), menuAssist=document.getElementById('menuAssist'),menuSound=document.getElementById('menuSound'),menuOrientation=document.getElementById('menuOrientation'),menuConceptCards=document.getElementById('menuConceptCards'),menuConceptReview=document.getElementById('menuConceptReview'),menuThreeSeed=document.getElementById('menuThreeSeed'),menuThreeSeedCopy=document.getElementById('menuThreeSeedCopy');
+  const menuRadar=document.getElementById('menuRadar'), menuDial=document.getElementById('menuDial'), menuGuide=document.getElementById('menuGuide'), menuAssist=document.getElementById('menuAssist'),menuSound=document.getElementById('menuSound'),menuMusic=document.getElementById('menuMusic'),menuMusicVolume=document.getElementById('menuMusicVolume'),menuOrientation=document.getElementById('menuOrientation'),menuConceptCards=document.getElementById('menuConceptCards'),menuConceptReview=document.getElementById('menuConceptReview'),menuThreeSeed=document.getElementById('menuThreeSeed'),menuThreeSeedCopy=document.getElementById('menuThreeSeedCopy');
+  const mainSound=document.getElementById('mainMenuSound'),mainMusic=document.getElementById('mainMenuMusic'),mainSfxVolume=document.getElementById('mainMenuSfxVolume'),mainMusicVolume=document.getElementById('mainMenuMusicVolume'),mainOrientation=document.getElementById('mainMenuOrientation'),mainPrediction=document.getElementById('mainMenuPrediction'),mainColorAssist=document.getElementById('mainMenuColorAssist'),mainGuide=document.getElementById('mainMenuGuide'),mainConceptCards=document.getElementById('mainMenuConceptCards');
   if(menuPrediction){ menuPrediction.textContent=SG_I18N.t('轨迹预测：'+(showPred?'开启':'关闭')); menuPrediction.classList.toggle('is-on',showPred); }
   if(menuColorAssist){menuColorAssist.textContent=SG_I18N.t('色觉辅助：'+(colorAssistEnabled?'开启':'关闭'));menuColorAssist.classList.toggle('is-on',colorAssistEnabled);menuColorAssist.setAttribute('aria-pressed',String(colorAssistEnabled));}
   const hudButtons={telemetry:['menuHudTelemetry','遥测'],gravity:['menuHudGravity','G / 引力'],radar:['menuHudRadar','小地图'],guidance:['menuHudGuidance','阶段提示'],targets:['menuHudTargets','目标标记']};
@@ -1217,8 +1322,28 @@ function syncUI(){
   if(menuAttitude) menuAttitude.textContent=SG_I18N.t('姿态：'+ATT_MODES[attMode]);
   if(menuDial) menuDial.textContent=SG_I18N.t('表盘：'+['世界固定','速度向上','机头向上'][dialMode]);
   if(menuGuide&&mission){ menuGuide.textContent=SG_I18N.t('新手指引：'+(mission.hintsHidden?'关闭':'开启')); menuGuide.classList.toggle('is-on',!mission.hintsHidden); }
-  if(menuSound){const audio=SG_AUDIO.status();menuSound.textContent=SG_I18N.t(audio.supported?(audio.enabled?'🔊 音效：开启':'🔇 音效：关闭'):'🔇 此浏览器不支持音效');menuSound.classList.toggle('is-on',audio.enabled&&audio.supported);}
-  if(menuOrientation){const display=SG_DISPLAY.status();menuOrientation.textContent=SG_I18N.t('📱 屏幕方向：'+display.label);menuOrientation.classList.toggle('is-on',display.mode!=='auto');}
+  const audio=SG_AUDIO.status(),music=SG_AUDIO.musicStatus();
+  for(const button of [menuSound,mainSound])if(button){button.textContent=SG_I18N.t(audio.supported?(audio.enabled?'🔊 音效：开启':'🔇 音效：关闭'):'🔇 此浏览器不支持音效');button.classList.toggle('is-on',audio.enabled&&audio.supported);button.setAttribute('aria-pressed',String(audio.enabled&&audio.supported));}
+  if(mainSfxVolume){const percent=Math.round((Number.isFinite(audio.volume)?audio.volume:1)*100),output=document.getElementById('mainMenuSfxVolumeValue');mainSfxVolume.value=String(percent);mainSfxVolume.disabled=!audio.supported;if(output)output.textContent=`${percent}%`;}
+  for(const button of [menuMusic,mainMusic])if(button){button.textContent=SG_I18N.t(music.supported?(music.enabled?'🎵 音乐：开启':'🔇 音乐：关闭'):'🔇 此浏览器不支持音乐');button.classList.toggle('is-on',music.enabled&&music.supported);button.setAttribute('aria-pressed',String(music.enabled&&music.supported));}
+  for(const [slider,outputId] of [[menuMusicVolume,'menuMusicVolumeValue'],[mainMusicVolume,'mainMenuMusicVolumeValue']])if(slider){const percent=Math.round(music.volume*100),output=document.getElementById(outputId);slider.value=String(percent);slider.disabled=!music.supported;if(output)output.textContent=`${percent}%`;}
+  const musicStatusNode=document.getElementById('mainMusicStatus');
+  if(musicStatusNode){
+    let label='音乐准备中。';
+    if(!music.supported)label='此浏览器不支持背景音乐。';
+    else if(!music.enabled)label='音乐已关闭。';
+    else if(music.state==='playing')label=SG_I18N.t('正在播放：')+(music.file||music.track||'');
+    else if(music.state==='error')label='音乐文件加载失败，请重新发布 dist/music。';
+    else if(music.state==='blocked')label='浏览器阻止了音乐，请再次点击页面。';
+    else if(music.state==='pending')label='音乐等待首次点击后播放。';
+    musicStatusNode.textContent=SG_I18N.t(label);musicStatusNode.dataset.state=music.state||'idle';
+  }
+  const display=SG_DISPLAY.status();
+  for(const button of [menuOrientation,mainOrientation])if(button){button.textContent=SG_I18N.t('📱 屏幕方向：'+display.label);button.classList.toggle('is-on',display.mode!=='auto');}
+  if(mainPrediction){mainPrediction.textContent=SG_I18N.t('轨迹预测：'+(showPred?'开启':'关闭'));mainPrediction.classList.toggle('is-on',showPred);}
+  if(mainColorAssist){mainColorAssist.textContent=SG_I18N.t('色觉辅助：'+(colorAssistEnabled?'开启':'关闭'));mainColorAssist.classList.toggle('is-on',colorAssistEnabled);mainColorAssist.setAttribute('aria-pressed',String(colorAssistEnabled));}
+  if(mainGuide&&mission){mainGuide.textContent=SG_I18N.t('新手指引：'+(mission.hintsHidden?'关闭':'开启'));mainGuide.classList.toggle('is-on',!mission.hintsHidden);}
+  if(mainConceptCards){mainConceptCards.textContent=SG_I18N.t('概念卡片：'+(conceptCardsEnabled?'开启':'关闭'));mainConceptCards.classList.toggle('is-on',conceptCardsEnabled);}
   if(menuConceptCards){const stateLabel=document.getElementById('menuConceptCardsState');if(stateLabel)stateLabel.textContent=SG_I18N.t(conceptCardsEnabled?'开启':'关闭');menuConceptCards.classList.toggle('is-on',conceptCardsEnabled);}
   if(menuConceptReview)menuConceptReview.hidden=level!==1;
   if(menuAssist&&mission){ menuAssist.textContent=SG_I18N.t(challengeMode?'⚠ 模式：挑战（有限燃料）':'🎓 模式：教学（无限燃料）'); menuAssist.classList.toggle('is-on',challengeMode); }
@@ -1234,12 +1359,36 @@ function syncUI(){
   }
   updateModePanel();
   updatePerformanceStatus();
+  SG_SKILLS.sync();
 }
 
 function cycleScreenOrientation(){
   const display=SG_DISPLAY.cycle();
   if(mission){mission.toast='屏幕方向：'+display.label;mission.toastT=2;}
   syncUI();
+}
+
+function tryShipSkill(){
+  if(!mission||paused||state!=='fly')return {ok:false,reason:'inactive'};
+  const boundaryCenter=level===10&&threeBody?threeBodyBarycenter():level===8?{x:0,y:0}:EARTH;
+  const worldBounds={x:boundaryCenter.x,y:boundaryCenter.y,radius:level===10?30000:level===8?80000:150000};
+  const warpBodies=asteroid?.alive?[...BODIES,asteroid]:BODIES;
+  const yamatoTargets=BODIES.filter(body=>(body.r||0)>5).map(body=>({ref:body,x:body.x,y:body.y,r:body.r,name:body.name,kind:body.isStar?'star':body.isBlackHole?'black-hole':'body'}));
+  if(asteroid?.alive)yamatoTargets.push({ref:asteroid,x:asteroid.x,y:asteroid.y,r:asteroid.r,name:asteroid.name,kind:'asteroid'});
+  if(station)yamatoTargets.push({ref:station,x:station.x,y:station.y,r:32,name:'空间站',kind:'station'});
+  for(const ship of threeBody?.rescueShips||[]){
+    if(ship.alive&&!ship.destroyed&&!ship.rescued)yamatoTargets.push({ref:ship,x:ship.x,y:ship.y,r:THREE_RESCUE_SHIP_R,name:`求救飞船 ${ship.index?'B':'A'}`,kind:'rescue'});
+  }
+  const markWorldStarted=()=>{mission.worldStarted=true;launched=true;rocket._clearedPad=true;rocket._launchAssistActive=false;rocket._launchCompleted=true;if(ghostShip)ghostShip.started=true;trailSampleT=0;predictionCache=null;};
+  const result=SG_SKILLS.use({rocket,mission,level,challengeMode,bodies:warpBodies,worldBounds,ringOut:RING_OUT,trail,asteroid,station,binary,blackHole,threeBody,
+    yamatoTargets,asteroidPushForce:ASTEROID_PUSH_FORCE,onWarp:markWorldStarted,onYamatoFire(){markWorldStarted();shake=Math.max(shake,5);},
+    onYamatoAsteroidHit(){
+      mission.asteroidChanged=true;mission.asteroidYamato=true;mission.asteroidSafeT=0;mission.stage=Math.max(3,mission.stage);mission.holdT=0;mission.asteroidForecast=null;
+      const forecast=getAsteroidForecast(true);mission.asteroidForecast=forecast;
+      mission.dynHint=forecast.safe?'大和炮偏转有效｜正在确认地球与月球均安全':'大和炮已经消耗｜当前预测仍有撞击风险';
+    }});
+  if(result.message){mission.toast=(result.ok?'✦ ':'⚠️ ')+result.message;mission.toastT=2.8;}
+  syncUI();return result;
 }
 
 function cueTurnTo(target,tolerance=0.24){
@@ -1401,9 +1550,10 @@ function saveCheckpoint(){
     asteroidMission:level===7?{
       asteroidContact:mission.asteroidContact,asteroidAnchored:mission.asteroidAnchored,
       asteroidMountAngle:mission.asteroidMountAngle,asteroidMountLocal:mission.asteroidMountLocal,
-      hingeAngle:mission.hingeAngle,asteroidChanged:mission.asteroidChanged,asteroidImpact:mission.asteroidImpact
+      hingeAngle:mission.hingeAngle,asteroidChanged:mission.asteroidChanged,asteroidImpact:mission.asteroidImpact,asteroidYamato:mission.asteroidYamato
     }:null,
-    ghost:ghostShip?{...ghostShip}:null
+    ghost:ghostShip?{...ghostShip}:null,
+    shipSkill:SG_SKILLS.snapshot()
   };
   mission.checkpoint=snapshot;
   if(!Array.isArray(mission.checkpointHistory)) mission.checkpointHistory=[];
@@ -1476,6 +1626,7 @@ function retryFromStage(reason){
   rocket.chuteAngle = cp&&Number.isFinite(cp.chuteAngle)?cp.chuteAngle:null;
   rocket.chuteFlowX = cp&&Number.isFinite(cp.chuteFlowX)?cp.chuteFlowX:0;
   rocket.chuteFlowY = cp&&Number.isFinite(cp.chuteFlowY)?cp.chuteFlowY:0;
+  SG_SKILLS.restore(cp?.shipSkill||null);
   // 检查点复活属于全新的画面状态：不能继承上一条时间线的撞击震动。
   trail = []; particles=[]; exhaustAccumulator=0; trailSampleT=0; state = 'fly'; shake = 0; bulletT = 0; predictionCache = null;
   camInit = true;
@@ -1495,6 +1646,15 @@ function updateFlightAchievements(dt){
   if(launched&&rocket.alive&&[1,3,4,5,6,7,8].includes(level)){
     const ap=orbitApsis(EARTH,rocket);if(ap.bound&&Number.isFinite(ap.ra)&&ap.rp>EARTH.r+25&&ap.ra<26000)unlockAchievement('first_orbit');
   }
+}
+function updateRewardFlightStats(dt){
+  if(!mission||!rocket||state!=='fly')return;
+  const thrusting=!!rocket.thrusting;
+  if(thrusting&&!mission.thrustWasActive)mission.burnCount=(mission.burnCount||0)+1;
+  mission.thrustWasActive=thrusting;
+  if(mission.worldStarted&&showPred)mission.predictionUsed=true;
+  if(launched&&mission.worldStarted&&!thrusting){mission.currentCoast=(mission.currentCoast||0)+dt;mission.longestCoast=Math.max(mission.longestCoast||0,mission.currentCoast);}else mission.currentCoast=0;
+  if(launched&&mission.worldStarted&&attMode===2)mission.inertialTime=(mission.inertialTime||0)+dt;
 }
 function update(dt, dtReal){
   if(dtReal===undefined) dtReal = dt; // 实时时间（旋转用），默认=平移dt
@@ -1550,6 +1710,7 @@ function update(dt, dtReal){
   }
   updateMission(dt);
   updateLicenseEcho(dtReal);
+  updateMusicPressure(dt);
   updateFlightAchievements(dtReal);
   if(mission && mission.toastT>0) mission.toastT -= dt;
   // 尾焰是视觉效果，按真实时间更新；不能跟随子弹时间变慢后越积越多。
@@ -1563,7 +1724,9 @@ function update(dt, dtReal){
   // 屏幕震动是镜头反馈，按真实时间结束；推进触发的子弹时间不能把它无限拉长。
   shake = Math.max(0, shake - dtReal*30);
 
+  SG_SKILLS.update(dt,dtReal,{rocket,mission,level,state});
   updateFlightPhysics(dt,dtReal,observationDt);
+  updateRewardFlightStats(dt);
 }
 
 // ---------- 绘制 ----------
@@ -1615,7 +1778,9 @@ addEventListener('spacegame-languagechange',()=>{
   if(document.getElementById('sciencePage').classList.contains('is-visible'))openSciencePage(scienceReturn==='briefing');
   if(achievementCollectionOpen)renderAchievements();
 });
+document.addEventListener('spacegame-music-state',()=>syncUI());
 SG_INPUT.install();
+installMusicContextObserver();
 resetGame();
 openLevelSelect(true);
 requestAnimationFrame(loop);

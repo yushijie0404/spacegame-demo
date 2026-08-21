@@ -17,7 +17,15 @@ const ACHIEVEMENTS=[
   {id:'chaos_surfer',title:'混沌救援队长',icon:'chaos',accent:'#ff8fba',accent2:'#6fdcff',method:'完成最终关，营救两艘求救飞船并逃离三体系统。',joke:'三颗太阳都不知道下一步，你还顺手救了两船人。'},
   {id:'five_g_club',title:'5G 俱乐部',icon:'bolt',accent:'#ef476f',accent2:'#ffb142',method:'飞行中承受至少 5G，并保持飞船与船员完好。',joke:'脸留在了座椅上，灵魂勉强跟了上来。'},
   {id:'challenge_ace',title:'挑战王牌',icon:'star',accent:'#fff0a8',accent2:'#f0a500',method:'在任意一关的挑战模式中获得三星。',joke:'无限燃料是教学。你显然没在听课。'},
-  {id:'tenfold_voyager',title:'十界远航者',icon:'crown',accent:'#7de3ff',accent2:'#ffd166',method:'完成全部十个关卡。星级不限，活着回来就算。',joke:'十关之后，你已具备把任何问题解释成轨道力学的资格。'}
+  {id:'tenfold_voyager',title:'十界远航者',icon:'crown',accent:'#7de3ff',accent2:'#ffd166',method:'完成全部十个关卡。星级不限，活着回来就算。',joke:'十关之后，你已具备把任何问题解释成轨道力学的资格。'},
+  {id:'blind_navigator',title:'关掉答案飞',icon:'orbit',accent:'#ffd166',accent2:'#4cc9f0',method:'在挑战模式中关闭轨迹预测，并全程不再开启直至通关。',joke:'预测线休假了。牛顿本人被临时叫来导航。'},
+  {id:'pulse_economist',title:'六句话说完',icon:'bolt',accent:'#ffb142',accent2:'#ef476f',method:'在任意挑战任务中，用不超过 6 个点火段完成任务。',joke:'发动机发言很少，但每一句都切中轨道。'},
+  {id:'silent_coast',title:'关机漂流者',icon:'sling',accent:'#9fdcff',accent2:'#8b7dff',method:'在挑战任务中完成一次至少 30 秒的连续无动力滑行并通关。',joke:'最长的一段操作，是坚定地什么也不做。'},
+  {id:'lagrange_collector',title:'换个地方停车',icon:'balance',accent:'#5fd068',accent2:'#ffd166',method:'分别从至少两个不同的拉格朗日点完成第六关。',joke:'宇宙有五个停车位，你拒绝办固定月卡。'},
+  {id:'gentle_persuasion',title:'轻轻劝退',icon:'asteroid',accent:'#8be39a',accent2:'#d8a16f',method:'先软着陆小行星，再用持续推力完成行星防御。',joke:'没有撞击，没有爆炸，只有一场很有推力的谈判。'},
+  {id:'kinetic_answer',title:'以舰作锤',icon:'asteroid',accent:'#ef476f',accent2:'#ffb142',method:'使用动能撞击路线完成第七关。',joke:'任务书写着“改变轨道”，你选择了最有标点的一种。'},
+  {id:'clean_run',title:'不读档的人',icon:'crown',accent:'#f4f7ff',accent2:'#7de3ff',method:'在挑战模式中不使用阶段回退完成任意任务。',joke:'时间线只有一条，因为你没给宇宙反悔的机会。'},
+  {id:'inertia_pilot',title:'惯性很有主见',icon:'satellite',accent:'#c99cff',accent2:'#4cc9f0',method:'在纯惯性姿态下累计飞行至少 30 秒并完成挑战任务。',joke:'飞船不替你转弯。它只是安静地尊重你的决定。'}
 ];
 globalThis.SpaceGameAchievementContent=ACHIEVEMENTS;
 const LEVEL_ACHIEVEMENTS={1:'geo_postman',2:'homecoming',3:'orbital_handshake',4:'far_side_footprint',5:'lunar_slingshot',6:'balance_artist',7:'asteroid_whisperer',8:'binary_commuter',9:'abyss_return',10:'chaos_surfer'};
@@ -53,10 +61,12 @@ function unlockAchievement(id,{silent=false}={}){
   const item=ACHIEVEMENTS.find(a=>a.id===id);if(!item||achievementUnlocked(id))return false;
   achievementState[id]={unlockedAt:new Date().toISOString()};saveAchievementState();updateAchievementCount();
   if(achievementCollectionOpen)renderAchievements();
+  globalThis.SpaceGameShipSkins?.sync?.();
+  if(typeof updateRewardDirection==='function')updateRewardDirection();
   if(!silent)queueAchievementToast(item);
   return true;
 }
-function updateAchievementCount(){const el=document.getElementById('achievementCount'),count=ACHIEVEMENTS.filter(a=>achievementUnlocked(a.id)).length;if(el)el.textContent=`${count}/${ACHIEVEMENTS.length}`;const summary=document.getElementById('achievementSummary');if(summary)summary.textContent=`已解锁 ${count} / ${ACHIEVEMENTS.length} · 点击勋章查看收藏吐槽`;}
+function updateAchievementCount(){const el=document.getElementById('achievementCount'),count=ACHIEVEMENTS.filter(a=>achievementUnlocked(a.id)).length,t=value=>globalThis.SpaceGameI18n?.t(value)||value;if(el)el.textContent=`${count}/${ACHIEVEMENTS.length}`;const summary=document.getElementById('achievementSummary');if(summary)summary.textContent=`${t('已解锁')} ${count} / ${ACHIEVEMENTS.length} · ${t('勋章邀请你尝试不同路线与驾驶限制')}`;}
 function renderAchievements(){
   const grid=document.getElementById('achievementGrid');if(!grid)return;grid.replaceChildren();
   for(const item of ACHIEVEMENTS){const unlocked=achievementUnlocked(item.id),card=document.createElement('button');card.type='button';card.className='achievement-card'+(unlocked?'':' is-locked');card.style.setProperty('--badge-accent',item.accent);card.style.setProperty('--badge-accent2',item.accent2);card.setAttribute('aria-label',`${item.title}，${unlocked?'已解锁':'未解锁'}`);card.innerHTML=achievementBadgeMarkup(item,!unlocked)+`<div class="achievement-state">${unlocked?'✓ 已解锁':'○ 尚未解锁'}</div><h2>${item.title}</h2><p class="achievement-method ${unlocked?'':'achievement-hint'}">${unlocked?'点击查看勋章吐槽':'解锁方法：'+item.method}</p>`;card.addEventListener('click',()=>openAchievementDetail(item.id));grid.appendChild(card);}
@@ -84,3 +94,23 @@ function syncProgressAchievements(){
   for(let i=1;i<=10;i++){if((progress[i]?.stars||0)>0){completed++;unlockAchievement(LEVEL_ACHIEVEMENTS[i],{silent:true});if([1,3,4,5,6,7,8].includes(i))hasOrbitHistory=true;if(i===8)unlockAchievement('orbital_handshake',{silent:true});if((progress[i]?.stars||0)>=3)unlockAchievement('challenge_ace',{silent:true});}}
   if(hasOrbitHistory)unlockAchievement('first_orbit',{silent:true});if(completed===10)unlockAchievement('tenfold_voyager',{silent:true});updateAchievementCount();
 }
+function recordLagrangeAchievementVisit(pointId){
+  const id=Math.max(1,Math.min(5,Number(pointId)||1)),visits=Array.isArray(achievementState._lagrangeVisits)?achievementState._lagrangeVisits.slice():[];
+  if(!visits.includes(id)){visits.push(id);achievementState._lagrangeVisits=visits.sort((a,b)=>a-b);saveAchievementState();}
+  if(visits.length>=2)unlockAchievement('lagrange_collector');
+  return visits.slice();
+}
+function evaluateSpecialAchievements(levelId){
+  if(!mission)return [];
+  const unlocked=[] ,award=id=>{if(unlockAchievement(id))unlocked.push(id);};
+  if(Number(levelId)===6){const before=achievementUnlocked('lagrange_collector');recordLagrangeAchievementVisit(mission.lagrangeTarget);if(!before&&achievementUnlocked('lagrange_collector'))unlocked.push('lagrange_collector');}
+  if(Number(levelId)===7){if(mission.asteroidImpact)award('kinetic_answer');else if(mission.asteroidSoftContact)award('gentle_persuasion');}
+  if(typeof challengeMode==='undefined'||!challengeMode)return unlocked;
+  if(!mission.predictionUsed)award('blind_navigator');
+  if((mission.burnCount||0)>0&&mission.burnCount<=6)award('pulse_economist');
+  if((mission.longestCoast||0)>=30)award('silent_coast');
+  if((mission.rewindCount||0)===0)award('clean_run');
+  if((mission.inertialTime||0)>=30)award('inertia_pilot');
+  return unlocked;
+}
+globalThis.evaluateSpecialAchievements=evaluateSpecialAchievements;

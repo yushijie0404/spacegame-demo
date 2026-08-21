@@ -14,7 +14,7 @@
     if(achievementCollectionOpen){if(e.code==='Escape'){closeAchievementDetail();closeAchievementCollection();}e.preventDefault();return;}
     keys[e.code]=true;
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
-    if(e.repeat && ['KeyR','KeyT','KeyK','KeyB','KeyV','KeyH','KeyM','KeyN','KeyL','KeyC','KeyP'].includes(e.code)) return;
+    if(e.repeat && ['KeyR','KeyT','KeyK','KeyB','KeyV','KeyH','KeyM','KeyN','KeyL','KeyC','KeyP','KeyF'].includes(e.code)) return;
     if(!e.repeat&&(e.code==='KeyA'||e.code==='KeyD'||e.code==='ArrowLeft'||e.code==='ArrowRight')) SG_AUDIO.sfx('turn');
     if(e.code==='KeyR') restartCurrent(e.shiftKey);
     if(e.code==='KeyT') setPrediction();
@@ -25,6 +25,7 @@
     if(e.code==='KeyM') toggleAssist();
     if(e.code==='KeyN') toggleSound();
     if(e.code==='KeyE') tryMissionAction();
+    if(e.code==='KeyF') tryShipSkill();
     if(e.code==='KeyL') mission&&mission.done?nextLevel():openLevelSelect();
     if(e.code==='KeyC') cycleAttitude();
     if(e.code==='KeyP') togglePause();
@@ -43,7 +44,7 @@
   const ACTION_HANDLERS={
     prediction:()=>setPrediction(),colorassist:()=>toggleColorAssist(),hudtelemetry:()=>toggleHudInfo('telemetry'),hudgravity:()=>toggleHudInfo('gravity'),hudradar:()=>toggleHudInfo('radar'),hudguidance:()=>toggleHudInfo('guidance'),hudtargets:()=>toggleHudInfo('targets'),camera:()=>toggleCameraMode(),radar:()=>cycleRadar(),attitude:()=>cycleAttitude(),
     dial:()=>cycleDial(),guide:()=>toggleGuide(),briefing:()=>openBriefing(),science:()=>openSciencePage(false),concept:()=>reviewConceptCard(),conceptcards:()=>toggleConceptCards(),campaignlog:()=>openCampaignLog(),assist:()=>toggleAssist(),sound:()=>toggleSound(),orientation:()=>cycleScreenOrientation(),language:()=>globalThis.SpaceGameI18n?.cycle?.(),
-    level:()=>openLevelSelect(),rewind:()=>rewindStage(),restart:()=>resetGame(),pause:()=>togglePause(),
+    level:()=>openLevelSelect(),rewind:()=>rewindStage(),restart:()=>resetGame(),pause:()=>togglePause(),skill:()=>tryShipSkill(),
     mission:()=>tryMissionAction(),threeseed:()=>toggleThreeBodySeedMode(),copyseed:()=>copyThreeBodySeed(),copyperf:()=>copyPerformanceReport()
   };
   function dispatchAction(action,fromMenu=false){

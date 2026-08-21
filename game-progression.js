@@ -8,29 +8,30 @@
 // 第六关给足 100%：L2/L3 的三星来自路线难度，不以省燃料卡玩家。
 // 第九关 40% = 18.39 u/s Δv：起点直推仍低于 36.70 u/s 的逃逸需求；
 // 在 240 u 深渊点火并留出正逃逸能量时，确定性模拟剩余约 11.5%。
+// scoreReserve 仅保留为高手分数路线的余量审计参考，不再直接奖励星星。
 const CHALLENGE_CONFIG={
-  1:{fuel:55,fuelStar:15,parTime:150,life:0,mass:1},
+  1:{fuel:55,scoreReserve:15,parTime:150,life:0,mass:1},
   2:{fuel:70,parTime:180,life:210,mass:1},
-  3:{fuel:100,fuelStar:20,parTime:300,life:300,mass:1.2},
-  4:{fuel:95,fuelStar:18,parTime:390,life:0,mass:1},
+  3:{fuel:100,scoreReserve:20,parTime:300,life:300,mass:1.2},
+  4:{fuel:95,scoreReserve:18,parTime:390,life:0,mass:1},
   5:{fuel:31,parTime:300,life:0,mass:1,vInfStar:55,exitAngleStar:18},
   6:{fuel:100,parTime:480,life:0,mass:1},
-  7:{fuel:100,fuelStar:18,parTime:220,life:0,mass:1},
-  8:{fuel:100,fuelStar:20,parTime:330,life:0,mass:1},
-  9:{fuel:40,fuelStar:5,parTime:150,life:0,mass:1},
-  10:{fuel:85,fuelStar:20,parTime:190,life:0,mass:1}
+  7:{fuel:100,scoreReserve:18,parTime:220,life:0,mass:1},
+  8:{fuel:100,scoreReserve:20,parTime:330,life:0,mass:1},
+  9:{fuel:40,scoreReserve:5,parTime:150,life:0,mass:1},
+  10:{fuel:85,scoreReserve:20,parTime:190,life:0,mass:1}
 };
 const STAR_RULES={
-  1:['完成同步轨道部署：★','在绿色目标经度内释放：+★','挑战燃料剩余至少 15%：+★'],
+  1:['完成同步轨道部署：★','在绿色目标经度内释放：+★','点火段不超过 6 次：+★'],
   2:['安全返回地球：★','全程不使用降落伞：+★','精确落入绿色着陆区：+★'],
-  3:['完成重载货运对接：★★','挑战燃料剩余至少 20%：+★'],
-  4:['安全着陆月球背面：★','精确落入绿色月背中央区：+★','挑战燃料剩余至少 18%：+★'],
+  3:['完成重载货运对接：★★','无阶段回退完成：+★'],
+  4:['安全着陆月球背面：★','精确落入绿色月背中央区：+★','单次无动力滑行至少 25 秒：+★'],
   5:['飞出绿圈且不会返回：★','逃逸余速 v∞ 至少 55 u/s：+★','穿越绿圈时方向偏差不超过 18°：+★'],
   6:['抵达 L1：★','抵达 L4 或 L5：★★','抵达 L2 或 L3：★★★'],
-  7:['让小行星同时避开地球和月球：★','飞船没有在撞击中损毁：+★','挑战燃料剩余至少 18%：+★'],
-  8:['抵达另一颗太阳旁的空间站：★','全程避开两颗恒星的高温区：+★','挑战燃料剩余至少 20%：+★'],
-  9:['穿过救援门并逃离黑洞：★','在半径 270 u 内完成深渊点火：+★','挑战燃料剩余至少 5%：+★'],
-  10:['营救两艘求救飞船并逃离三体系统：★','全程不进入红色潮汐危险圈：+★','挑战燃料剩余至少 20%：+★']
+  7:['让小行星同时避开地球和月球：★','飞船没有在撞击中损毁：+★','单次无动力滑行至少 20 秒：+★'],
+  8:['抵达另一颗太阳旁的空间站：★','全程避开两颗恒星的高温区：+★','点火段不超过 8 次：+★'],
+  9:['穿过救援门并逃离黑洞：★','在半径 270 u 内完成深渊点火：+★','点火段不超过 3 次：+★'],
+  10:['营救求救飞船并逃离三体系统：★','全程不进入红色潮汐危险圈：+★','无阶段回退完成：+★']
 };
 
 const SAVE_KEY='spacegame-progress-v2';
@@ -61,6 +62,23 @@ function loadProgress(){
   }catch(_){ return {}; }
 }
 function starText(count){ return '★'.repeat(count)+'☆'.repeat(3-count); }
+function totalCampaignStars(progress=loadProgress()){let total=0;for(let i=1;i<=10;i++)total+=Math.max(0,Math.min(3,Number(progress?.[i]?.stars||0)));return total;}
+function scoreBenchmark(score){
+  const value=Math.max(0,Math.round(Number(score)||0));
+  if(value>=850)return {rank:'S',next:0,nextRank:'S',label:'S 级纪录'};
+  if(value>=700)return {rank:'A',next:850-value,nextRank:'S',label:'A 级 · 距 S 级'};
+  if(value>=550)return {rank:'B',next:700-value,nextRank:'A',label:'B 级 · 距 A 级'};
+  if(value>0)return {rank:'C',next:550-value,nextRank:'B',label:'C 级 · 距 B 级'};
+  return {rank:'—',next:550,nextRank:'B',label:'尚无纪录'};
+}
+function progressionText(value){return typeof SG_I18N!=='undefined'?SG_I18N.t(value):(globalThis.SpaceGameI18n?.t?.(value)||value);}
+function scoreBenchmarkText(benchmark){return benchmark.next?`${progressionText(benchmark.label)} ${benchmark.next} ${progressionText('分')}`:progressionText(benchmark.label);}
+function rewardDirectionState(progress=loadProgress()){
+  const totalStars=totalCampaignStars(progress),completedActs=SpaceGameCampaign.completedActs(progress).length;
+  let totalBestScore=0;for(let i=1;i<=10;i++)totalBestScore+=Math.max(0,Number(progress?.[i]?.score||0));
+  const nextStarMilestone=totalStars<12?12:null;
+  return {totalStars,completedActs,totalBestScore,nextStarMilestone};
+}
 function campaignCatalogState(progress=loadProgress()){
   const completed=[];
   for(let i=1;i<=10;i++)if(Number(progress?.[i]?.stars||0)>0)completed.push(i);
@@ -83,6 +101,7 @@ function saveLevelResult(levelId,score,earnedStars=1,options={}){
     if(levelId===8)unlockAchievement('orbital_handshake');
     if(typeof challengeMode!=='undefined'&&challengeMode&&currentStars>=3)unlockAchievement('challenge_ace');
     if(Array.from({length:10},(_,i)=>progress[i+1]).every(item=>(item?.stars||0)>0))unlockAchievement('tenfold_voyager');
+    if(typeof evaluateSpecialAchievements==='function')evaluateSpecialAchievements(levelId);
   }
   const upgradeReward=SG_UPGRADES.recordResult(levelId,{completed:true,challenge:typeof challengeMode!=='undefined'&&challengeMode,stars:currentStars});
   updateLevelCards();
@@ -95,10 +114,23 @@ function updateLevelCards(){
     const result=progress[i]||{score:0,stars:0};
     const scoreEl=document.querySelector(`[data-level-score="${i}"]`), starsEl=document.querySelector(`[data-level-stars="${i}"]`);
     if(scoreEl) scoreEl.textContent=result.score||'—';
+    if(scoreEl?.parentElement)scoreEl.parentElement.dataset.rank=scoreBenchmarkText(scoreBenchmark(result.score));
     if(starsEl){ starsEl.textContent=starText(result.stars||0); starsEl.setAttribute('aria-label',(result.stars||0)+' 星'); }
   }
   if(typeof updateCampaignCatalog==='function')updateCampaignCatalog(progress);
+  updateRewardDirection(progress);
   if(typeof syncUpgradeBay==='function')syncUpgradeBay();
+  globalThis.SpaceGameShipSkins?.sync?.();
+}
+function updateRewardDirection(progress=loadProgress()){
+  if(typeof document==='undefined'||typeof document.getElementById!=='function')return;
+  const state=rewardDirectionState(progress),t=progressionText,set=(id,text)=>{const node=document.getElementById(id);if(node)node.textContent=text;};
+  set('rewardStarTotal',`${state.totalStars} / 30 ${t('星')}`);
+  set('rewardActProgress',`${state.completedActs} / 4 ${t('幕已完成')}`);
+  set('rewardNextUnlock',state.nextStarMilestone?`${t('再获得')} ${state.nextStarMilestone-state.totalStars} ${t('星解锁飞天一号')}`:t('飞天一号已达到星级条件'));
+  set('rewardScoreTotal',`${t('十关最高分合计')} ${state.totalBestScore}`);
+  const unlocked=globalThis.SpaceGameShipSkins?.list?.().filter(item=>globalThis.SpaceGameShipSkins.isUnlocked(item.id)).length||1;
+  set('rewardSkinProgress',`${unlocked} / 3 ${t('外观已解锁')}`);
 }
 function challengeLifeEnabled(){ return challengeMode&&(level===2||level===3); }
 function challengeRemainingFuel(){ return Math.max(0,(mission?.fuelBudget||0)-(mission?.fuelUsed||0)); }
@@ -139,9 +171,11 @@ function calcScore(){
 }
 function resultLine(result){
   const reward=result.upgradeReward?.earned?`<span style="color:#28794a">⬆ 首次达成奖励：+${result.upgradeReward.earned} 升级点</span><br>`:'';
-  if(result.scoreSaved===false)return `本局练习得分 <b style="font-size:24px">${result.score}</b> · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br><span style="color:#888">固定种子练习：本局星级正常结算，分数不计入最高分。</span><br>${reward}`;
+  const benchmark=scoreBenchmark(result.score),rank=`<span style="color:#5b62b5;font-weight:900">${scoreBenchmarkText(benchmark)}</span>`;
+  const skillText=globalThis.SpaceGameShipSkills?.resultText?.()||'',skill=skillText?`<span style="color:#5570ad">${skillText}</span><br>`:'';
+  if(result.scoreSaved===false)return `本局练习得分 <b style="font-size:24px">${result.score}</b> · ${rank} · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br><span style="color:#888">固定种子练习：本局星级正常结算，分数不计入最高分。</span><br>${skill}${reward}`;
   const best=(result.bestScore>result.score||result.bestStars>result.stars)?`<span style="color:#888">历史最佳 ${result.bestScore} 分 · ${starText(result.bestStars)}</span><br>`:'';
-  return `本次得分 <b style="font-size:24px">${result.score}</b> · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br>${best}${reward}`;
+  return `本次得分 <b style="font-size:24px">${result.score}</b> · ${rank} · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br>${best}${skill}${reward}`;
 }
 function performanceDetail(){
   if(!challengeMode) return `教学模式 · 无限燃料 · 时间 ${flightT.toFixed(1)}s（教学模式最高 600 分）`;
