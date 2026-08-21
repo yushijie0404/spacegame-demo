@@ -72,6 +72,13 @@
   .pause-card h2{margin:0 42px 4px 0;font-size:24px}.pause-card p{margin:0 0 16px;color:#aebde0;font-size:13px}.pause-close{position:absolute;top:12px;right:12px;width:40px;height:40px;padding:0;color:#eef4ff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;font-size:24px;font-weight:800;line-height:1;cursor:pointer}.pause-close:hover{background:rgba(255,255,255,.2)}.pause-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}.pause-actions button{min-height:52px;padding:10px;border:1px solid rgba(255,255,255,.28);border-radius:14px;font-size:16px;font-weight:900;cursor:pointer}.pause-resume{color:#17213c;background:#ffd166;border-color:#fff1b2}.pause-restart{color:#281704;background:#ff9f43;border-color:#ffd0a3}.pause-home{grid-column:1/-1;color:#10203c;background:#4cc9f0;border-color:#bff3ff}.pause-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pause-grid button{min-height:48px;padding:9px 10px;color:#eaf1ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:13px;font-weight:800;cursor:pointer}.pause-grid button[hidden]{display:none}.pause-grid button.is-on{color:#14203c;background:#4cc9f0}.pause-grid #menuAssist,.pause-grid #menuThreeSeed,.pause-grid #menuThreeSeedCopy{grid-column:1/-1}.pause-grid #menuThreeSeedCopy{color:#17213c;background:#d9c6ff}
   #perfStatus{margin:8px 0 14px;padding:9px 11px;white-space:pre-line;color:#c8d7f3;background:rgba(5,10,30,.38);border:1px solid rgba(255,255,255,.12);border-radius:12px;font-size:12px;line-height:1.5;font-variant-numeric:tabular-nums}
   .pause-grid #menuPerf{grid-column:1/-1;color:#17213c;background:#9fe8ff}
+  .pause-grid #menuCampaignLog{grid-column:1/-1;color:#17213c;background:#ffd166;border-color:#fff1b2}
+  #campaignLog,#campaignSummary{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(4,8,24,.86);backdrop-filter:blur(8px)}
+  #campaignLog.is-visible,#campaignSummary.is-visible{display:flex}#campaignLog{z-index:18}#campaignSummary{z-index:19;cursor:pointer}
+  .campaign-log-card,.campaign-summary-card{position:relative;width:min(760px,100%);max-height:calc(100vh - 36px);overflow:auto;padding:25px;color:#eef4ff;background:linear-gradient(145deg,#111b42,#172852);border:2px solid rgba(255,209,102,.68);border-radius:24px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
+  .campaign-log-card h2,.campaign-summary-card h1{margin:5px 44px 7px 0}.campaign-log-card>p,.campaign-summary-lead{color:#b9c8e6;line-height:1.55}.campaign-log-close{position:absolute;right:12px;top:12px;width:40px;height:40px;padding:0;color:#eef4ff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:12px;font-size:24px;cursor:pointer}
+  .campaign-log-list{display:grid;gap:10px;margin-top:17px}.campaign-log-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:14px;text-align:left;color:#eef4ff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:14px;cursor:pointer}.campaign-log-entry strong{font-size:15px}.campaign-log-entry span{color:#ffd166;font-size:12px;font-weight:900}.campaign-log-entry:disabled{opacity:.48;cursor:not-allowed}.campaign-log-entry:disabled span{color:#aebde0}
+  .campaign-summary-kicker{color:#ffd166;font-size:12px;font-weight:950;letter-spacing:1.5px}.campaign-summary-missions{display:grid;gap:8px;margin:18px 0;padding:0;list-style:none}.campaign-summary-missions li{padding:11px 13px;color:#dce8ff;background:rgba(255,255,255,.07);border-left:4px solid #4cc9f0;border-radius:10px;line-height:1.5}.campaign-summary-advance{padding:15px 17px;color:#17213c;background:#ffd166;border-radius:14px;font-weight:850;line-height:1.6}.campaign-summary-next{margin:15px 0 4px;color:#9fe8ff;font-weight:900}.campaign-summary-skip{margin:18px 0 0;color:#8fa4ce;text-align:center;font-size:12px}
   .hud-info-settings{margin-top:12px;padding:12px 14px;background:rgba(5,10,30,.38);border:1px solid rgba(255,255,255,.12);border-radius:15px}.hud-info-settings h3{margin:0 0 4px;font-size:14px}.hud-info-settings p{margin:0 0 9px;font-size:11px}.hud-info-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.hud-info-grid button{min-height:40px;padding:7px 5px;color:#aebde0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:10px;font-size:11px;font-weight:900;cursor:pointer}.hud-info-grid button.is-on{color:#10203c;background:#9fe8ff;border-color:#dff8ff}
   .term-help{position:fixed;z-index:6;top:190px;right:18px}.term-help[hidden]{display:none}.term-help-toggle{min-height:32px;padding:5px 10px;color:#eef4ff;background:rgba(8,14,38,.82);border:1px solid rgba(255,255,255,.22);border-radius:11px;font-size:12px;font-weight:900;cursor:pointer}.term-help-panel{position:absolute;right:0;top:calc(100% + 7px);display:none;width:310px;padding:11px;color:#eaf1ff;background:rgba(8,14,38,.96);border:1px solid rgba(159,232,255,.42);border-radius:13px;box-shadow:0 12px 30px rgba(0,0,0,.35)}.term-help:hover .term-help-panel,.term-help:focus-within .term-help-panel,.term-help.is-open .term-help-panel{display:block}.term-help-terms{display:flex;flex-wrap:wrap;gap:6px}.term-help-terms button{padding:5px 8px;color:#dff8ff;background:rgba(76,201,240,.12);border:1px solid rgba(76,201,240,.35);border-radius:999px;font-size:11px;font-weight:850;cursor:pointer}.term-help-terms button.is-selected{color:#17213c;background:#ffd166;border-color:#fff1b2}.term-help-copy{margin:8px 1px 0!important;color:#d6e2f5!important;font-size:12px!important;line-height:1.5}
   .key-help{margin-top:15px;padding:13px 14px;background:rgba(5,10,30,.38);border:1px solid rgba(255,255,255,.12);border-radius:15px}.key-help h3{margin:0 0 9px;font-size:14px}.key-help-grid{display:flex;flex-wrap:wrap;gap:7px}.key-help .pill{font-size:11px;background:rgba(255,255,255,.09)}.touch-help{display:none;margin-top:8px;color:#aebde0;font-size:12px;line-height:1.45}
@@ -80,7 +87,7 @@
   #briefing.is-visible{display:flex}
   #sciencePage.is-visible{display:flex}
   #briefing .brief-card{width:min(780px,100%);max-height:min(720px,calc(100vh - 36px));overflow:auto;color:#17213c;background:#f8fbff;border:3px solid #17213c;border-radius:24px;box-shadow:0 14px 0 rgba(0,0,0,.3);padding:24px}
-  .brief-kicker{font-size:12px;font-weight:800;color:#5570ad;letter-spacing:1.5px}.brief-title{margin:4px 0 5px;font-size:26px}.brief-goal{margin:0 0 18px;color:#57647f}
+  .brief-kicker{font-size:12px;font-weight:800;color:#5570ad;letter-spacing:1.5px}.brief-final-exam{margin:8px 0 5px;padding:9px 12px;color:#41306f;background:linear-gradient(90deg,#efe8ff,#e4f8ff);border:1px solid #b8a9e8;border-radius:12px;font-size:14px;font-weight:950;letter-spacing:.3px}.brief-title{margin:4px 0 5px;font-size:26px}.brief-goal{margin:0 0 18px;color:#57647f}
   .brief-story{margin:14px 0;padding:17px 18px;color:#17335d;background:linear-gradient(135deg,#e7f5ff,#dce9ff);border:2px solid #86bff2;border-radius:17px}.brief-story h3{margin:0 0 8px;color:#17689d;font-size:15px}.brief-story p{margin:0;font-size:16px;font-weight:750;line-height:1.65}
   .brief-key-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:12px}.brief-key{padding:14px 15px;border-radius:15px}.brief-key>span{display:block;margin-bottom:6px;font-size:11px;font-weight:950;letter-spacing:1.2px}.brief-key strong{display:block;font-size:16px;line-height:1.5}.brief-key.goal{color:#15532a;background:#ddf7e4;border:2px solid #7dce91}.brief-key.goal>span{color:#328348}.brief-key.action{color:#633d00;background:#fff1c8;border:2px solid #edc65c}.brief-key.action>span{color:#9a6b00}.brief-key.action ol{margin:8px 0 0;padding-left:21px;color:#614d25;font-size:13px}.brief-key.action li{margin:4px 0;line-height:1.45}
   .brief-stage-roadmap{margin-top:13px;padding:12px 14px;background:#eef2f8;border:1px solid #c8d1e2;border-radius:15px}.brief-stage-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.brief-stage-head h3{margin:0;color:#34415e;font-size:14px}.brief-stage-progress{color:#65708a;font-size:12px;font-weight:900}.brief-stage-list{counter-reset:brief-stage;display:grid;gap:6px;margin:9px 0 0;padding:0;list-style:none}.brief-stage-item{counter-increment:brief-stage;display:grid;grid-template-columns:27px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:40px;padding:7px 10px;color:#6f7788;background:#e2e6ed;border:1px solid #d0d5dd;border-radius:10px}.brief-stage-item::before{content:counter(brief-stage);display:grid;place-items:center;width:24px;height:24px;color:#697386;background:#f2f4f7;border-radius:50%;font-size:11px;font-weight:950}.brief-stage-item strong{min-width:0;font-size:12px;line-height:1.35}.brief-stage-item span{font-size:10px;font-weight:900;white-space:nowrap}.brief-stage-item.is-active{color:#563900;background:#fff0bd;border-color:#e7bd44;box-shadow:0 2px 0 rgba(102,72,0,.12)}.brief-stage-item.is-active::before{color:#17213c;background:#ffd166}.brief-stage-item.is-complete{color:#245b35;background:#e0f4e5;border-color:#9bcdaa}.brief-stage-item.is-complete::before{content:'✓';color:#fff;background:#4aa865}.brief-stage-item.is-future strong{font-weight:700}
@@ -117,6 +124,7 @@
   #msg p{margin:4px 0 16px;color:#555}
   #msg button{font-family:inherit;font-weight:800;font-size:17px;border:3px solid #222;border-radius:14px;background:#ffd166;color:#222;padding:10px 26px;margin:0 5px;cursor:pointer;box-shadow:0 5px 0 #222;transition:transform .06s, box-shadow .06s}
   #msg button:active{transform:translateY(4px);box-shadow:0 1px 0 #222}
+  .final-exam-result{width:min(430px,100%);margin:13px auto 15px;padding:12px 14px;text-align:left;color:#28324a;background:#f3f1ff;border:1px solid #c9c0ea;border-radius:14px}.final-exam-result>strong{display:block;margin-bottom:8px;color:#41306f;text-align:center}.final-exam-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:7px;padding:6px 4px;border-top:1px solid rgba(65,48,111,.12);font-size:13px;font-weight:850}.final-exam-row:first-of-type{border-top:0}.final-exam-row .exam-mark{font-size:15px}.final-exam-row.is-pass .exam-mark,.final-exam-row.is-pass .exam-state{color:#248347}.final-exam-row.is-fail .exam-mark,.final-exam-row.is-fail .exam-state{color:#c43d58}.final-exam-row.is-pending .exam-mark,.final-exam-row.is-pending .exam-state{color:#9a6b00}.final-exam-row .exam-state{font-size:12px;white-space:nowrap}.final-exam-ships{font-size:11px;color:#65708a}
   @media (max-width:760px){
     .hud{top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));max-width:none;padding:9px 10px}.brand-mark{width:34px;height:34px}.hud .title{font-size:17px}.hud .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mode-badge{margin-top:5px}.key-strip{display:none}
     .tool-rail{top:calc(82px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));grid-template-columns:repeat(4,50px);gap:7px;padding:8px;border-radius:20px}.icon-btn{width:50px;height:50px;border-radius:15px}.icon-btn .ico{font-size:22px}.tool-rail .lbl{display:block}
@@ -178,7 +186,7 @@
 </style>
 </head>
 <body>
-<canvas id="cv"></canvas><canvas id="hudCv" aria-hidden="true"></canvas><div id="gravityStatus" class="sr-only" role="status" aria-live="polite"></div>
+<canvas id="cv"></canvas><canvas id="hudCv" aria-hidden="true"></canvas><div id="gravityStatus" class="sr-only" role="status" aria-live="polite"></div><div id="threeBodyExamStatus" class="sr-only" role="status" aria-live="polite"></div>
 <div id="orientationHint" role="status" aria-live="polite" aria-hidden="true"><span class="rotate-icon" aria-hidden="true">↻</span><strong>建议横屏游玩</strong><span class="orientation-copy">请转动设备以使用所选布局</span></div>
 <div class="hud">
   <div class="brand-row"><div class="brand-mark" aria-hidden="true">🚀</div><div><div class="title">🛰️ 第一关 · 地球同步卫星</div><div class="sub">目标：进入绿色同步轨道，再释放卫星</div><div id="modeBadge" class="mode-badge">教学模式 · 无限燃料 · 完成得 1 星</div></div></div>
@@ -220,6 +228,7 @@
     <button id="menuLanguage" data-menu-action="language">🌐 中文</button>
     <button id="menuConceptCards" data-menu-action="conceptcards"><span>概念卡片：</span><span id="menuConceptCardsState">开启</span></button>
     <button id="menuConceptReview" data-menu-action="concept" hidden>🪐 回看轨道概念</button>
+    <button id="menuCampaignLog" data-menu-action="campaignlog">📖 战役日志</button>
     <button id="menuAssist" data-menu-action="assist">模式：教学（无限燃料）</button>
     <button id="menuThreeSeed" data-menu-action="threeseed" aria-pressed="false" hidden>🌌 练习模式：固定本局宇宙种子（关闭）</button>
     <button id="menuThreeSeedCopy" data-menu-action="copyseed" hidden>📋 复制种子</button>
@@ -247,7 +256,7 @@
   <button type="button" data-term="escape" onmouseenter="showTermHelp('escape')" onfocus="showTermHelp('escape')" onclick="showTermHelp('escape')">逃逸余速 v∞</button>
 </div><p id="termHelpCopy" class="term-help-copy" aria-live="polite"></p></div></aside>
 <div id="briefing" role="dialog" aria-modal="true" aria-labelledby="briefTitle"><div class="brief-card">
-  <div class="brief-kicker" id="briefKicker">任务简报</div><h2 class="brief-title" id="briefTitle"></h2>
+  <div class="brief-kicker" id="briefKicker">任务简报</div><div id="briefFinalExam" class="brief-final-exam" hidden>最终考核 · 本次任务将调用你全部的训练</div><h2 class="brief-title" id="briefTitle"></h2>
   <section class="brief-story"><h3>📡 任务简报</h3><p id="briefStory"></p></section>
   <div class="brief-key-grid"><section class="brief-key goal"><span>关键目标</span><strong id="briefGoal"></strong></section><section class="brief-key action"><span>当前操作</span><strong id="briefAction"></strong><ol id="briefSteps"></ol></section></div>
   <section class="brief-stage-roadmap" aria-labelledby="briefRoadmapTitle"><div class="brief-stage-head"><h3 id="briefRoadmapTitle">任务步骤</h3><span class="brief-stage-progress" id="briefStageProgress"></span></div><ol class="brief-stage-list" id="briefStageList"></ol></section>
@@ -310,8 +319,16 @@
   <div class="emoji" id="mEmoji">🎉</div>
   <h1 id="mTitle">登陆成功！</h1>
   <p id="mText">任务完成</p>
-  <button onclick="resetGame()">再玩一次 (R)</button><button id="mNext" onclick="nextLevel()" style="display:none;background:#5fd068">下一关 (L)</button><button onclick="openLevelSelect()" style="background:#4cc9f0">任务目录</button>
+  <button onclick="continueAfterResult('retry')">再玩一次 (R)</button><button id="mNext" onclick="continueAfterResult('next')" style="display:none;background:#5fd068">下一关 (L)</button><button onclick="continueAfterResult('menu')" style="background:#4cc9f0">任务目录</button>
 </div></div>
+<section id="campaignLog" aria-labelledby="campaignLogTitle"><div class="campaign-log-card">
+  <button class="campaign-log-close" type="button" onclick="closeCampaignLog()" aria-label="关闭战役日志">×</button>
+  <div class="campaign-summary-kicker">CAMPAIGN ARCHIVE</div><h2 id="campaignLogTitle">📖 战役日志</h2><p>完成一幕后，可在这里回看任务成绩与航程记录。</p><div id="campaignLogList" class="campaign-log-list"></div>
+</div></section>
+<section id="campaignSummary" aria-labelledby="campaignSummaryTitle" onclick="closeCampaignSummary()"><div class="campaign-summary-card">
+  <div id="campaignSummaryKicker" class="campaign-summary-kicker">战役总结</div><h1 id="campaignSummaryTitle"></h1><p id="campaignSummaryLead" class="campaign-summary-lead"></p>
+  <ul id="campaignSummaryMissions" class="campaign-summary-missions"></ul><p id="campaignSummaryAdvance" class="campaign-summary-advance"></p><p id="campaignSummaryNext" class="campaign-summary-next"></p><p class="campaign-summary-skip">点击任意处继续</p>
+</div></section>
 <div id="achievementToast" role="status" aria-live="polite"><div id="achievementToastBadge"></div><div class="achievement-toast-copy"><span class="achievement-toast-kicker">ACHIEVEMENT UNLOCKED</span><strong id="achievementToastName" class="achievement-toast-name"></strong><span id="achievementToastJoke" class="achievement-toast-joke"></span></div></div>
 <script src="./runtime-performance.js"></script>
 <script src="./game-audio.js"></script>
@@ -494,11 +511,27 @@ const CONCEPT_CARDS_KEY='spacegame-concept-cards-v1';
 let conceptCardsEnabled=(()=>{try{return localStorage.getItem(CONCEPT_CARDS_KEY)!=='off';}catch(_){return true;}})();
 let conceptCardOpen=false,conceptCardTimer=null,conceptCardType='periapsis';
 const CAMPAIGN_ACTS=Object.freeze([
-  {start:1,end:3,title:'第一幕 · 地球轨道执照'},
-  {start:4,end:6,title:'第二幕 · 地月航路'},
-  {start:7,end:8,title:'第三幕 · 深空危机'},
-  {start:9,end:10,title:'第四幕 · 极端宇宙'}
+  {id:1,start:1,end:3,title:'第一幕 · 地球轨道执照',advance:'你已取得地球轨道执照，任务范围将越过近地空间。',next:'下一幕预告 · 地月航路'},
+  {id:2,start:4,end:6,title:'第二幕 · 地月航路',advance:'地月航路已经贯通，下一次警报来自更远的深空。',next:'下一幕预告 · 深空危机'},
+  {id:3,start:7,end:8,title:'第三幕 · 深空危机',advance:'你在深空危机中证明了应变能力，极端宇宙正在等待。',next:'下一幕预告 · 极端宇宙'},
+  {id:4,start:9,end:10,title:'第四幕 · 极端宇宙',advance:'十项任务全部完成：你已从轨道学员成长为星际航行员。',next:'战役完成 · 航程记录已归档'}
 ]);
+const CAMPAIGN_REVIEWS=Object.freeze({
+  1:'把同步卫星稳定送入任务轨道',2:'将乘员安全带回地面',3:'向空间站完成补给对接',4:'把科考队送达月球背面',5:'借用月球引力飞出地球',
+  6:'在地月平衡区部署中继',7:'改变小行星航向守住家园',8:'穿越双星并补给暮光站',9:'从黑洞深渊带回乘员',10:'营救求救飞船并逃离三体系统'
+});
+const CAMPAIGN_LOG_KEY='spacegame-campaign-log-v1';
+function campaignActComplete(act,progress=loadProgress()){return SpaceGameCampaign.actComplete(act.id,progress);}
+function saveCampaignLogState(){try{localStorage.setItem(CAMPAIGN_LOG_KEY,JSON.stringify(campaignLogState));}catch(_){}}
+function loadCampaignLogState(){
+  try{
+    const raw=localStorage.getItem(CAMPAIGN_LOG_KEY);
+    if(raw){const saved=JSON.parse(raw);return{viewed:Array.isArray(saved?.viewed)?saved.viewed.filter(id=>id>=1&&id<=4):[]};}
+    const progress=loadProgress(),viewed=SpaceGameCampaign.completedActs(progress);
+    const migrated={viewed};localStorage.setItem(CAMPAIGN_LOG_KEY,JSON.stringify(migrated));return migrated;
+  }catch(_){return{viewed:[]};}
+}
+let campaignLogState=loadCampaignLogState(),pendingCampaignSummaryAct=0,campaignSummaryReview=false,resultContinuation='',campaignLogOpen=false;
 let levelSelectOpen = false, gameStarted = false, freeTasksExpanded = false;
 let showPred = true; // T 开关：未来轨迹辅助线
 const COLOR_ASSIST_KEY='spacegame-color-assist-v1';
@@ -518,7 +551,7 @@ const CAMERA_MODES = ['跟随飞船','地球静止'];
 function cameraModeName(){ return cameraMode===0?'跟随飞船':level===10?'系统质心静止':'地球静止'; }
 let radarMode = 0;
 const RADAR_MODES = ['轨道','全局'];
-let radarHitBox = null, attitudeHitBox = null, telemetryHitBox = null, telemetryExpanded = false;
+let radarHitBox = null, attitudeHitBox = null, telemetryHitBox = null, telemetryExpanded = false, threeBodyExamHitBox=null, threeBodyExamExpanded=false;
 let predictionCache = null;
 let actionCue = null;
 let missionActionVisual = '';
@@ -662,6 +695,63 @@ function openLevelSelect(initial=false){
   syncProgressAchievements();updateLevelCards();syncUI();
 }
 function campaignActForLevel(levelId){return CAMPAIGN_ACTS.find(act=>levelId>=act.start&&levelId<=act.end)||CAMPAIGN_ACTS[3];}
+function queueCampaignSummary(levelId,progress=loadProgress()){
+  const actId=SpaceGameCampaign.eligibleAct(levelId,progress,campaignLogState.viewed);
+  if(actId)pendingCampaignSummaryAct=actId;
+}
+globalThis.queueCampaignSummary=queueCampaignSummary;
+function markCampaignSummaryViewed(actId){
+  if(!campaignLogState.viewed.includes(actId)){campaignLogState.viewed.push(actId);campaignLogState.viewed.sort((a,b)=>a-b);saveCampaignLogState();}
+}
+function renderCampaignSummary(actId){
+  const act=CAMPAIGN_ACTS.find(item=>item.id===Number(actId));if(!act)return false;
+  const progress=loadProgress(),t=SG_I18N.t,finale=act.id===4;
+  document.getElementById('campaignSummaryKicker').textContent=t(finale?'战役完成':'战役总结');
+  document.getElementById('campaignSummaryTitle').textContent=t(act.title);
+  document.getElementById('campaignSummaryLead').textContent=t(finale?'四幕航程已经全部完成。':'本幕任务全部完成，以下是你的实际航程记录。');
+  const list=document.getElementById('campaignSummaryMissions');list.replaceChildren();
+  for(let i=act.start;i<=act.end;i++){
+    const stars=Math.max(0,Math.min(3,Number(progress?.[i]?.stars||0))),li=document.createElement('li');
+    li.textContent=`${t('任务')} ${String(i).padStart(2,'0')} · ${t(CAMPAIGN_REVIEWS[i])} · ${starText(stars)} (${stars}/3 ${t('星')})`;list.appendChild(li);
+  }
+  document.getElementById('campaignSummaryAdvance').textContent=t(act.advance);
+  document.getElementById('campaignSummaryNext').textContent=t(act.next);
+  return true;
+}
+function showCampaignSummary(actId,{review=false}={}){
+  if(!renderCampaignSummary(actId))return;
+  campaignSummaryReview=review;if(!review)markCampaignSummaryViewed(Number(actId));
+  const page=document.getElementById('campaignSummary');page.dataset.act=String(actId);page.classList.add('is-visible');
+}
+function closeCampaignSummary(){
+  const page=document.getElementById('campaignSummary');if(!page.classList.contains('is-visible'))return;
+  page.classList.remove('is-visible');
+  if(campaignSummaryReview){campaignSummaryReview=false;return;}
+  pendingCampaignSummaryAct=0;const action=resultContinuation;resultContinuation='';executeResultAction(action);
+}
+function renderCampaignLog(){
+  const progress=loadProgress(),list=document.getElementById('campaignLogList'),t=SG_I18N.t;list.replaceChildren();
+  for(const act of CAMPAIGN_ACTS){
+    const complete=campaignActComplete(act,progress),button=document.createElement('button'),title=document.createElement('strong'),state=document.createElement('span');
+    button.type='button';button.className='campaign-log-entry';button.disabled=!complete;title.textContent=t(act.title);state.textContent=t(complete?'已记录':'完成本幕后解锁');button.append(title,state);
+    if(complete)button.addEventListener('click',()=>showCampaignSummary(act.id,{review:true}));list.appendChild(button);
+  }
+}
+function openCampaignLog(){campaignLogOpen=true;paused=true;renderCampaignLog();document.getElementById('campaignLog').classList.add('is-visible');syncUI();}
+function closeCampaignLog(){campaignLogOpen=false;document.getElementById('campaignLog').classList.remove('is-visible');syncUI();}
+function executeResultAction(action){
+  if(action==='retry')resetGame();
+  else if(action==='next'){if(level<10)startLevel(level+1);else openLevelSelect();}
+  else if(action==='menu')openLevelSelect();
+}
+function continueAfterResult(action){
+  if(pendingCampaignSummaryAct){resultContinuation=action;hideMsg();showCampaignSummary(pendingCampaignSummaryAct);return;}
+  executeResultAction(action);
+}
+addEventListener('spacegame-languagechange',()=>{
+  if(campaignLogOpen)renderCampaignLog();
+  const page=document.getElementById('campaignSummary');if(page.classList.contains('is-visible'))renderCampaignSummary(Number(page.dataset.act));
+});
 function updateCampaignCatalog(progress=loadProgress()){
   const root=document.getElementById('levelSelect'),pathGrid=document.getElementById('recommendedLevelGrid'),freeGrid=document.getElementById('freeTaskGrid');
   if(!root||!pathGrid||!freeGrid)return;
@@ -724,10 +814,11 @@ function startLevel(levelId){
   resetGame();
 }
 function nextLevel(){
-  if(level<10) startLevel(level+1);
-  else openLevelSelect();
+  if(mission?.done&&pendingCampaignSummaryAct){continueAfterResult('next');return;}
+  executeResultAction('next');
 }
 function restartCurrent(full=false){
+  if(mission?.done&&pendingCampaignSummaryAct){continueAfterResult('retry');return;}
   if(full || mission.done) resetGame();
   else rewindStage();
 }
@@ -829,7 +920,8 @@ function resetGame(){
     asteroidChanged:false,asteroidImpact:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null,
     binaryHeatViolated:false,binaryCaptured:false,binaryGateCrossed:false,binaryTargetEnergy:Infinity,
     blackHoleMinR:Infinity,blackHoleDeepBurn:false,blackHoleEscaping:false,blackHoleFrozen:false,blackHoleAwaitRelease:false,blackHoleInvalidExitT:0,blackHoleExitFailed:false,
-    threeGateIndex:0,threeRescued:[false,false],threeDestroyed:[false,false],threeRescueOrder:[],threeDangerViolated:false,threeMinClearance:Infinity,threeEscapeT:0,threeSeed:threeBody?.seed||0};
+    threeGateIndex:0,threeRescued:[false,false],threeDestroyed:[false,false],threeRescueOrder:[],threeApproachMade:false,threeDangerViolated:false,threeMinClearance:Infinity,threeEscapeT:0,threeSeed:threeBody?.seed||0};
+  threeBodyExamExpanded=false;threeBodyExamHitBox=null;
   if(level===5){
     mission.slingInitialEnergy=earthSpecificEnergy(rocket);
     mission.slingEntryEnergy=mission.slingInitialEnergy;
@@ -868,6 +960,9 @@ function openBriefing(){
   if(!mission) return;
   const info=stageInfo()[Math.min(mission.stage,stageInfo().length-1)];
   document.getElementById('briefKicker').textContent=LEVELS[level].title;
+  const finalExam=document.getElementById('briefFinalExam');
+  finalExam.hidden=level!==10;
+  finalExam.textContent=SG_I18N.t('最终考核 · 本次任务将调用你全部的训练');
   document.getElementById('briefTitle').textContent=info.name;
   document.getElementById('briefStory').textContent=LEVELS[level].brief;
   document.getElementById('briefGoal').textContent=LEVELS[level].sub.replace(/^目标：/,'');
@@ -965,7 +1060,7 @@ function toggleColorAssist(){
   colorAssistEnabled=!colorAssistEnabled;
   try{localStorage.setItem(COLOR_ASSIST_KEY,colorAssistEnabled?'on':'off');}catch(_){}
   document.documentElement.classList.toggle('color-assist',colorAssistEnabled);
-  if(mission){mission.toast=colorAssistEnabled?'色觉辅助已开启｜区域增加形状纹理':'色觉辅助已关闭';mission.toastT=2.2;}
+  if(mission){mission.toast=colorAssistEnabled?'色觉辅助已开启｜危险区叉号、目标区圆点':'色觉辅助已关闭';mission.toastT=2.2;}
   syncUI();
 }
 function toggleHudInfo(key){
@@ -1110,7 +1205,7 @@ function syncUI(){
   if(pause){ pause.classList.toggle('is-active',paused); pause.setAttribute('aria-pressed',String(paused)); pause.querySelector('.ico').textContent=paused?'▶':'Ⅱ'; pause.querySelector('.lbl').textContent=paused?'继续':'暂停'; }
   syncMissionAction();
   const briefingOpen=document.getElementById('briefing').classList.contains('is-visible');
-  document.getElementById('pauseMenu').classList.toggle('is-visible',paused&&!levelSelectOpen&&!briefingOpen&&!sciencePageOpen);
+  document.getElementById('pauseMenu').classList.toggle('is-visible',paused&&!levelSelectOpen&&!briefingOpen&&!sciencePageOpen&&!campaignLogOpen);
   const menuPrediction=document.getElementById('menuPrediction'),menuColorAssist=document.getElementById('menuColorAssist'), menuAttitude=document.getElementById('menuAttitude');
   const menuRadar=document.getElementById('menuRadar'), menuDial=document.getElementById('menuDial'), menuGuide=document.getElementById('menuGuide'), menuAssist=document.getElementById('menuAssist'),menuSound=document.getElementById('menuSound'),menuOrientation=document.getElementById('menuOrientation'),menuConceptCards=document.getElementById('menuConceptCards'),menuConceptReview=document.getElementById('menuConceptReview'),menuThreeSeed=document.getElementById('menuThreeSeed'),menuThreeSeedCopy=document.getElementById('menuThreeSeedCopy');
   if(menuPrediction){ menuPrediction.textContent=SG_I18N.t('轨迹预测：'+(showPred?'开启':'关闭')); menuPrediction.classList.toggle('is-on',showPred); }
@@ -1292,7 +1387,7 @@ function saveCheckpoint(){
     blackHoleState:blackHole?{properTime:blackHole.properTime,farTime:blackHole.farTime,factor:blackHole.factor,coordinateFactor:blackHole.coordinateFactor,minRadius:blackHole.minRadius,beaconAngle:blackHole.beaconAngle,frozen:false}:null,
     blackHoleMission:level===9?{blackHoleMinR:mission.blackHoleMinR,blackHoleDeepBurn:mission.blackHoleDeepBurn,blackHoleEscaping:mission.blackHoleEscaping,blackHoleFrozen:false,blackHoleAwaitRelease:!!mission.blackHoleAwaitRelease,blackHoleInvalidExitT:0,blackHoleExitFailed:false}:null,
     threeBodyState:threeBody?{seed:threeBody.seed,time:threeBody.time,pairs:threeBody.pairs.map(p=>p.slice()),sides:threeBody.sides.slice(),bodies:BODIES.map(b=>({x:b.x,y:b.y,vx:b.vx,vy:b.vy})),rescueShips:(threeBody.rescueShips||[]).map(s=>({...s,pair:(s.pair||[]).slice(),trail:(s.trail||[]).map(p=>({...p}))}))}:null,
-    threeBodyMission:level===10?{threeGateIndex:mission.threeGateIndex,threeRescued:(mission.threeRescued||[false,false]).slice(),threeDestroyed:(mission.threeDestroyed||[false,false]).slice(),threeRescueOrder:(mission.threeRescueOrder||[]).slice(),threeDangerViolated:mission.threeDangerViolated,threeMinClearance:mission.threeMinClearance,threeEscapeT:mission.threeEscapeT,threeSeed:mission.threeSeed}:null,
+    threeBodyMission:level===10?{threeGateIndex:mission.threeGateIndex,threeRescued:(mission.threeRescued||[false,false]).slice(),threeDestroyed:(mission.threeDestroyed||[false,false]).slice(),threeRescueOrder:(mission.threeRescueOrder||[]).slice(),threeApproachMade:!!mission.threeApproachMade,threeDangerViolated:mission.threeDangerViolated,threeMinClearance:mission.threeMinClearance,threeEscapeT:mission.threeEscapeT,threeSeed:mission.threeSeed}:null,
     launchFrameActive:!!rocket._launchFrameActive, launchAssistActive:!!rocket._launchAssistActive,
     launchCompleted:!!rocket._launchCompleted, chute:!!rocket.chute, chuteAngle:rocket.chuteAngle,
     chuteFlowX:rocket.chuteFlowX||0, chuteFlowY:rocket.chuteFlowY||0,
@@ -1408,6 +1503,8 @@ function update(dt, dtReal){
   // 这样地球、月球、空间站和轨道中的第二关飞船都不会在示范仍“等待点火”时自行移动。
   const waitingForGuideIgnition=mission&&!mission.worldStarted;
   if(waitingForGuideIgnition){
+    // 开场世界虽暂停，阶段已进入：先登记回响，但在首次推进前不消耗显示时间。
+    updateLicenseEcho(0);
     if(!(keys['ArrowUp']||keys['KeyW'])) return;
     mission.worldStarted=true;
     if(ghostShip) ghostShip.started=true;
@@ -1452,6 +1549,7 @@ function update(dt, dtReal){
     }
   }
   updateMission(dt);
+  updateLicenseEcho(dtReal);
   updateFlightAchievements(dtReal);
   if(mission && mission.toastT>0) mission.toastT -= dt;
   // 尾焰是视觉效果，按真实时间更新；不能跟随子弹时间变慢后越积越多。

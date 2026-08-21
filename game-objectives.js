@@ -256,6 +256,11 @@ function updateMissionL9(dt){
     if(m.energy>0){mission.blackHoleEscaping=true;advanceStage();return;}
   }else mission.dynHint=`飞向绿色救援圈｜还差 ${Math.max(0,BH_ESCAPE_R-m.r).toFixed(0)}`;
 }
+function threeBodyExamResultHtml(exam=threeBodyExamState()){
+  const row=(label,status,detail='')=>`<div class="final-exam-row is-${status}"><span class="exam-mark">${status==='pass'?'✓':status==='fail'?'×':'○'}</span><span>${SG_I18N.t(label)}${detail?` <small class="final-exam-ships">${detail}</small>`:''}</span><span class="exam-state">${SG_I18N.t(status==='pass'?'已达成':status==='fail'?'未达成':'待完成')}</span></div>`;
+  const ships=`A ${exam.rescued[0]?'✓':'×'} · B ${exam.rescued[1]?'✓':'×'}`;
+  return `<section class="final-exam-result"><strong>🎓 ${SG_I18N.t('最终考核')}</strong>${row('交会接近',exam.approach?'pass':'fail')}${row('船员转移',exam.rescuedCount===2?'pass':exam.escaped?'fail':'pending',ships)}${row('危险规避',exam.avoidance==='passed'?'pass':'fail')}${row('成功逃逸',exam.escaped?'pass':'fail')}</section>`;
+}
 function finishThreeBodyCrossing(m=threeBodyMetrics()){
   if(level!==10||mission.done)return;
   mission.done=true;state='complete';
@@ -267,7 +272,7 @@ function finishThreeBodyCrossing(m=threeBodyMetrics()){
   const result=saveLevelResult(10,performanceScore(),starResult.stars,{saveScore:threeBodySeedMode==='random'}),seed=formatThreeBodySeed(mission.threeSeed);
   const restartNote=threeBodySeedMode==='fixed'?'固定种子练习：整关重来保持同一宇宙；本局星级正常结算，分数不计入最高分。':'随机种子模式：整关重来会扰动三颗恒星的初始条件，本局成绩可计入最高分。';
   syncUI();showMsg(destroyedCount?'🚀':'🆘',destroyedCount?'幸存者撤离完成！':'三体救援成功！',
-    resultLine(result)+`成功营救 ${rescuedCount} 艘 · 损失 ${destroyedCount} 艘 · 本局种子 <b>${seed}</b><br>最近恒星净空 ${mission.threeMinClearance.toFixed(0)} u<br>`+
+    resultLine(result)+threeBodyExamResultHtml()+`成功营救 ${rescuedCount} 艘 · 损失 ${destroyedCount} 艘 · 本局种子 <b>${seed}</b><br>最近恒星净空 ${mission.threeMinClearance.toFixed(0)} u<br>`+
     `${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
     `<span style="color:#888">${restartNote}</span>`);
 }
@@ -299,6 +304,7 @@ function updateMissionL10(dt){
     if(!Array.isArray(mission.threeRescued))mission.threeRescued=[false,false];
     if(!Array.isArray(mission.threeRescueOrder))mission.threeRescueOrder=[];
     const candidates=[0,1].filter(index=>!mission.threeRescued[index]&&!mission.threeDestroyed[index]).map(index=>threeBodyRescueMetrics(index));
+    if(candidates.some(item=>item.distance<=THREE_GATE_R))mission.threeApproachMade=true;
     const target=candidates.slice().sort((a,b)=>a.distance-b.distance)[0];
     if(!target){if(rescuedCount>0)beginThreeBodyEscapePhase('✅ 已救出幸存船员｜现在带他们逃出去');return;}
     const shipName=target.index===0?'A':'B',choiceText=mission.stage===0?'任选一艘｜':'';

@@ -9,6 +9,8 @@
     if(installed)return;
     installed=true;
   addEventListener('keydown', e=>{
+    if(document.getElementById('campaignSummary')?.classList.contains('is-visible')){if(e.code==='Escape'||e.code==='Enter'||e.code==='Space')closeCampaignSummary();e.preventDefault();return;}
+    if(campaignLogOpen){if(e.code==='Escape')closeCampaignLog();e.preventDefault();return;}
     if(achievementCollectionOpen){if(e.code==='Escape'){closeAchievementDetail();closeAchievementCollection();}e.preventDefault();return;}
     keys[e.code]=true;
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
@@ -40,7 +42,7 @@
 
   const ACTION_HANDLERS={
     prediction:()=>setPrediction(),colorassist:()=>toggleColorAssist(),hudtelemetry:()=>toggleHudInfo('telemetry'),hudgravity:()=>toggleHudInfo('gravity'),hudradar:()=>toggleHudInfo('radar'),hudguidance:()=>toggleHudInfo('guidance'),hudtargets:()=>toggleHudInfo('targets'),camera:()=>toggleCameraMode(),radar:()=>cycleRadar(),attitude:()=>cycleAttitude(),
-    dial:()=>cycleDial(),guide:()=>toggleGuide(),briefing:()=>openBriefing(),science:()=>openSciencePage(false),concept:()=>reviewConceptCard(),conceptcards:()=>toggleConceptCards(),assist:()=>toggleAssist(),sound:()=>toggleSound(),orientation:()=>cycleScreenOrientation(),language:()=>globalThis.SpaceGameI18n?.cycle?.(),
+    dial:()=>cycleDial(),guide:()=>toggleGuide(),briefing:()=>openBriefing(),science:()=>openSciencePage(false),concept:()=>reviewConceptCard(),conceptcards:()=>toggleConceptCards(),campaignlog:()=>openCampaignLog(),assist:()=>toggleAssist(),sound:()=>toggleSound(),orientation:()=>cycleScreenOrientation(),language:()=>globalThis.SpaceGameI18n?.cycle?.(),
     level:()=>openLevelSelect(),rewind:()=>rewindStage(),restart:()=>resetGame(),pause:()=>togglePause(),
     mission:()=>tryMissionAction(),threeseed:()=>toggleThreeBodySeedMode(),copyseed:()=>copyThreeBodySeed(),copyperf:()=>copyPerformanceReport()
   };
@@ -154,6 +156,7 @@
     e.preventDefault();
     const point={x:e.clientX,y:e.clientY};
     const inBox=box=>box&&point.x>=box.x&&point.x<=box.x+box.w&&point.y>=box.y&&point.y<=box.y+box.h;
+    if(!paused&&inBox(threeBodyExamHitBox)){threeBodyExamExpanded=!threeBodyExamExpanded;return;}
     if(!paused&&inBox(attitudeHitBox)){ cycleDial(); return; }
     if(!paused&&inBox(radarHitBox)){ cycleRadar(); return; }
     if(!paused&&inBox(telemetryHitBox)){telemetryExpanded=!telemetryExpanded;if(mission){mission.toast=telemetryExpanded?'遥测已展开':'遥测已精简';mission.toastT=1.25;}return;}

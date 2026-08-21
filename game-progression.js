@@ -34,6 +34,20 @@ const STAR_RULES={
 };
 
 const SAVE_KEY='spacegame-progress-v2';
+const CAMPAIGN_ACT_RANGES=Object.freeze([[1,3],[4,6],[7,8],[9,10]]);
+const SpaceGameCampaign=Object.freeze({
+  actComplete(actId,progress={}){
+    const range=CAMPAIGN_ACT_RANGES[Number(actId)-1];if(!range)return false;
+    for(let i=range[0];i<=range[1];i++)if(Number(progress?.[i]?.stars||0)<1)return false;
+    return true;
+  },
+  completedActs(progress={}){return CAMPAIGN_ACT_RANGES.map((_,index)=>index+1).filter(id=>this.actComplete(id,progress));},
+  eligibleAct(levelId,progress={},viewed=[]){
+    const id=CAMPAIGN_ACT_RANGES.findIndex(([start,end])=>Number(levelId)>=start&&Number(levelId)<=end)+1;
+    return id>0&&!viewed.includes(id)&&this.actComplete(id,progress)?id:0;
+  }
+});
+globalThis.SpaceGameCampaign=SpaceGameCampaign;
 const SG_UPGRADES=globalThis.SpaceGameUpgrades||{
   recordResult(){return {earned:0,reasons:[],state:{points:0,engine:0,structure:0}};},
   reconcileProgress(){return {earned:0};},fuelMultiplier(){return 1;},landingMultiplier(){return 1;},
@@ -63,6 +77,7 @@ function saveLevelResult(levelId,score,earnedStars=1,options={}){
   const bestScore=scoreSaved?Math.max(previous.score||0,currentScore):(previous.score||0),bestStars=Math.max(previous.stars||0,currentStars);
   progress[levelId]={score:bestScore,stars:bestStars};
   try{ localStorage.setItem(SAVE_KEY,JSON.stringify(progress)); }catch(_){}
+  if(typeof globalThis.queueCampaignSummary==='function')globalThis.queueCampaignSummary(levelId,progress);
   if(typeof window!=='undefined'){
     unlockAchievement(LEVEL_ACHIEVEMENTS[levelId]);
     if(levelId===8)unlockAchievement('orbital_handshake');

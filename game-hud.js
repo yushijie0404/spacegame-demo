@@ -302,6 +302,40 @@ function telemetryRiskColor(value,safeMax,warningMax){
   return value<=safeMax?'#5fd068':value<=warningMax?'#ffd166':'#ef476f';
 }
 
+function drawThreeBodyExamChecklist(){
+  if(level!==10||!mission||mission.done){threeBodyExamHitBox=null;return;}
+  const exam=threeBodyExamState(),compact=W<760,landscape=H<=520;
+  const width=landscape?Math.min(380,Math.max(250,W-430)):compact?Math.max(280,W-24):420;
+  const height=threeBodyExamExpanded?(compact?134:146):38,x=(W-width)/2;
+  const y=landscape?8:compact?(threeBodyExamExpanded?Math.min(310,Math.max(286,H-height-220)):207):14;
+  threeBodyExamHitBox={x,y,w:width,h:height};
+  ctx.save();ctx.fillStyle='rgba(9,15,39,.88)';roundRect(x,y,width,height,13);ctx.fill();
+  ctx.strokeStyle='rgba(197,177,255,.78)';ctx.lineWidth=1.5;roundRect(x,y,width,height,13);ctx.stroke();
+  ctx.textAlign='left';ctx.fillStyle='#eee8ff';ctx.font='900 13px "Microsoft YaHei",sans-serif';
+  const header=`🎓 ${SG_I18N.t('最终考核')} · ${SG_I18N.t('营救')} ${exam.rescuedCount}/2 · ${SG_I18N.t(threeBodyExamExpanded?'点击收起':'点击展开')} ${threeBodyExamExpanded?'▴':'▾'}`;
+  fitText(header,x+13,y+24,width-26,10);
+  if(threeBodyExamExpanded){
+    const rows=[
+      {label:'① '+SG_I18N.t('交会接近'),status:exam.approach?'pass':'pending',detail:SG_I18N.t(exam.approach?'已达成':'待完成')},
+      {label:'② '+SG_I18N.t('船员转移'),status:exam.rescuedCount===2?'pass':exam.rescuedCount?'pending':'pending',detail:`A ${exam.rescued[0]?'✓':'○'}   B ${exam.rescued[1]?'✓':'○'}`},
+      {label:'③ '+SG_I18N.t('危险规避'),status:exam.avoidance==='failed'?'fail':exam.avoidance==='passed'?'pass':'pending',detail:SG_I18N.t(exam.avoidance==='failed'?'未达成':exam.avoidance==='passed'?'已达成':'待结算')},
+      {label:'④ '+SG_I18N.t('成功逃逸'),status:exam.escaped?'pass':'pending',detail:SG_I18N.t(exam.escaped?'已达成':'待完成')}
+    ];
+    rows.forEach((row,index)=>{
+      const rowY=y+(compact?47:51)+index*(compact?21:24),mark=row.status==='pass'?'✓':row.status==='fail'?'×':'○';
+      ctx.fillStyle=row.status==='pass'?'#5fd068':row.status==='fail'?'#ef476f':'#ffd166';ctx.font='950 14px sans-serif';ctx.fillText(mark,x+14,rowY);
+      ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='800 12px "Microsoft YaHei",sans-serif';ctx.fillText(row.label,x+38,rowY);
+      ctx.fillStyle=row.status==='pass'?'#7de895':row.status==='fail'?'#ff7d98':'#ffd166';ctx.textAlign='right';ctx.fillText(row.detail,x+width-14,rowY);ctx.textAlign='left';
+    });
+  }
+  const status=document.getElementById('threeBodyExamStatus');
+  if(status){
+    const accessible=`${SG_I18N.t('最终考核')}：${SG_I18N.t('交会接近')} ${SG_I18N.t(exam.approach?'已达成':'待完成')}；${SG_I18N.t('船员转移')} A ${exam.rescued[0]?'✓':'○'} B ${exam.rescued[1]?'✓':'○'}；${SG_I18N.t('危险规避')} ${SG_I18N.t(exam.avoidance==='failed'?'未达成':exam.avoidance==='passed'?'已达成':'待结算')}；${SG_I18N.t('成功逃逸')} ${SG_I18N.t(exam.escaped?'已达成':'待完成')}`;
+    if(status.textContent!==accessible)status.textContent=accessible;
+  }
+  ctx.restore();
+}
+
 function drawHUDOverlay(worldDrawStarted){
   const hudNow=performance.now(),hudInterval=lowPowerMode?(mobileEconomy?1000/24:1000/30):0;
   SG_PERF.sample('world',hudNow-worldDrawStarted);
@@ -546,6 +580,7 @@ function drawHUDOverlay(worldDrawStarted){
   ctx.fillText(dialNames[dialMode]+' · 点击切换', attX, attY+attR+16);
   ctx.textAlign='left';
   drawRadar();
+  drawThreeBodyExamChecklist();
 
   // 子弹时间视觉：暗角 + 提示
   if(bulletT>0){
@@ -582,6 +617,14 @@ function drawHUDOverlay(worldDrawStarted){
   if(mission && hudInfo.guidance && !mission.hintsHidden && !mission.done){
     const landscapeCompact=H<=520,ultraShort=landscapeCompact&&H<360,compact=W<760||landscapeCompact;
     const bw=landscapeCompact?Math.min(360,Math.max(250,W-330)):Math.min(560,W-24), bx=W/2-bw/2, bh=ultraShort?54:(landscapeCompact?60:(compact?80:76)), by=landscapeCompact?H-(ultraShort?62:72):H-(compact?204:140);
+    const echo=licenseEchoStatus();
+    if(echo.text){
+      const eh=landscapeCompact?28:32,ey=by-eh-7;
+      ctx.globalAlpha=echo.alpha;ctx.fillStyle='rgba(8,25,53,.9)';roundRect(bx,ey,bw,eh,11);ctx.fill();
+      ctx.strokeStyle='rgba(76,201,240,.72)';ctx.lineWidth=1.5;roundRect(bx,ey,bw,eh,11);ctx.stroke();
+      ctx.fillStyle='#9fe8ff';ctx.font=`850 ${landscapeCompact?11.5:13}px "Baloo 2",sans-serif`;ctx.textAlign='left';
+      fitText(`${SG_I18N.t('📡 执照回响：')}${SG_I18N.t(echo.text)}`,bx+12,ey+(landscapeCompact?19:22),bw-24,10);ctx.globalAlpha=1;
+    }
     ctx.fillStyle='rgba(10,14,35,.72)';
     roundRect(bx, by, bw, bh, 14); ctx.fill();
     ctx.strokeStyle='rgba(255,209,102,.6)'; ctx.lineWidth=2; roundRect(bx, by, bw, bh, 14); ctx.stroke();

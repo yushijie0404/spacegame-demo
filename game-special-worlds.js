@@ -97,6 +97,14 @@ function isThreeBodyShipRescued(index){
 function isThreeBodyShipDestroyed(index){
   return !!(threeBody?.rescueShips?.[index]?.destroyed||(mission&&Array.isArray(mission.threeDestroyed)&&mission.threeDestroyed[index]));
 }
+function threeBodyExamState(source=mission){
+  const rescued=Array.isArray(source?.threeRescued)?source.threeRescued.slice(0,2):[false,false];
+  while(rescued.length<2)rescued.push(false);
+  const approach=!!source?.threeApproachMade||rescued.some(Boolean),dangerViolated=!!source?.threeDangerViolated;
+  const escaped=!!source?.done&&Number(source?.threeEscapeT||0)>=1.2;
+  return {approach,rescued,rescuedCount:rescued.filter(Boolean).length,dangerViolated,
+    avoidance:dangerViolated?'failed':escaped?'passed':'pending',escaped};
+}
 function nearestUnrescuedThreeBodyShip(ship=rocket){
   let nearest=null;
   for(let index=0;index<2;index++){

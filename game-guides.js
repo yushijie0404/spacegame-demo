@@ -14,6 +14,26 @@ const GUIDE_DEMOS={
   4:{duration:74,budget:44,burnRate:1.6},
   8:{duration:82,budget:42,burnRate:.75}
 };
+const LICENSE_ECHO_MAP=Object.freeze({
+  '3:2':'第一关技能：稳定绕行','3:3':'第一关技能：稳定绕行',
+  '4:1':'第一关技能：近地点顺向点火','4:3':'第二关技能：控制接地速度',
+  '5:2':'第四关技能：相对月球减速捕获','8:3':'第三关技能：先消速度差再对接',
+  '9:1':'第一关技能：在最近点顺向点火','10:0':'第三关技能：相对速度匹配','10:1':'第三关技能：相对速度匹配'
+});
+const licenseEchoSessionSeen=new Set();
+let licenseEchoStageKey='',licenseEchoText='',licenseEchoRemaining=0;
+function updateLicenseEcho(dtReal=0){
+  if(!mission){licenseEchoStageKey='';licenseEchoText='';licenseEchoRemaining=0;return;}
+  const key=`${level}:${mission.stage}`;
+  if(key!==licenseEchoStageKey){
+    licenseEchoStageKey=key;licenseEchoText='';licenseEchoRemaining=0;
+    const text=LICENSE_ECHO_MAP[key];
+    if(text&&!licenseEchoSessionSeen.has(key)){licenseEchoSessionSeen.add(key);licenseEchoText=text;licenseEchoRemaining=3.8;}
+  }else if(licenseEchoRemaining>0)licenseEchoRemaining=Math.max(0,licenseEchoRemaining-Math.max(0,dtReal));
+}
+function licenseEchoStatus(){
+  return {text:licenseEchoRemaining>0?licenseEchoText:'',remaining:licenseEchoRemaining,alpha:Math.min(1,licenseEchoRemaining/.45)};
+}
 function smooth01(v){ v=Math.max(0,Math.min(1,v)); return v*v*(3-2*v); }
 function createRecordedGuide(levelId){
   const cfg=GUIDE_DEMOS[levelId];

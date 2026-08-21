@@ -4,33 +4,25 @@
 // Frame scheduling, physics, input, persistence and mission completion stay in their owning modules.
 
 function drawZoneEncoding(cx,cy,r,kind,start=0,end=TAU,innerR=null){
-  if(!colorAssistEnabled||!Number.isFinite(r)||r<=0)return;
-  // 形状纹理属于区域内部，而不是边界线。默认在边界内侧铺陈；
-  // 热区等环带可以传入真实内半径，避免纹理覆盖天体本体。
-  const span=Math.max(.05,Math.abs(end-start)),padding=10/cam.zoom,outer=Math.max(0,r-padding);
-  const fallbackInner=Math.max(0,outer-Math.min(r*.42,62/cam.zoom));
-  const inner=Math.min(outer,Math.max(0,Number.isFinite(innerR)?innerR+padding:fallbackInner));
-  const radialSpan=Math.max(outer-inner,1/cam.zoom),rows=Math.max(1,Math.min(4,Math.ceil(radialSpan*cam.zoom/24)));
-  const marker=kind==='danger'?5.8/cam.zoom:5/cam.zoom;
-  ctx.save();ctx.strokeStyle='rgba(255,255,255,.72)';ctx.fillStyle='rgba(255,255,255,.72)';ctx.lineWidth=1.35/cam.zoom;ctx.setLineDash([]);
+  if(!colorAssistEnabled||(kind!=='danger'&&kind!=='target')||!Number.isFinite(r)||r<=0)return;
+  // 标记位置完全使用世界坐标；叉号和圆点尺寸使用固定屏幕像素。
+  const span=Math.max(.05,Math.abs(end-start)),hasInner=Number.isFinite(innerR);
+  const outer=hasInner?innerR+(r-innerR)*.82:r*.88;
+  const inner=Math.min(outer,Math.max(0,hasInner?innerR+(r-innerR)*.2:r*.55));
+  const radialSpan=Math.max(outer-inner,1e-6),rows=radialSpan>r*.3?2:1;
+  const markerPx=5.8,dotPx=3.2,marker=markerPx/Math.max(.001,cam.zoom),dot=dotPx/Math.max(.001,cam.zoom),linePx=1.35;
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,.6)';ctx.fillStyle='rgba(255,255,255,.6)';ctx.lineWidth=linePx/Math.max(.001,cam.zoom);ctx.setLineDash([]);
   for(let row=0;row<rows;row++){
-    const rr=inner+radialSpan*(row+.55)/rows,count=Math.max(3,Math.min(42,Math.round(span*rr*cam.zoom/38))),stagger=(row%2)*.5;
+    const rr=inner+radialSpan*(row+.55)/rows,count=Math.max(3,Math.min(16,Math.round(span*rr/Math.max(64,r*.3)))),stagger=(row%2)*.5;
     for(let i=0;i<count;i++){
       const a=start+(end-start)*(i+.5+stagger)/count,x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;ctx.save();ctx.translate(x,y);ctx.rotate(a);
-      if(kind==='danger'){ctx.beginPath();ctx.moveTo(-marker,-marker);ctx.lineTo(marker,marker);ctx.moveTo(marker,-marker);ctx.lineTo(-marker,marker);ctx.stroke();}
-      else if(kind==='safe'){ctx.beginPath();ctx.moveTo(-marker,marker);ctx.lineTo(marker,-marker);ctx.stroke();}
-      else{ctx.beginPath();ctx.arc(0,0,3/cam.zoom,0,TAU);ctx.fill();}
+      ctx.beginPath();
+      if(kind==='danger'){ctx.moveTo(-marker,-marker);ctx.lineTo(marker,marker);ctx.moveTo(marker,-marker);ctx.lineTo(-marker,marker);ctx.stroke();}
+      else{ctx.arc(0,0,dot,0,TAU);ctx.fill();}
       ctx.restore();
     }
   }
   ctx.restore();
-}
-function drawPredictionEndpoint(points,kind='target'){
-  if(!colorAssistEnabled||!points||points.length<2)return;
-  const p=points[points.length-1],s=8/cam.zoom;ctx.save();ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=2/cam.zoom;ctx.setLineDash([]);ctx.beginPath();
-  if(kind==='danger'){ctx.moveTo(p.x-s,p.y-s);ctx.lineTo(p.x+s,p.y+s);ctx.moveTo(p.x+s,p.y-s);ctx.lineTo(p.x-s,p.y+s);}
-  else{ctx.moveTo(p.x,p.y-s);ctx.lineTo(p.x+s,p.y);ctx.lineTo(p.x,p.y+s);ctx.lineTo(p.x-s,p.y);ctx.closePath();}
-  ctx.stroke();ctx.restore();
 }
 
 function drawSlingshotZones(){
@@ -38,7 +30,6 @@ function drawSlingshotZones(){
   ctx.strokeStyle=mission.slingFlybyValid?'rgba(95,208,104,.9)':'rgba(95,208,104,.4)';
   ctx.lineWidth=4/cam.zoom; ctx.setLineDash([18/cam.zoom,14/cam.zoom]);
   ctx.beginPath(); ctx.arc(EARTH.x,EARTH.y,SLING_EXIT_R,0,TAU); ctx.stroke(); ctx.setLineDash([]);
-  drawZoneEncoding(EARTH.x,EARTH.y,SLING_EXIT_R,'safe');
   ctx.fillStyle='rgba(95,208,104,.9)'; ctx.font=`800 ${15/cam.zoom}px "Microsoft YaHei",sans-serif`; ctx.textAlign='center';
   ctx.fillText('地球逃逸门',EARTH.x,EARTH.y-SLING_EXIT_R-16/cam.zoom);
 
@@ -95,7 +86,6 @@ function drawAsteroidDefenseZones(){
   if(showPred&&f.pts.length>1){
     ctx.strokeStyle='rgba(255,209,102,.92)';ctx.lineWidth=4/cam.zoom;ctx.setLineDash([15/cam.zoom,11/cam.zoom]);
     ctx.beginPath();ctx.moveTo(asteroid.x,asteroid.y);for(const p of f.pts)ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);
-    drawPredictionEndpoint(f.pts,'target');
     if(f.impact){
       const p=f.impact,s=18/cam.zoom;ctx.strokeStyle='#ff5d7d';ctx.lineWidth=4/cam.zoom;
       ctx.beginPath();ctx.moveTo(p.x-s,p.y-s);ctx.lineTo(p.x+s,p.y+s);ctx.moveTo(p.x+s,p.y-s);ctx.lineTo(p.x-s,p.y+s);ctx.stroke();
@@ -120,9 +110,15 @@ function drawBinaryZones(){
   const g=binaryGatePoint(),dx=MOON.x-MARS.x,dy=MOON.y-MARS.y,d=Math.max(1,Math.hypot(dx,dy)),nx=-dy/d,ny=dx/d,gw=260;
   ctx.strokeStyle='rgba(95,208,104,.9)';ctx.lineWidth=5/cam.zoom;
   ctx.beginPath();ctx.moveTo(g.x-nx*gw,g.y-ny*gw);ctx.lineTo(g.x+nx*gw,g.y+ny*gw);ctx.stroke();
-  if(colorAssistEnabled){ctx.fillStyle='rgba(255,255,255,.78)';for(let i=-3;i<=3;i++){const q=i*gw/3.4;ctx.beginPath();ctx.arc(g.x+nx*q,g.y+ny*q,3.2/cam.zoom,0,TAU);ctx.fill();}}
+  if(colorAssistEnabled){const gateDotPx=3.2,gateDot=gateDotPx/Math.max(.001,cam.zoom);ctx.fillStyle='rgba(255,255,255,.78)';for(let i=-3;i<=3;i++){const q=i*gw/3.4;ctx.beginPath();ctx.arc(g.x+nx*q,g.y+ny*q,gateDot,0,TAU);ctx.fill();}}
   ctx.fillStyle='#5fd068';ctx.beginPath();ctx.arc(g.x,g.y,14/cam.zoom,0,TAU);ctx.fill();
   ctx.font=`900 ${14/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('移动引力通道',g.x,g.y-24/cam.zoom);
+  if(mission.stage>=2&&station){
+    const sr=mission.stage===3?42:120;
+    ctx.fillStyle='rgba(95,208,104,.12)';ctx.strokeStyle='rgba(95,208,104,.92)';ctx.lineWidth=(mission.stage===3?4:3)/cam.zoom;ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(station.x,station.y,sr,0,TAU);ctx.fill();ctx.stroke();
+    drawZoneEncoding(station.x,station.y,sr,'target');
+  }
   ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.moveTo(-13/cam.zoom,0);ctx.lineTo(13/cam.zoom,0);ctx.moveTo(0,-13/cam.zoom);ctx.lineTo(0,13/cam.zoom);ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,.65)';ctx.font=`800 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText('共同质心',0,-20/cam.zoom);
   if(mission.stage>=1&&!mission.done){
@@ -189,7 +185,6 @@ function drawThreeBodyZones(){
   for(const b of BODIES){ctx.fillStyle='rgba(239,71,111,.055)';ctx.strokeStyle='rgba(239,71,111,.42)';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(b.x,b.y,b.r+THREE_DANGER_PAD,0,TAU);ctx.fill();ctx.stroke();drawZoneEncoding(b.x,b.y,b.r+THREE_DANGER_PAD,'danger',0,TAU,b.r);}
   ctx.strokeStyle='rgba(201,156,255,.25)';ctx.lineWidth=3/cam.zoom;ctx.setLineDash([12/cam.zoom,14/cam.zoom]);ctx.beginPath();ctx.arc(center.x,center.y,THREE_CHAOS_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
   ctx.strokeStyle=mission.stage>=2?'rgba(95,208,104,.9)':'rgba(95,208,104,.34)';ctx.lineWidth=5/cam.zoom;ctx.setLineDash([18/cam.zoom,13/cam.zoom]);ctx.beginPath();ctx.arc(center.x,center.y,THREE_ESCAPE_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
-  drawZoneEncoding(center.x,center.y,THREE_ESCAPE_R,'safe');
   if(W>=760){ctx.fillStyle='rgba(95,208,104,.88)';ctx.font=`900 ${14/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('混沌逃逸边界',center.x,center.y-THREE_ESCAPE_R-17/cam.zoom);}
   // 受困飞船的短轨迹让合成引力造成的弯曲肉眼可见。
   for(let i=0;i<2;i++){
@@ -201,7 +196,7 @@ function drawThreeBodyZones(){
     const g=threeBodyGate(i),visited=isThreeBodyShipRescued(i),destroyed=isThreeBodyShipDestroyed(i),active=!visited&&!destroyed,col=i===0?'76,201,240':'255,209,102',recommended=nearestRescue?.index===i;
     ctx.fillStyle=destroyed?'rgba(239,71,111,.035)':`rgba(95,208,104,${active ? .10 : .035})`;ctx.strokeStyle=destroyed?'rgba(239,71,111,.55)':`rgba(95,208,104,${active ? pulse : .24})`;ctx.lineWidth=(recommended?4:active?3:2)/cam.zoom;
     ctx.setLineDash([10/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.arc(g.x,g.y,THREE_GATE_R,0,TAU);ctx.fill();ctx.stroke();ctx.setLineDash([]);
-    drawZoneEncoding(g.x,g.y,THREE_GATE_R,'target');
+    if(active)drawZoneEncoding(g.x,g.y,THREE_GATE_R,'target');
     drawStrandedRescueShip(g,i,active,visited,destroyed,pulse);
     ctx.fillStyle=destroyed?'#ef476f':`rgba(${col},${active?1:.58})`;ctx.font=`900 ${(recommended?15:13)/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(`求救飞船 ${i?'B':'A'}${destroyed?' · 已坠毁':visited?' · 已营救':recommended?' · 最近':''}`,g.x,g.y-THREE_GATE_R-14/cam.zoom);
     if(active){ctx.strokeStyle=`rgba(95,208,104,${recommended ? .28 : .16})`;ctx.lineWidth=(recommended?1.6:1.1)/cam.zoom;ctx.setLineDash([5/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.moveTo(rocket.x,rocket.y);ctx.lineTo(g.x,g.y);ctx.stroke();ctx.setLineDash([]);}
@@ -215,7 +210,7 @@ function drawBlackHoleZones(){
   const invalidExit=mission.blackHoleInvalidExitT>0;
   ctx.strokeStyle=invalidExit?'rgba(239,71,111,.92)':m.energy>0?'rgba(95,208,104,.92)':'rgba(95,208,104,.36)';ctx.lineWidth=5/cam.zoom;ctx.setLineDash([17/cam.zoom,12/cam.zoom]);
   ctx.beginPath();ctx.arc(0,0,BH_ESCAPE_R,0,TAU);ctx.stroke();ctx.setLineDash([]);
-  drawZoneEncoding(0,0,BH_ESCAPE_R,invalidExit?'danger':'safe');
+  if(invalidExit)drawZoneEncoding(0,0,BH_ESCAPE_R,'danger');
   ctx.fillStyle=invalidExit?'rgba(255,120,145,.96)':'rgba(95,208,104,.9)';ctx.font=`900 ${15/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText(invalidExit?'能量不足 · 仍会返回':'远方救援门 · 需正逃逸能量',0,-BH_ESCAPE_R-18/cam.zoom);
   ctx.strokeStyle='rgba(95,208,104,.18)';ctx.lineWidth=BH_BURN_R-BH_BURN_IN;ctx.beginPath();ctx.arc(0,0,(BH_BURN_R+BH_BURN_IN)/2,0,TAU);ctx.stroke();
   ctx.strokeStyle='rgba(95,208,104,.82)';ctx.lineWidth=2.5/cam.zoom;ctx.beginPath();ctx.arc(0,0,BH_BURN_R,0,TAU);ctx.stroke();
@@ -282,7 +277,6 @@ function drawMissionZones(){
   ctx.strokeStyle='rgba(95,208,104,.82)'; ctx.lineWidth=2.5/cam.zoom;
   ctx.beginPath(); ctx.arc(EARTH.x, EARTH.y, R_GEO-GEO_BAND, 0, TAU); ctx.stroke();
   ctx.beginPath(); ctx.arc(EARTH.x, EARTH.y, R_GEO+GEO_BAND, 0, TAU); ctx.stroke();
-  drawZoneEncoding(EARTH.x,EARTH.y,R_GEO,'target');
   // 定点扇形（绿色，随地球自转）
   ctx.fillStyle='rgba(95,208,104,.28)';
   ctx.beginPath();
@@ -292,7 +286,7 @@ function drawMissionZones(){
   ctx.closePath(); ctx.fill();
   ctx.strokeStyle='rgba(95,208,104,.9)'; ctx.lineWidth=2.5/cam.zoom;
   ctx.beginPath(); ctx.arc(EARTH.x, EARTH.y, R_GEO, slot-SLOT_HALF, slot+SLOT_HALF); ctx.stroke();
-  drawZoneEncoding(EARTH.x,EARTH.y,R_GEO,'safe',slot-SLOT_HALF,slot+SLOT_HALF);
+  drawZoneEncoding(EARTH.x,EARTH.y,R_GEO+GEO_BAND,'target',slot-SLOT_HALF,slot+SLOT_HALF,R_GEO-GEO_BAND);
   ctx.strokeStyle='rgba(95,208,104,.4)'; ctx.lineWidth=1.5/cam.zoom; ctx.setLineDash([4,6]);
   ctx.beginPath();
   ctx.moveTo(EARTH.x + Math.cos(slot)*EARTH.r, EARTH.y + Math.sin(slot)*EARTH.r);
@@ -317,8 +311,6 @@ function drawLunarFarSideZone(){
   ctx.beginPath(); ctx.arc(MOON.x,MOON.y,r,a-Math.PI/2,a+Math.PI/2); ctx.stroke();
   ctx.strokeStyle='rgba(95,208,104,.98)'; ctx.lineWidth=17/cam.zoom;
   ctx.beginPath(); ctx.arc(MOON.x,MOON.y,r,a-MOON_TARGET_HALF,a+MOON_TARGET_HALF); ctx.stroke();
-  drawZoneEncoding(MOON.x,MOON.y,r,'safe',a-Math.PI/2,a+Math.PI/2);
-  drawZoneEncoding(MOON.x,MOON.y,r,'target',a-MOON_TARGET_HALF,a+MOON_TARGET_HALF);
   const grad=ctx.createLinearGradient(MOON.x+Math.cos(a)*r,MOON.y+Math.sin(a)*r,MOON.x+Math.cos(a)*(r+800),MOON.y+Math.sin(a)*(r+800));
   grad.addColorStop(0,'rgba(95,208,104,.42)'); grad.addColorStop(1,'rgba(95,208,104,0)'); ctx.fillStyle=grad;
   ctx.beginPath();
@@ -327,6 +319,7 @@ function drawLunarFarSideZone(){
   ctx.lineTo(MOON.x+Math.cos(a+MOON_TARGET_HALF*.45)*(r+800),MOON.y+Math.sin(a+MOON_TARGET_HALF*.45)*(r+800));
   ctx.lineTo(MOON.x+Math.cos(a-MOON_TARGET_HALF*.45)*(r+800),MOON.y+Math.sin(a-MOON_TARGET_HALF*.45)*(r+800));
   ctx.closePath(); ctx.fill();
+  drawZoneEncoding(MOON.x,MOON.y,r+800,'target',a-MOON_TARGET_HALF,a+MOON_TARGET_HALF,r);
   if(mission.stage>=2){
     ctx.strokeStyle='rgba(207,216,220,.45)'; ctx.lineWidth=1.5/cam.zoom; ctx.setLineDash([5/cam.zoom,7/cam.zoom]);
     ctx.beginPath(); ctx.moveTo(rocket.x,rocket.y); ctx.lineTo(MOON.x,MOON.y); ctx.stroke(); ctx.setLineDash([]);
@@ -351,7 +344,6 @@ function drawLandingZone(){
   // 地表绿色弧段
   ctx.strokeStyle='rgba(95,208,104,.9)'; ctx.lineWidth=14;
   ctx.beginPath(); ctx.arc(EARTH.x, EARTH.y, EARTH.r, lz-LAND_HALF, lz+LAND_HALF); ctx.stroke();
-  drawZoneEncoding(EARTH.x,EARTH.y,EARTH.r,'safe',lz-LAND_HALF,lz+LAND_HALF);
   // 引导光柱（从地表向上延伸，便于远处看到）
   const grad = ctx.createLinearGradient(
     EARTH.x+Math.cos(lz)*EARTH.r, EARTH.y+Math.sin(lz)*EARTH.r,
@@ -462,7 +454,6 @@ function draw(){
       ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
       for(const p of pts) ctx.lineTo(p.x, p.y);
       ctx.stroke(); ctx.setLineDash([]);
-      drawPredictionEndpoint(pts,'target');
     }
     // 近/远地点标记（子弹时间发生处）
     const fs = 13/cam.zoom;
