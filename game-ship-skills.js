@@ -9,7 +9,7 @@
   const planned=new Map([
     ['rocket',{shipId:'rocket',id:'buffer_fork',icon:'🛬',name:'缓冲货叉',kind:'passive',summary:'安全着陆速度上限提高 15%。',specialty:'擅长：返回与着陆任务',available:false}],
     ['swordwing',{shipId:'swordwing',id:'space_warp',icon:'✦',name:'空间折跃',kind:'active',holdToCharge:true,maxUses:SPACE_WARP_MAX_USES,cooldown:SPACE_WARP_COOLDOWN,fuelCost:SPACE_WARP_FUEL_COST,summary:'按住聚能 0.1 秒后沿机头折跃 150u，松手取消；每关 3 次，挑战模式每次消耗 5% 燃料，冷却 5 秒。',specialty:'擅长：连续交会与路径修正',available:false}],
-    ['hyperion',{shipId:'hyperion',id:'yamato_cannon',icon:'☄',name:'大和炮',kind:'active',holdToCharge:true,summary:'按住聚能 0.9 秒后发射，松手取消；聚能时显示 2000u 瞄准线，命中小行星会将其击碎。',specialty:'擅长：小行星防御 · 每关一次',available:false}]
+    ['hyperion',{shipId:'hyperion',id:'yamato_cannon',icon:'☄',name:'大和炮',kind:'active',holdToCharge:true,summary:'按住聚能 0.9 秒后发射，松手取消；命中小行星会将其击碎，命中友方空间站会导致任务失败。',specialty:'擅长：小行星防御 · 每关一次',available:false}]
   ]);
   function resolveWarpPath(input={}){
     const start={x:Number(input.x)||0,y:Number(input.y)||0},heading=Number(input.heading)||0;
@@ -105,7 +105,7 @@
       const fx={phase:'charging',start:preview.start,end:preview.end,impact:preview.impact,heading:preview.heading,hit:preview.hit,targetKind:preview.targetKind,targetName:preview.targetName,
         chargeRemaining:YAMATO_CHARGE_DURATION,chargeDuration:YAMATO_CHARGE_DURATION,remaining:YAMATO_CHARGE_DURATION,beamDuration:YAMATO_BEAM_DURATION,impactDuration:YAMATO_IMPACT_DURATION};
       return {ok:true,deferConsume:true,sound:'yamato_charge',message:t('大和炮开始聚能 · 按住并保持瞄准'),preview,payload:{yamatoFx:fx}};
-    },update({state,dtReal,rocket,yamatoTargets,asteroid,onYamatoFire,onYamatoAsteroidHit}){
+    },update({state,dtReal,rocket,yamatoTargets,asteroid,station,onYamatoFire,onYamatoAsteroidHit,onYamatoStationHit}){
       const fx=state.payload?.yamatoFx;if(!fx)return;
       const step=Math.max(0,Number(dtReal)||0);
       if(fx.phase==='charging'){
@@ -118,6 +118,7 @@
         state.uses=Math.min(state.maxUses,state.uses+1);state.used=state.uses>=state.maxUses;
         let destruction=null;
         if(asteroid&&shot.hit&&shot.target===asteroid&&typeof onYamatoAsteroidHit==='function')destruction=onYamatoAsteroidHit(shot)||null;
+        else if(station&&shot.hit&&shot.target===station&&typeof onYamatoStationHit==='function')destruction=onYamatoStationHit(shot)||null;
         Object.assign(fx,{phase:'beam',remaining:YAMATO_BEAM_DURATION,hit:shot.hit,targetKind:shot.targetKind,targetName:shot.targetName});
         if(typeof onYamatoFire==='function')onYamatoFire({...shot,destruction});
         global.SpaceGameAudio?.sfx?.('yamato_cannon');sync();return;

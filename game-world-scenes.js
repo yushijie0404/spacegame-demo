@@ -113,7 +113,7 @@ function drawBinaryZones(){
   if(colorAssistEnabled){const gateDotPx=3.2,gateDot=gateDotPx/Math.max(.001,cam.zoom);ctx.fillStyle='rgba(255,255,255,.78)';for(let i=-3;i<=3;i++){const q=i*gw/3.4;ctx.beginPath();ctx.arc(g.x+nx*q,g.y+ny*q,gateDot,0,TAU);ctx.fill();}}
   ctx.fillStyle='#5fd068';ctx.beginPath();ctx.arc(g.x,g.y,14/cam.zoom,0,TAU);ctx.fill();
   ctx.font=`900 ${14/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('移动引力通道',g.x,g.y-24/cam.zoom);
-  if(mission.stage>=2&&station){
+  if(mission.stage>=2&&station&&!station.shattered){
     const sr=mission.stage===3?42:120;
     ctx.fillStyle='rgba(95,208,104,.12)';ctx.strokeStyle='rgba(95,208,104,.92)';ctx.lineWidth=(mission.stage===3?4:3)/cam.zoom;ctx.setLineDash([]);
     ctx.beginPath();ctx.arc(station.x,station.y,sr,0,TAU);ctx.fill();ctx.stroke();
@@ -121,7 +121,7 @@ function drawBinaryZones(){
   }
   ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.moveTo(-13/cam.zoom,0);ctx.lineTo(13/cam.zoom,0);ctx.moveTo(0,-13/cam.zoom);ctx.lineTo(0,13/cam.zoom);ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,.65)';ctx.font=`800 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.fillText('共同质心',0,-20/cam.zoom);
-  if(mission.stage>=1&&!mission.done){
+  if(mission.stage>=1&&!mission.done&&!station?.shattered){
     const tx=mission.stage===1?g.x:station.x,ty=mission.stage===1?g.y:station.y;
     ctx.strokeStyle='rgba(255,209,102,.45)';ctx.lineWidth=1.6/cam.zoom;ctx.setLineDash([5/cam.zoom,8/cam.zoom]);ctx.beginPath();ctx.moveTo(rocket.x,rocket.y);ctx.lineTo(tx,ty);ctx.stroke();ctx.setLineDash([]);
   }
@@ -326,7 +326,7 @@ function drawLunarFarSideZone(){
   }
 }
 function drawStationOrbitZone(){
-  if(!station) return;
+  if(!station||station.shattered) return;
   ctx.strokeStyle='rgba(76,201,240,.32)'; ctx.lineWidth=3/cam.zoom; ctx.setLineDash([9/cam.zoom,10/cam.zoom]);
   ctx.beginPath(); ctx.arc(EARTH.x,EARTH.y,STATION_R,0,TAU); ctx.stroke(); ctx.setLineDash([]);
   const m=stationMetrics();
@@ -461,6 +461,7 @@ function drawBlackHoleStarfield(t){
 function draw(){
   const worldDrawStarted=performance.now();
   if(typeof SG_AUDIO!=='undefined') SG_AUDIO.setEngine(!paused&&state==='fly'&&rocket&&rocket.alive&&rocket.thrusting,rocket&&rocket.thrustPower);
+  if(typeof SG_AUDIO!=='undefined') SG_AUDIO.setTurn(!paused&&state==='fly'&&rocket&&rocket.alive&&!!(keys['ArrowLeft']||keys['KeyA']||keys['ArrowRight']||keys['KeyD']));
   ctx=worldCtx;
   ctx.setTransform(DPR,0,0,DPR,0,0);
   updateActionCue();

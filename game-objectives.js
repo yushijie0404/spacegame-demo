@@ -335,6 +335,11 @@ function updateMissionL10(dt){
 // 任务阶段推进（每帧调用）
 function updateMission(dt){
   if(!mission || mission.done || state!=='fly' || !launched) return;
+  if(mission.stationDestroyed){
+    mission.stationSabotageT=(mission.stationSabotageT||0)+dt;mission.dynHint='友方空间站已解体｜碎片仍在扩散';
+    if(mission.stationSabotageT>=3.2)finishYamatoStationSabotage();
+    return;
+  }
   if(level===10){ updateMissionL10(dt); return; }
   if(level===2){ updateMissionL2(dt); return; }
   if(level===3){ updateMissionL3(dt); return; }
@@ -643,11 +648,18 @@ function finishAsteroidDefense(forecast=getAsteroidForecast(true)){
     resultLine(result)+defenseSummary+`${performanceDetail()}<br>${starBreakdownHtml(starResult)}<br>`+
     `<span style="color:#888">无论软着陆、持续推离还是牺牲飞船撞击，只要最终轨道同时避开地球和月球就算成功。</span>`);
 }
+function finishYamatoStationSabotage(){
+  if(!mission||mission.done||!mission.stationDestroyed||state!=='fly')return;
+  state='dead';mission.failed=true;rocket.thrusting=false;syncUI();
+  if(typeof unlockAchievement==='function')unlockAchievement('prisoner_7251');
+  showMsg('⛓️','任务失败：空间站去哪了？',
+    `我的天，我早想这么做了。你也恨透了这份工作了，对吧？<br><span style="color:#888">友方空间站已被大和炮拆成了轨道零件。按 R 回到本阶段，任务控制中心会假装这段录像不存在。</span>`);
+}
 function updateMissionL7(dt){
   if(!asteroid)return;
   if(asteroid.shattered){
     mission.asteroidSafeT+=dt;mission.dynHint='小行星已碎裂｜正在确认碎片散开';
-    if(mission.asteroidSafeT>=1.8)finishAsteroidDefense(getAsteroidForecast(true));
+    if(mission.asteroidSafeT>=3.8)finishAsteroidDefense(getAsteroidForecast(true));
     return;
   }
   if(!asteroid.alive)return;

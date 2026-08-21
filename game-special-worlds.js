@@ -191,12 +191,12 @@ function createAsteroid(){
 function shatterAsteroid(shot={}){
   if(!asteroid||!asteroid.alive)return [];
   const dir=shot.dir||{x:Math.cos(Number(shot.heading)||0),y:Math.sin(Number(shot.heading)||0)},side={x:-dir.y,y:dir.x};
-  const sizes=[.52,.46,.41,.36,.31,.27],spread=[-1,-.58,-.2,.22,.61,1];
+  const sizes=[.46,.27,.52,.31,.41,.36],angles=[-1.08,.74,-.34,1.57,-2.02,.19],offsets=[.48,.66,.36,.71,.58,.43],speeds=[54,37,48,63,42,58];
   asteroid.fragments=sizes.map((scale,index)=>{
-    const lateral=spread[index],forward=.25+index*.08,offsetR=asteroid.r*(.18+index*.035),speed=22+index*4;
-    return {x:asteroid.x+dir.x*offsetR+side.x*lateral*asteroid.r*.48,y:asteroid.y+dir.y*offsetR+side.y*lateral*asteroid.r*.48,
-      vx:asteroid.vx+dir.x*(speed+forward*10)+side.x*lateral*28,vy:asteroid.vy+dir.y*(speed+forward*10)+side.y*lateral*28,
-      r:asteroid.r*scale,angle:asteroid.angle+index*.73,av:asteroid.av+(index-2.5)*.19,life:6,maxLife:6,index};
+    const ca=Math.cos(angles[index]),sa=Math.sin(angles[index]),radial={x:dir.x*ca+side.x*sa,y:dir.y*ca+side.y*sa},offsetR=asteroid.r*offsets[index];
+    return {x:asteroid.x+radial.x*offsetR,y:asteroid.y+radial.y*offsetR,
+      vx:asteroid.vx+dir.x*(24+(index%3)*7)+radial.x*speeds[index],vy:asteroid.vy+dir.y*(24+(index%3)*7)+radial.y*speeds[index],
+      r:asteroid.r*scale,angle:asteroid.angle+angles[index]+index*.31,av:asteroid.av+[-.74,.51,-.39,.83,-.58,.32][index],life:7,maxLife:7,index};
   });
   asteroid.alive=false;asteroid.shattered=true;asteroid.mu=0;
   if(typeof particles!=='undefined'&&Array.isArray(particles)){
@@ -206,6 +206,30 @@ function shatterAsteroid(shot={}){
     }
   }
   return asteroid.fragments;
+}
+
+function shatterStation(shot={}){
+  if(!station||station.shattered)return [];
+  const base=station.a+Math.PI/2,dir=shot.dir||{x:Math.cos(Number(shot.heading)||0),y:Math.sin(Number(shot.heading)||0)};
+  const pieces=[
+    ['panel',-49,-7,22,18,-1.34,66],['panel',-27,8,18,22,.92,54],['module',-13,-2,18,13,-.48,47],
+    ['core',3,1,17,24,1.61,42],['module',17,-5,16,15,-2.14,57],['panel',34,9,21,19,.27,69],
+    ['panel',54,-8,19,22,2.42,61],['truss',-6,3,31,5,-.91,76],['dish',22,-23,14,14,1.17,51]
+  ];
+  station.fragments=pieces.map(([type,lx,ly,w,h,burst,speed],index)=>{
+    const ca=Math.cos(base),sa=Math.sin(base),x=station.x+lx*ca-ly*sa,y=station.y+lx*sa+ly*ca,a=base+burst;
+    const radialX=Math.cos(a),radialY=Math.sin(a),kick=28+(index%3)*7;
+    return {type,x,y,w,h,angle:base+index*.37,av:[-.92,.61,-.47,.78,-.68,.43,-.81,.55,-.36][index],
+      vx:(station.vx||0)+dir.x*kick+radialX*speed,vy:(station.vy||0)+dir.y*kick+radialY*speed,life:5.5,maxLife:5.5,index};
+  });
+  station.shattered=true;station.docked=false;station.destroyT=0;
+  if(typeof particles!=='undefined'&&Array.isArray(particles)){
+    for(let i=0;i<44;i++){
+      const a=i*.83+(i%4)*.19,speed=42+(i%9)*12;
+      particles.push({x:shot.impact?.x??station.x,y:shot.impact?.y??station.y,vx:(station.vx||0)+Math.cos(a)*speed+dir.x*34,vy:(station.vy||0)+Math.sin(a)*speed+dir.y*34,life:.9+(i%6)*.13,c:i%4===0?'#ffb142':i%3===0?'#d9ecff':'#76e4ff'});
+    }
+  }
+  return station.fragments;
 }
 
 function asteroidMetrics(ship=rocket){

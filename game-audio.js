@@ -30,12 +30,13 @@
   let context=null,master=null,compressor=null,sfxBus=null,musicBus=null,noiseBuffer=null;
   let engineTone=null,engineNoise=null,engineToneGain=null,engineNoiseGain=null;
   let engineAirGain=null,engineFilter=null,engineAirFilter=null,engineLfo=null;
-  let enabled=loadEnabled(),sfxVolume=loadSfxVolume(),lastEngineActive=false,lastNamedEvent='',lastNamedAt=-Infinity,lastTurnAt=-Infinity;
+  let turnNoise=null,turnHighGain=null,turnBodyGain=null,turnHighFilter=null,turnBodyFilter=null;
+  let enabled=loadEnabled(),sfxVolume=loadSfxVolume(),lastEngineActive=false,lastTurnActive=false,lastNamedEvent='',lastNamedAt=-Infinity,lastTurnAt=-Infinity;
   let musicEnabled=true,musicVolume=.8,userUnlocked=false,autoplayBlocked=false;
   let musicRuntimeState='idle',musicRuntimeError='';
   let desiredTrack='',currentVoice=null,pendingTrack='',switchTimer=null,loopTimer=null,transitionSerial=0;
   let visibilityPauseTimer=null,transientDuckTimer=null;
-  const voices=new Set(),musicDucks=new Map();
+  const voices=new Set(),musicDucks=new Map(),preloadedTracks=new Map();
 
   function loadEnabled(){
     try{const value=global.localStorage&&localStorage.getItem(STORAGE_KEY);return value===null?true:value!=='off';}
@@ -99,7 +100,12 @@
     engineNoise.connect(engineNoiseGain).connect(engineFilter);
     engineNoise.connect(engineAirGain).connect(engineAirFilter).connect(sfxBus);
     engineFilter.connect(sfxBus);
-    engineTone.start();engineNoise.start();engineLfo.start();
+    turnHighFilter=ctx.createBiquadFilter();turnHighFilter.type='highpass';turnHighFilter.frequency.value=1180;turnHighFilter.Q.value=.22;
+    turnBodyFilter=ctx.createBiquadFilter();turnBodyFilter.type='bandpass';turnBodyFilter.frequency.value=430;turnBodyFilter.Q.value=.5;
+    turnHighGain=ctx.createGain();turnHighGain.gain.value=.0001;turnBodyGain=ctx.createGain();turnBodyGain.gain.value=.0001;
+    turnNoise=ctx.createBufferSource();turnNoise.buffer=noiseBuffer;turnNoise.loop=true;
+    turnNoise.connect(turnHighFilter).connect(turnHighGain).connect(sfxBus);turnNoise.connect(turnBodyFilter).connect(turnBodyGain).connect(sfxBus);
+    engineTone.start();engineNoise.start();engineLfo.start();turnNoise.start();
   }
   function ensure(){
     if((!enabled&&!musicEnabled)||!AudioCtor)return null;
@@ -184,6 +190,38 @@
     try{return new URL(relative,global.document?.baseURI||global.location?.href||'file:///').href;}
     catch(_){return encodeURI(relative);}
   }
+  function newTrackAudio(trackId){
+    const track=MUSIC_TRACKS[trackId],direct=global.location?.protocol==='file:';
+    if(!track||typeof global.Audio!=='function')return null;
+    const audio=new global.Audio();audio.preload='auto';if(!direct)audio.crossOrigin='anonymous';audio.src=musicUrl(track.file);audio.playsInline=true;
+    return audio;
+  }
+  function preloadTrack(trackId,onProgress){
+    if(!MUSIC_TRACKS[trackId]||typeof global.Audio!=='function')return Promise.resolve(false);
+    let entry=preloadedTracks.get(trackId);
+    if(entry){if(typeof onProgress==='function'){entry.listeners.add(onProgress);onProgress(entry.progress);}return entry.promise;}
+    const audio=newTrackAudio(trackId),listeners=new Set();if(typeof onProgress==='function')listeners.add(onProgress);
+    entry={audio,listeners,progress:.02,claimed:false,promise:null,timer:null};preloadedTracks.set(trackId,entry);
+    const report=value=>{entry.progress=Math.max(entry.progress,Math.min(1,Number(value)||0));for(const listener of entry.listeners){try{listener(entry.progress);}catch(_){}}};
+    entry.promise=new Promise(resolve=>{
+      let done=false;const finish=ok=>{if(done)return;done=true;if(entry.timer!==null){clearTimeout(entry.timer);entry.timer=null;}report(1);if(!ok&&!entry.claimed)preloadedTracks.delete(trackId);resolve(ok);};
+      audio.addEventListener?.('loadedmetadata',()=>report(.18),{once:true});
+      audio.addEventListener?.('progress',()=>{
+        try{if(audio.duration>0&&audio.buffered?.length)report(.18+.76*Math.min(1,audio.buffered.end(audio.buffered.length-1)/audio.duration));}catch(_){}
+      });
+      audio.addEventListener?.('canplay',()=>report(.78),{once:true});
+      audio.addEventListener?.('canplaythrough',()=>finish(true),{once:true});
+      audio.addEventListener?.('error',()=>finish(false),{once:true});
+      entry.timer=setTimeout(()=>finish(audio.readyState>=3),12000);
+      try{audio.load?.();}catch(_){finish(false);}
+    });
+    report(.02);return entry.promise;
+  }
+  function preloadLevel(level,options={}){
+    const id=Math.max(1,Math.min(10,Number(level)||1)),intensity=options.intensity||'normal';
+    const trackId=intensity!=='normal'&&INTENSITY_TRACKS[id]?.[intensity]||LEVEL_TRACKS[id];
+    return preloadTrack(trackId,options.onProgress);
+  }
   function publishMusicState(state,trackId=desiredTrack,error=''){
     musicRuntimeState=state;musicRuntimeError=error?.name||String(error||'');
     const doc=global.document,root=doc?.documentElement;
@@ -254,7 +292,7 @@
     const track=MUSIC_TRACKS[trackId];
     if(!track||!context||!musicBus||typeof global.Audio!=='function')return null;
     const direct=global.location?.protocol==='file:';
-    const audio=new global.Audio();audio.preload='auto';if(!direct)audio.crossOrigin='anonymous';audio.src=musicUrl(track.file);audio.playsInline=true;
+    const preload=preloadedTracks.get(trackId),audio=preload&&!preload.claimed?(preload.claimed=true,preloadedTracks.delete(trackId),preload.audio):newTrackAudio(trackId);if(!audio)return null;
     const source=direct?null:context.createMediaElementSource(audio),gain=direct?null:context.createGain();if(gain)gain.gain.value=.0001;
     if(source&&gain)source.connect(gain).connect(musicBus);
     const voice={trackId,track,audio,source,gain,direct,envelope:0,fadeTimer:null,level:dbToGain(track.trimDb),released:false,looping:false,releaseTimer:null,playPromise:null};
@@ -480,9 +518,20 @@
     if(active!==lastEngineActive){if(active)setMusicDuck('engine',.68,.12);else clearMusicDuck('engine',.24);}
     lastEngineActive=active;
   }
+  function setTurn(active){
+    active=!!active&&enabled;
+    if(active===lastTurnActive)return;
+    if(!context&&!active)return;
+    const ctx=active?ensure():context;if(!ctx||!turnHighGain||!turnBodyGain)return;
+    const now=ctx.currentTime,ramp=active?.045:.18;
+    setParam(turnHighGain.gain,active?.038:.0001,now,ramp);setParam(turnBodyGain.gain,active?.024:.0001,now,ramp);
+    turnHighFilter.frequency.cancelScheduledValues(now);turnHighFilter.frequency.linearRampToValueAtTime(active?1320:980,now+(active?.12:.2));
+    turnBodyFilter.frequency.cancelScheduledValues(now);turnBodyFilter.frequency.linearRampToValueAtTime(active?510:350,now+(active?.16:.22));
+    lastTurnActive=active;
+  }
   function setEnabled(next){
     enabled=!!next;saveEnabled();
-    if(!enabled)setEngine(false,0);else ensure();
+    if(!enabled){setEngine(false,0);setTurn(false);}else ensure();
     if(context&&sfxBus){
       const now=context.currentTime;
       sfxBus.gain.cancelScheduledValues(now);
@@ -496,10 +545,10 @@
     return sfxVolume;
   }
   function toggle(){setEnabled(!enabled);if(enabled)sfx('ui');return enabled;}
-  function stopAll(){setEngine(false,0);}
-  function status(){return {enabled,volume:sfxVolume,supported:!!AudioCtor,ready:!!context,engineActive:lastEngineActive,music:musicStatus()};}
+  function stopAll(){setEngine(false,0);setTurn(false);}
+  function status(){return {enabled,volume:sfxVolume,supported:!!AudioCtor,ready:!!context,engineActive:lastEngineActive,turnActive:lastTurnActive,music:musicStatus()};}
 
-  const api={unlock,sfx,setEngine,setEnabled,setSfxVolume,toggle,stopAll,status,isEnabled:()=>enabled,
+  const api={unlock,sfx,setEngine,setTurn,setEnabled,setSfxVolume,toggle,stopAll,status,isEnabled:()=>enabled,preloadTrack,preloadLevel,preloadMenu:onProgress=>preloadTrack('menu',onProgress),
     playBgm,playLevel,playMenu:options=>playBgm('menu',options),playReading:options=>playBgm('reading',options),setIntensity,
     pauseMusic,resumeMusic,stopMusic,setMusicDuck,clearMusicDuck,setMusicEnabled,toggleMusic,setMusicVolume,musicStatus,
     isMusicEnabled:()=>musicEnabled,musicTracks:()=>MUSIC_TRACKS,levelTracks:()=>LEVEL_TRACKS};

@@ -15,7 +15,6 @@
     keys[e.code]=true;
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
     if(e.repeat && ['KeyR','KeyT','KeyK','KeyB','KeyV','KeyH','KeyM','KeyN','KeyL','KeyC','KeyP','KeyF'].includes(e.code)) return;
-    if(!e.repeat&&(e.code==='KeyA'||e.code==='KeyD'||e.code==='ArrowLeft'||e.code==='ArrowRight')) SG_AUDIO.sfx('turn');
     if(e.code==='KeyR') restartCurrent(e.shiftKey);
     if(e.code==='KeyT') setPrediction();
     if(e.code==='KeyK') toggleCameraMode();
@@ -144,7 +143,6 @@
       e.preventDefault(); e.stopPropagation();
       activePointers.add(e.pointerId); btn.setPointerCapture(e.pointerId);
       keys[code]=true; btn.classList.add('is-pressed');
-      if(code==='KeyA'||code==='KeyD') SG_AUDIO.sfx('turn');
     });
     btn.addEventListener('pointerup',release); btn.addEventListener('pointercancel',release); btn.addEventListener('lostpointercapture',release);
     // 捕获阶段先释放输入，避免繁重 Canvas 帧让按钮自己的 pointerup 排到下一次推进之后。

@@ -304,6 +304,27 @@ function drawRocket(){
 
 function drawStation(){
   if(!station||!worldCircleVisible({x:station.x,y:station.y,r:70},120)) return;
+  if(station.shattered){
+    for(const fragment of station.fragments||[]){
+      if(fragment.life<=0)continue;
+      const life=Math.max(.2,Math.min(1,fragment.life/Math.max(.001,fragment.maxLife||5.5)));
+      ctx.save();ctx.translate(fragment.x,fragment.y);ctx.rotate(fragment.angle);ctx.globalAlpha=life;
+      if(!lowPowerMode){ctx.shadowColor=fragment.type==='panel'?'#4cc9f0':'#ffb142';ctx.shadowBlur=9/cam.zoom;}
+      ctx.lineWidth=1.5/cam.zoom;ctx.strokeStyle='#d9ecff';
+      if(fragment.type==='panel'){
+        ctx.fillStyle='#24589d';ctx.fillRect(-fragment.w/2,-fragment.h/2,fragment.w,fragment.h);ctx.strokeRect(-fragment.w/2,-fragment.h/2,fragment.w,fragment.h);
+        ctx.strokeStyle='rgba(185,230,255,.55)';ctx.beginPath();ctx.moveTo(0,-fragment.h/2);ctx.lineTo(0,fragment.h/2);ctx.moveTo(-fragment.w/2,0);ctx.lineTo(fragment.w/2,0);ctx.stroke();
+      }else if(fragment.type==='truss'){
+        ctx.strokeStyle='#d6e4ee';ctx.lineWidth=3/cam.zoom;ctx.beginPath();ctx.moveTo(-fragment.w/2,0);ctx.lineTo(fragment.w/2,0);ctx.stroke();ctx.lineWidth=1/cam.zoom;for(let x=-fragment.w/2;x<fragment.w/2;x+=7){ctx.beginPath();ctx.moveTo(x,-3);ctx.lineTo(x+6,3);ctx.stroke();}
+      }else if(fragment.type==='dish'){
+        ctx.strokeStyle='#edf3f7';ctx.lineWidth=2/cam.zoom;ctx.beginPath();ctx.arc(0,0,fragment.w/2,.15*Math.PI,1.15*Math.PI);ctx.stroke();ctx.beginPath();ctx.moveTo(-2,2);ctx.lineTo(7,10);ctx.stroke();
+      }else{
+        ctx.fillStyle=fragment.type==='core'?'#f4bf45':'#cbd6df';roundRect(-fragment.w/2,-fragment.h/2,fragment.w,fragment.h,3);ctx.fill();ctx.stroke();
+      }
+      ctx.restore();
+    }
+    ctx.fillStyle='#ffb6a0';ctx.font=`900 ${12/cam.zoom}px "Microsoft YaHei",sans-serif`;ctx.textAlign='center';ctx.fillText('空间站残骸',station.x,station.y-48/cam.zoom);ctx.textAlign='left';return;
+  }
   // 远景时只放大绘制，不改变碰撞盒，让空间站在手机上仍能辨认。
   const lod=Math.max(1,Math.min(2.35,.52/Math.max(.04,cam.zoom))),pulse=.55+.35*Math.sin((mission?.flightTime||0)*3.4);
   ctx.save();ctx.translate(station.x,station.y);ctx.rotate(station.a+Math.PI/2);ctx.scale(lod,lod);

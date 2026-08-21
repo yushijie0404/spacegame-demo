@@ -17,6 +17,7 @@
   *{box-sizing:border-box}
   .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
   html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden;background:#0b1026;font-family:'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  #gameLoader{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;color:#fff;background:#000;opacity:1;transition:opacity .65s ease;touch-action:manipulation}#gameLoader.is-leaving{opacity:0;pointer-events:none}#gameLoader[hidden]{display:none}.game-loader-core{width:min(760px,calc(100vw - 44px));text-align:left}.game-loader-title{margin:0 0 30px;font:800 clamp(25px,6vw,70px)/1.05 'Segoe UI','Arial Narrow',sans-serif;letter-spacing:clamp(4px,1vw,13px);white-space:nowrap}.game-loader-title span{display:block;overflow:hidden;background:linear-gradient(90deg,#fff 0%,#fff 68%,#9fe8ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;clip-path:inset(0 100% 0 0);opacity:0;transform:translateX(-26px);animation:gameTitleReveal 1.65s cubic-bezier(.2,.72,.22,1) .16s forwards}.game-loader-track{position:relative;height:5px;overflow:hidden;background:#1a1a1a}.game-loader-fill{width:var(--loader-progress,0%);height:100%;background:linear-gradient(90deg,#fff,#9fe8ff,#4cc9f0);box-shadow:0 0 18px rgba(76,201,240,.7);transition:width .18s ease}.game-loader-meta{display:flex;justify-content:space-between;margin-top:11px;color:#78808d;font:700 10px/1.2 'Segoe UI',sans-serif;letter-spacing:2.6px}.game-loader-percent{color:#dcecff;font-variant-numeric:tabular-nums}@keyframes gameTitleReveal{0%{clip-path:inset(0 100% 0 0);opacity:0;transform:translateX(-26px)}28%{opacity:1}100%{clip-path:inset(0 0 0 0);opacity:1;transform:translateX(0)}}@media(max-width:620px){.game-loader-core{width:calc(100vw - 34px)}.game-loader-title{margin-bottom:22px;font-size:clamp(22px,8.2vw,36px);letter-spacing:clamp(2px,1.6vw,6px)}.game-loader-meta{font-size:9px;letter-spacing:1.7px}}
   button{font:inherit}
   #cv{position:fixed;inset:0;display:block;width:var(--app-width,100vw);height:var(--app-height,100dvh);touch-action:none;cursor:grab}
   #hudCv{position:fixed;inset:0;z-index:3;display:block;width:var(--app-width,100vw);height:var(--app-height,100dvh);pointer-events:none}
@@ -195,6 +196,7 @@
 </style>
 </head>
 <body>
+<div id="gameLoader" role="status" aria-live="polite" aria-label="游戏资源加载中"><div class="game-loader-core"><h1 class="game-loader-title"><span>INTERSTELLAR COURIER</span></h1><div class="game-loader-track" role="progressbar" aria-label="加载进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="game-loader-fill"></div></div><div class="game-loader-meta"><span>LOADING FLIGHT SYSTEMS</span><span id="gameLoaderPercent" class="game-loader-percent">0%</span></div></div></div>
 <canvas id="cv"></canvas><canvas id="hudCv" aria-hidden="true"></canvas><div id="gravityStatus" class="sr-only" role="status" aria-live="polite"></div><div id="threeBodyExamStatus" class="sr-only" role="status" aria-live="polite"></div>
 <div id="orientationHint" role="status" aria-live="polite" aria-hidden="true"><span class="rotate-icon" aria-hidden="true">↻</span><strong>建议横屏游玩</strong><span class="orientation-copy">请转动设备以使用所选布局</span></div>
 <div class="hud">
@@ -307,7 +309,7 @@
   </div></section>
   <section id="freeTaskSection" class="free-task-section" aria-labelledby="freeTaskToggle"><button id="freeTaskToggle" class="free-task-toggle" type="button" onclick="toggleFreeTasks()" aria-expanded="false"><span>自由任务 · 9</span><small>全部任务始终可玩</small></button><div id="freeTaskPanel" class="free-task-panel" hidden><div id="freeTaskGrid" class="level-grid free-task-grid"></div></div></section>
   <section class="reward-direction" aria-labelledby="rewardDirectionTitle"><div class="reward-direction-head"><h3 id="rewardDirectionTitle">🧭 航程奖励方向</h3><p>星星推进战役 · 勋章邀请特殊玩法 · 分数用于高手优化 · 外观记录成长</p></div><div class="reward-direction-grid"><div class="reward-role"><span>战役星星</span><strong id="rewardStarTotal">0 / 30 星</strong><small id="rewardActProgress">0 / 4 幕已完成</small></div><div class="reward-role"><span>下一外观</span><strong id="rewardNextUnlock">再获得 12 星解锁飞天一号</strong><small id="rewardSkinProgress">1 / 3 外观已解锁</small></div><div class="reward-role"><span>特殊勋章</span><strong>不同路线与驾驶限制</strong><small>不作为普通通关门槛</small></div><div class="reward-role"><span>高手纪录</span><strong id="rewardScoreTotal">十关最高分合计 0</strong><small>燃料与时间只在这里拉开差距</small></div></div></section>
-  <div class="level-footer"><button class="main-settings-entry" type="button" onclick="openMainSettings()">⚙️ 游戏设置</button><button class="upgrade-entry" onclick="openUpgradeBay()">⚙️ 航天器升级 <span id="upgradePointBadge" class="upgrade-points">0 点</span></button><button class="ship-skin-entry" onclick="openShipSkinPicker()">🚀 飞船外观 <span id="shipSkinCurrent">星际快递号</span></button><button class="achievement-entry" onclick="openAchievementCollection()">🏅 勋章收藏 <span id="achievementCount" class="achievement-count">0/24</span></button><button id="continueLevel" onclick="closeLevelSelect()">继续当前任务</button></div>
+  <div class="level-footer"><button class="main-settings-entry" type="button" onclick="openMainSettings()">⚙️ 游戏设置</button><button class="upgrade-entry" onclick="openUpgradeBay()">⚙️ 航天器升级 <span id="upgradePointBadge" class="upgrade-points">0 点</span></button><button class="ship-skin-entry" onclick="openShipSkinPicker()">🚀 飞船外观 <span id="shipSkinCurrent">星际快递号</span></button><button class="achievement-entry" onclick="openAchievementCollection()">🏅 勋章收藏 <span id="achievementCount" class="achievement-count">0/25</span></button><button id="continueLevel" onclick="closeLevelSelect()">继续当前任务</button></div>
 </div></div></div>
 <div id="mainSettings" role="dialog" aria-modal="true" aria-labelledby="mainSettingsTitle" onclick="if(event.target===this)closeMainSettings()"><div class="main-settings-card">
   <button class="main-settings-close" type="button" onclick="closeMainSettings()" aria-label="关闭游戏设置">×</button><div class="level-kicker">GAME SETTINGS</div><h1 id="mainSettingsTitle">⚙️ 游戏设置</h1><p class="main-settings-lead">声音、语言、显示和测试选项集中在这里；飞船、勋章与升级仍在任务目录中。</p>
@@ -358,6 +360,7 @@
   <ul id="campaignSummaryMissions" class="campaign-summary-missions"></ul><p id="campaignSummaryAdvance" class="campaign-summary-advance"></p><p id="campaignSummaryNext" class="campaign-summary-next"></p><p class="campaign-summary-skip">点击任意处继续</p>
 </div></section>
 <div id="achievementToast" role="status" aria-live="polite"><div id="achievementToastBadge"></div><div class="achievement-toast-copy"><span class="achievement-toast-kicker">ACHIEVEMENT UNLOCKED</span><strong id="achievementToastName" class="achievement-toast-name"></strong><span id="achievementToastJoke" class="achievement-toast-joke"></span></div></div>
+<script src="./game-loader.js"></script>
 <script src="./runtime-performance.js"></script>
 <script src="./game-audio.js"></script>
 <script src="./game-missions.js"></script>
@@ -382,7 +385,7 @@
 const cv = document.getElementById('cv'), hudCv=document.getElementById('hudCv');
 const worldCtx=cv.getContext('2d'),hudCtx=hudCv.getContext('2d');
 const SG_PERF=globalThis.SpaceGamePerformance||{sample(){},frameGap(){},snapshot(){return {physics:{average:0,peak:0},world:{average:0,peak:0},hud:{average:0,peak:0},prediction:{average:0,peak:0},work:{average:0,peak:0},recent:{longFrameRate:0,worstGap:0}};},reset(){}};
-const SG_AUDIO=globalThis.SpaceGameAudio||{unlock(){},sfx(){},setEngine(){},setEnabled(){return false;},setSfxVolume(){return 0;},toggle(){return false;},stopAll(){},status(){return {enabled:false,volume:0,supported:false,ready:false,music:{enabled:false,volume:0,supported:false}};},isEnabled(){return false;},playBgm(){},playLevel(){},playMenu(){},playReading(){},setIntensity(){},setMusicDuck(){},clearMusicDuck(){},setMusicEnabled(){return false;},toggleMusic(){return false;},setMusicVolume(){return 0;},musicStatus(){return {enabled:false,volume:0,supported:false,state:'unsupported'};}};
+const SG_AUDIO=globalThis.SpaceGameAudio||{unlock(){},sfx(){},setEngine(){},setTurn(){},setEnabled(){return false;},setSfxVolume(){return 0;},toggle(){return false;},stopAll(){},preloadTrack(){return Promise.resolve(false);},preloadLevel(){return Promise.resolve(false);},preloadMenu(){return Promise.resolve(false);},status(){return {enabled:false,volume:0,supported:false,ready:false,music:{enabled:false,volume:0,supported:false}};},isEnabled(){return false;},playBgm(){},playLevel(){},playMenu(){},playReading(){},setIntensity(){},setMusicDuck(){},clearMusicDuck(){},setMusicEnabled(){return false;},toggleMusic(){return false;},setMusicVolume(){return 0;},musicStatus(){return {enabled:false,volume:0,supported:false,state:'unsupported'};}};
 const SG_ORBIT=globalThis.SpaceGameOrbit;
 const SG_DISPLAY=globalThis.SpaceGameDisplay||{install(){return {mode:'auto',label:'自动旋转'};},cycle(){return {mode:'auto',label:'自动旋转'};},status(){return {mode:'auto',label:'自动旋转'};}};
 const SG_I18N=globalThis.SpaceGameI18n||{t:value=>value,cycle(){return{locale:'zh',label:'中文',button:'🌐 中文'};},status(){return{locale:'zh',label:'中文',button:'🌐 中文'};},refresh(){}};
@@ -671,6 +674,13 @@ function earthSpecificEnergy(ship=rocket){
 }
 function updateStation(dt){
   if(!station) return;
+  if(station.shattered){
+    station.destroyT=(station.destroyT||0)+dt;
+    for(const fragment of station.fragments||[]){
+      fragment.x+=fragment.vx*dt;fragment.y+=fragment.vy*dt;fragment.angle=normalizeAngle(fragment.angle+fragment.av*dt);fragment.life=Math.max(0,fragment.life-dt);
+    }
+    return;
+  }
   if(typeof level!=='undefined'&&level===8&&typeof binary!=='undefined'&&binary){
     station.angle=normalizeAngle(station.angle+BINARY_STATION_OMEGA*dt);
     const c=Math.cos(station.angle),s=Math.sin(station.angle),v=BINARY_STATION_OMEGA*BINARY_STATION_R;
@@ -688,7 +698,7 @@ function updateStation(dt){
   }
 }
 function stationMetrics(){
-  if(!station) return {distance:Infinity,relSpeed:Infinity,closing:0};
+  if(!station||station.shattered) return {distance:Infinity,relSpeed:Infinity,closing:0};
   return SG_ORBIT.relativeNavigation(station,rocket);
 }
 // 当前关卡的教学步骤
@@ -898,7 +908,7 @@ function startLevel(levelId){
   level=Math.max(1,Math.min(10,Number(levelId)||1));
   // Start the level score on the mission-selection gesture. resetGame() asks
   // for the same track again, which preserves this early musical lead-in.
-  SG_AUDIO.playLevel(level,{intensity:'normal',duration:4.5});
+  SG_AUDIO.playLevel(level,{intensity:'normal',duration:1.35});
   challengeMode=false;
   gameStarted=true; levelSelectOpen=false; paused=false; lastBriefedLevel=0;
   closeAchievementCollection();
@@ -1014,6 +1024,7 @@ function resetGame(){
     lagrangeTarget:1,lagrangeDistance:Infinity,lagrangeRelSpeed:Infinity,
     asteroidContact:false,asteroidAnchored:false,asteroidMountAngle:0,hingeAngle:0,
     asteroidChanged:false,asteroidImpact:false,asteroidYamato:false,asteroidShattered:false,asteroidSafeT:0,asteroidMinEarth:Infinity,asteroidMinMoon:Infinity,asteroidForecast:null,
+    stationDestroyed:false,stationSabotageT:0,
     binaryHeatViolated:false,binaryCaptured:false,binaryGateCrossed:false,binaryTargetEnergy:Infinity,
     blackHoleMinR:Infinity,blackHoleDeepBurn:false,blackHoleEscaping:false,blackHoleFrozen:false,blackHoleAwaitRelease:false,blackHoleInvalidExitT:0,blackHoleExitFailed:false,
     threeGateIndex:0,threeRescued:[false,false],threeDestroyed:[false,false],threeRescueOrder:[],threeApproachMade:false,threeDangerViolated:false,threeMinClearance:Infinity,threeEscapeT:0,threeSeed:threeBody?.seed||0};
@@ -1376,7 +1387,7 @@ function cycleScreenOrientation(){
 function currentYamatoTargets(){
   const targets=BODIES.filter(body=>(body.r||0)>5).map(body=>({ref:body,x:body.x,y:body.y,r:body.r,name:body.name,kind:body.isStar?'star':body.isBlackHole?'black-hole':'body'}));
   if(asteroid?.alive)targets.push({ref:asteroid,x:asteroid.x,y:asteroid.y,r:asteroid.r,name:asteroid.name,kind:'asteroid'});
-  if(station)targets.push({ref:station,x:station.x,y:station.y,r:32,name:'空间站',kind:'station'});
+  if(station&&!station.shattered)targets.push({ref:station,x:station.x,y:station.y,r:32,name:'空间站',kind:'station'});
   for(const ship of threeBody?.rescueShips||[]){
     if(ship.alive&&!ship.destroyed&&!ship.rescued)targets.push({ref:ship,x:ship.x,y:ship.y,r:THREE_RESCUE_SHIP_R,name:`求救飞船 ${ship.index?'B':'A'}`,kind:'rescue'});
   }
@@ -1396,7 +1407,7 @@ function shipSkillRuntimeContext(){
     },
     onYamatoFire(shot){
       markSkillWorldStarted();shake=Math.max(shake,shot.destruction?11:7);
-      const message=shot.destruction?`${SG_I18N.t('大和炮击碎小行星')} · ${shot.destruction.fragments} ${SG_I18N.t('块')}`:
+      const message=shot.destruction?.station?SG_I18N.t('大和炮击毁友方空间站'):shot.destruction?`${SG_I18N.t('大和炮击碎小行星')} · ${shot.destruction.fragments} ${SG_I18N.t('块')}`:
         shot.hit?`${SG_I18N.t('光束消散在')} ${SG_I18N.t(shot.targetName||'目标')} ${SG_I18N.t('引力场中')}`:SG_I18N.t('大和炮射程内没有目标');
       mission.toast='☄ '+message;mission.toastT=3.4;
     },
@@ -1405,6 +1416,11 @@ function shipSkillRuntimeContext(){
       mission.asteroidChanged=true;mission.asteroidYamato=true;mission.asteroidShattered=true;mission.asteroidSafeT=0;mission.stage=Math.max(3,mission.stage);mission.holdT=0;mission.asteroidForecast=null;
       mission.dynHint='小行星已被大和炮击碎｜碎片正在远离危险轨道';
       return {fragments:fragments.length};
+    },
+    onYamatoStationHit(shot){
+      const fragments=shatterStation(shot);mission.stationDestroyed=true;mission.stationSabotageT=0;mission.dockReady=false;mission.finalHoldT=0;
+      mission.dynHint='友方空间站已解体｜任务控制中心正在确认你是不是认真的';shake=Math.max(shake,16);SG_AUDIO.sfx('explosion');
+      return {station:true,fragments:fragments.length};
     }};
 }
 function tryShipSkill(){
@@ -1612,7 +1628,7 @@ function retryFromStage(reason){
     velOffset=cp.velOffset||0;
     rocket.launchBaseVx=cp.launchBaseVx; rocket.launchBaseVy=cp.launchBaseVy; rocket._launchFrameActive=!!cp.launchFrameActive;
     rocket._launchAssistActive=!!cp.launchAssistActive; rocket._launchCompleted=!!cp.launchCompleted;
-    if(station&&Number.isFinite(cp.stationAngle)){ station.angle=cp.stationAngle; updateStation(0); }
+    if(station&&Number.isFinite(cp.stationAngle)){station.shattered=false;station.fragments=[];station.destroyT=0;station.docked=false;mission.stationDestroyed=false;mission.stationSabotageT=0;station.angle=cp.stationAngle;updateStation(0);}
     if(cp.slingshot) Object.assign(mission,cp.slingshot);
     if(cp.binaryMission)Object.assign(mission,cp.binaryMission);
     if(cp.blackHoleMission)Object.assign(mission,cp.blackHoleMission);
@@ -1813,6 +1829,12 @@ SG_INPUT.install();
 installMusicContextObserver();
 resetGame();
 openLevelSelect(true);
+const loaderRecommendedLevel=campaignCatalogState(loadProgress()).recommended||1;
+globalThis.SpaceGameLoader?.begin?.(SG_AUDIO,{recommendedLevel:loaderRecommendedLevel});
+const levelSelectWarmup=document.getElementById('levelSelect');
+const warmLevelMusic=event=>{const card=event.target?.closest?.('[data-level-card]'),levelId=card?.dataset.levelCard||(event.target?.closest?.('#noviceStart')?1:0);if(levelId)SG_AUDIO.preloadLevel(levelId);};
+levelSelectWarmup?.addEventListener('pointerdown',warmLevelMusic,{capture:true,passive:true});
+levelSelectWarmup?.addEventListener('pointerover',warmLevelMusic,{capture:true,passive:true});
 requestAnimationFrame(loop);
 </script>
 </body>

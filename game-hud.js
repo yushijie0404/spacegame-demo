@@ -37,12 +37,12 @@ function objectiveVisualTarget(){
   const outwardPoint=(cx,cy,r)=>{const dx=rocket.x-cx,dy=rocket.y-cy,d=Math.max(1,Math.hypot(dx,dy));return{x:cx+dx/d*r,y:cy+dy/d*r,r:28};};
   if(level===1){const a=padAngle();return{x:EARTH.x+Math.cos(a)*R_GEO,y:EARTH.y+Math.sin(a)*R_GEO,r:GEO_BAND,label:'同步带目标',color:'#5fd068'};}
   if(level===2){const a=landAngle();return{x:EARTH.x+Math.cos(a)*EARTH.r,y:EARTH.y+Math.sin(a)*EARTH.r,r:70,label:'着陆区',color:'#5fd068'};}
-  if(level===3&&station)return{x:station.x,y:station.y,r:38,label:'空间站',color:'#5fd068'};
+  if(level===3&&station&&!station.shattered)return{x:station.x,y:station.y,r:38,label:'空间站',color:'#5fd068'};
   if(level===4)return{x:MOON.x,y:MOON.y,r:MOON.r,label:'月球',color:'#dce3e8'};
   if(level===5){if(mission.stage<3)return{x:MOON.x,y:MOON.y,r:MOON.r,label:'月球借力',color:'#dce3e8'};const p=outwardPoint(EARTH.x,EARTH.y,SLING_EXIT_R);return{...p,label:'地球逃逸门',color:'#5fd068'};}
   if(level===6){const lm=nearestLagrangeMetrics(),p=lm.point;return{x:p.x,y:p.y,r:220,label:`最近 L${p.id}`,color:p.color};}
   if(level===7&&asteroid?.alive)return{x:asteroid.x,y:asteroid.y,r:asteroid.r,label:'目标小行星',color:'#d8a16f'};
-  if(level===8&&binary){if(mission.stage===0)return{x:0,y:0,r:60,label:'双星通道',color:'#4cf0dd'};const p=mission.stage===1?binaryGatePoint():station;return{x:p.x,y:p.y,r:mission.stage===1?30:38,label:mission.stage===1?'引力通道':'暮光站',color:mission.stage===1?'#4cf0dd':'#5fd068'};}
+  if(level===8&&binary){if(mission.stage===0)return{x:0,y:0,r:60,label:'双星通道',color:'#4cf0dd'};if(station?.shattered)return null;const p=mission.stage===1?binaryGatePoint():station;return{x:p.x,y:p.y,r:mission.stage===1?30:38,label:mission.stage===1?'引力通道':'暮光站',color:mission.stage===1?'#4cf0dd':'#5fd068'};}
   if(level===9&&blackHole){if(mission.stage<2)return{x:0,y:0,r:BH_PHOTON_RING,label:'黑洞近点',color:'#d9a6ff'};const p=outwardPoint(0,0,BH_ESCAPE_R);return{...p,label:'远方救援门',color:'#5fd068'};}
   if(level===10&&threeBody){if(mission.stage<2){const rescue=nearestUnrescuedThreeBodyShip();if(rescue){const p=rescue.gate;return{x:p.x,y:p.y,r:THREE_GATE_R,label:`最近：求救飞船 ${rescue.index?'B':'A'}`,color:rescue.index?'#ffd166':'#4cf0dd'};}}const c=threeBodyBarycenter(),p=outwardPoint(c.x,c.y,THREE_ESCAPE_R);return{...p,label:'安全边界',color:'#5fd068'};}
   return null;
@@ -87,7 +87,7 @@ function drawBinaryRadar(){
   if(showPred&&!rocket.landed){const p=getPredictedPath();ctx.strokeStyle='rgba(255,209,102,.75)';ctx.lineWidth=1;ctx.setLineDash([2,2]);ctx.beginPath();for(let i=0;i<p.pts.length;i++){const q=p.pts[i];i?ctx.lineTo(mapX(q.x),mapY(q.y)):ctx.moveTo(mapX(q.x),mapY(q.y));}ctx.stroke();ctx.setLineDash([]);}
   for(const b of [MARS,MOON,EARTH]){const r=Math.max(b.isStar?4:2.5,b.r*scale);ctx.fillStyle=b===MARS?'#ffad3d':b===MOON?'#b9e4ff':'#4cc9f0';ctx.beginPath();ctx.arc(mapX(b.x),mapY(b.y),r,0,TAU);ctx.fill();}
   ctx.fillStyle='#4cf0dd';ctx.beginPath();ctx.arc(mapX(gate.x),mapY(gate.y),3,0,TAU);ctx.fill();
-  ctx.fillStyle='#5fd068';ctx.beginPath();ctx.arc(mapX(station.x),mapY(station.y),3,0,TAU);ctx.fill();
+  if(!station.shattered){ctx.fillStyle='#5fd068';ctx.beginPath();ctx.arc(mapX(station.x),mapY(station.y),3,0,TAU);ctx.fill();}
   ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mapX(rocket.x),mapY(rocket.y),3.5,0,TAU);ctx.fill();
   if(radarMode===1){const vw=Math.max(8,W/cam.zoom*scale),vh=Math.max(8,H/cam.zoom*scale);ctx.strokeStyle='#4cc9f0';ctx.setLineDash([3,2]);ctx.strokeRect(mapX(cam.x)-vw/2,mapY(cam.y)-vh/2,vw,vh);ctx.setLineDash([]);}
   ctx.restore();ctx.fillStyle='#fff';ctx.font=`800 ${portrait?8:9}px sans-serif`;ctx.textAlign='left';ctx.fillText(RS<100?(radarMode===0?'双星 · 点按':'全局 · 点按'):(radarMode===0?'双星雷达 · 点击切换':'全局导航 · 点击切换'),cx+5,cy+11);
@@ -231,7 +231,7 @@ function drawRadar(){
       ctx.setLineDash([]);
       ctx.fillStyle='rgba(219,231,255,.45)'; ctx.beginPath(); ctx.arc(mapX(ghostShip.x),mapY(ghostShip.y),3,0,TAU); ctx.fill();
     }
-    if(level===3&&station){
+    if(level===3&&station&&!station.shattered){
       const sqx=mapX(station.x), sqy=mapY(station.y);
       ctx.strokeStyle='rgba(95,208,104,.65)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(rqx,rqy); ctx.lineTo(sqx,sqy); ctx.stroke();
       ctx.fillStyle='#5fd068'; ctx.beginPath(); ctx.arc(sqx,sqy,4,0,TAU); ctx.fill();
@@ -464,7 +464,7 @@ function drawHUDOverlay(worldDrawStarted){
   ctx.fillStyle='rgba(255,209,102,.9)';
   if(teleDetailed){
   if(level===1) ctx.fillText(`同步带高度 ${(R_GEO-EARTH.r-GEO_BAND).toFixed(0)}~${(R_GEO-EARTH.r+GEO_BAND).toFixed(0)}`, W-20, teleY+76);
-  if(level===3&&station){
+  if(level===3&&station&&!station.shattered){
     const m=stationMetrics();
     ctx.fillStyle='#5fd068'; ctx.fillText(`空间站距离 ${m.distance.toFixed(0)} u`,W-20,teleY+76);
     ctx.fillStyle=telemetryRiskColor(m.relSpeed,8,22); ctx.fillText(`相对速度·空间站 ${m.relSpeed.toFixed(1)} u/s`,W-20,teleY+96);
@@ -519,7 +519,7 @@ function drawHUDOverlay(worldDrawStarted){
     let critical='任务导航正常',criticalColor='#ffd166';
     if(level===1){const s=directSyncStatus();critical=s.inBand?`同步差 ${s.residual.toFixed(3)} rad/s`:'目标：进入同步带';criticalColor=s.inBand?'#5fd068':'#ffd166';}
     else if(level===2)critical=mission.stage>=2?'目标：对准绿色着陆区':'目标：返回地表';
-    else if(level===3&&station){const m=stationMetrics();critical=`空间站 ${m.distance.toFixed(0)} u · 相对速度·空间站 ${m.relSpeed.toFixed(1)}`;criticalColor=m.distance<300?'#5fd068':'#ffd166';}
+    else if(level===3&&station&&!station.shattered){const m=stationMetrics();critical=`空间站 ${m.distance.toFixed(0)} u · 相对速度·空间站 ${m.relSpeed.toFixed(1)}`;criticalColor=m.distance<300?'#5fd068':'#ffd166';}
     else if(level===4&&lunarM){critical=Math.abs(lunarM.farDelta)<Math.PI/2?'已到月背 · 准备着陆':'目标：月球背面';criticalColor=Math.abs(lunarM.farDelta)<Math.PI/2?'#5fd068':'#ffd166';}
     else if(level===5){const e=earthSpecificEnergy(),v=e>0?Math.sqrt(2*e):0;critical=`逃逸余速 v∞ ${v.toFixed(1)} u/s`;criticalColor=e>0?'#5fd068':'#ffd166';}
     else if(level===6){const lm=nearestLagrangeMetrics();critical=`L${lm.point.id} ${lm.distance.toFixed(0)} u · 相对速度·目标点 ${lm.relSpeed.toFixed(1)}`;criticalColor=lm.point.color;}
