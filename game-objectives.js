@@ -538,7 +538,7 @@ function finishSlingshot(){
   const result=saveLevelResult(5,performanceScore(),starResult.stars);
   const usedMoon=Number.isFinite(mission.slingClosestDistance)&&mission.slingClosestDistance<1400;
   const closestAlt=usedMoon?Math.max(0,mission.slingClosestDistance-MOON.r):null;
-  syncUI();
+  mission.dynHint='';syncUI();
   showMsg('🪃','成功飞出地球！',
     resultLine(result)+`已向外穿过地球逃逸门 · v∞ ${vInf.toFixed(1)} u/s<br>`+
     (usedMoon?`最近月面高度 ${closestAlt.toFixed(0)} u · `:'')+
@@ -547,6 +547,14 @@ function finishSlingshot(){
     `<span style="color:#888">方向偏差是飞行速度与绿圈当地向外法线的夹角；越接近 0°，出圈越干净。</span>`);
 }
 // 第五关：地面有限燃料发射 → 月球运动后方飞越 → 正能量穿越地球逃逸门
+function isSlingshotTransferDeadEnd({missionLevel,isChallenge,stage,fuel,apoapsisRadius,radialVelocity=Infinity,predictedMoonAltitude=Infinity,moonOrbitRadius=MOON_ORBIT_R}){
+  return missionLevel===5&&isChallenge&&stage===0
+    &&fuel<SLING_DEAD_END_FUEL_THRESHOLD
+    &&radialVelocity<-8
+    &&predictedMoonAltitude>=2600
+    &&Number.isFinite(apoapsisRadius)
+    &&apoapsisRadius<moonOrbitRadius-SLING_DEAD_END_APOAPSIS_GAP;
+}
 function updateMissionL5(dt){
   if(rocket.landed) return;
   const m=moonMetrics(),energy=earthSpecificEnergy();
@@ -575,7 +583,23 @@ function updateMissionL5(dt){
   if(mission.stage===0){
     const ap=orbitApsis(EARTH,rocket),alt=ap.r-EARTH.r;
     const transferReady=ap.bound&&orbitalAngularRate()>0&&ap.rp>EARTH.r&&ap.ra>MOON_ORBIT_R-700&&ap.ra<MOON_ORBIT_R+1100;
-    mission.dynHint=`把预计最高点送到月球轨道｜燃料 ${rocket.fuel.toFixed(1)}%｜最高点 ${Number.isFinite(ap.ra)?Math.max(0,ap.ra-EARTH.r).toFixed(0):'逃逸'}`;
+    const transferPrediction=rocket.fuel<SLING_DEAD_END_FUEL_THRESHOLD&&!rocket.thrusting?getPredictedPath():null;
+    const predictedMoonAltitude=transferPrediction?.moonApproach?.altitude??Infinity;
+    const transferDeadEnd=isSlingshotTransferDeadEnd({missionLevel:level,isChallenge:challengeMode,stage:mission.stage,fuel:rocket.fuel,apoapsisRadius:ap.ra,radialVelocity:radial,predictedMoonAltitude});
+    const deadEndMessage=SG_I18N.t('当前燃料不足以完成转移｜按 Shift+R 或在暂停菜单选择“整关重来”');
+    if(predictedMoonAltitude<1800){
+      mission.slingDeadEndT=0;
+      if(mission.toast.replace(/^⚠\s*/, '')===deadEndMessage){mission.toast='';mission.toastT=0;}
+      mission.slingDeadEndNotified=false;
+    }else mission.slingDeadEndT=transferDeadEnd?Math.min(SLING_DEAD_END_CONFIRM_TIME,mission.slingDeadEndT+dt):0;
+    if(mission.slingDeadEndT>=SLING_DEAD_END_CONFIRM_TIME){
+      mission.dynHint=deadEndMessage;
+      return;
+    }
+    if(predictedMoonAltitude<1800){
+      const eta=Math.max(5,Math.round(transferPrediction.moonApproach.time/5)*5);
+      mission.dynHint=`${SG_I18N.t('相遇窗口')}｜${SG_I18N.t('预计近月点')} ${Math.max(0,predictedMoonAltitude).toFixed(0)} u｜${SG_I18N.t('约')} ${eta} ${SG_I18N.t('秒后')}`;
+    }else mission.dynHint=`把预计最高点送到月球轨道｜燃料 ${rocket.fuel.toFixed(1)}%｜最高点 ${Number.isFinite(ap.ra)?Math.max(0,ap.ra-EARTH.r).toFixed(0):'逃逸'}`;
     if(transferReady){ mission.holdT+=dt; if(mission.holdT>=.25) advanceStage(); }
     else mission.holdT=0;
     return;

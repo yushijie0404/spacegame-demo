@@ -214,9 +214,11 @@ function drawRadar(){
       if(pred.impact){
         const qx=mapX(pred.impact.x),qy=mapY(pred.impact.y),s=portrait?3:4;
         ctx.strokeStyle='#ef476f';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(qx-s,qy-s);ctx.lineTo(qx+s,qy+s);ctx.moveTo(qx+s,qy-s);ctx.lineTo(qx-s,qy+s);ctx.stroke();
-      }else if(level===5&&pred.moonApproach&&pred.moonApproach.altitude<1800){
-        const qx=mapX(pred.moonApproach.x),qy=mapY(pred.moonApproach.y);
-        ctx.fillStyle=pred.moonApproach.altitude<80?'#ef476f':'#ffd166';ctx.beginPath();ctx.arc(qx,qy,portrait?3:4,0,TAU);ctx.fill();
+      }else if(level===5&&!rocket.thrusting&&pred.moonApproach&&pred.moonApproach.altitude<1800){
+        const p=pred.moonApproach,qx=mapX(p.x),qy=mapY(p.y),mx=mapX(p.bodyX),my=mapY(p.bodyY);
+        ctx.strokeStyle='rgba(159,232,255,.72)';ctx.lineWidth=1;ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(qx,qy);ctx.lineTo(mx,my);ctx.stroke();ctx.setLineDash([]);
+        ctx.fillStyle=p.altitude<80?'#ef476f':'#ffd166';ctx.beginPath();ctx.arc(qx,qy,portrait?3:4,0,TAU);ctx.fill();
+        ctx.strokeStyle='#9fe8ff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(mx,my,portrait?4:5,0,TAU);ctx.stroke();
       }
     }
     const rqx=mapX(rocket.x), rqy=mapY(rocket.y);

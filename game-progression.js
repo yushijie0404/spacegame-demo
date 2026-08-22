@@ -49,12 +49,6 @@ const SpaceGameCampaign=Object.freeze({
   }
 });
 globalThis.SpaceGameCampaign=SpaceGameCampaign;
-const SG_UPGRADES=globalThis.SpaceGameUpgrades||{
-  recordResult(){return {earned:0,reasons:[],state:{points:0,engine:0,structure:0}};},
-  reconcileProgress(){return {earned:0};},fuelMultiplier(){return 1;},landingMultiplier(){return 1;},
-  effects(){return {engineLevel:0,structureLevel:0,fuelSavingPercent:0,landingBonusPercent:0};},
-  state(){return {points:0,engine:0,structure:0};},purchase(){return {ok:false,reason:'points'};},MAX_LEVEL:3
-};
 function loadProgress(){
   try{
     const saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
@@ -103,13 +97,11 @@ function saveLevelResult(levelId,score,earnedStars=1,options={}){
     if(Array.from({length:10},(_,i)=>progress[i+1]).every(item=>(item?.stars||0)>0))unlockAchievement('tenfold_voyager');
     if(typeof evaluateSpecialAchievements==='function')evaluateSpecialAchievements(levelId);
   }
-  const upgradeReward=SG_UPGRADES.recordResult(levelId,{completed:true,challenge:typeof challengeMode!=='undefined'&&challengeMode,stars:currentStars});
   updateLevelCards();
-  return {score:currentScore,stars:currentStars,bestScore,bestStars,scoreSaved,upgradeReward};
+  return {score:currentScore,stars:currentStars,bestScore,bestStars,scoreSaved};
 }
 function updateLevelCards(){
   const progress=loadProgress();
-  SG_UPGRADES.reconcileProgress(progress);
   for(let i=1;i<=10;i++){
     const result=progress[i]||{score:0,stars:0};
     const scoreEl=document.querySelector(`[data-level-score="${i}"]`), starsEl=document.querySelector(`[data-level-stars="${i}"]`);
@@ -119,7 +111,6 @@ function updateLevelCards(){
   }
   if(typeof updateCampaignCatalog==='function')updateCampaignCatalog(progress);
   updateRewardDirection(progress);
-  if(typeof syncUpgradeBay==='function')syncUpgradeBay();
   globalThis.SpaceGameShipSkins?.sync?.();
 }
 function updateRewardDirection(progress=loadProgress()){
@@ -171,15 +162,13 @@ function calcScore(){
     maxG:(rocket.maxG/G_REF).toFixed(1)};
 }
 function resultLine(result){
-  const reward=result.upgradeReward?.earned?`<span style="color:#28794a">⬆ 首次达成奖励：+${result.upgradeReward.earned} 升级点</span><br>`:'';
   const benchmark=scoreBenchmark(result.score),rank=`<span style="color:#5b62b5;font-weight:900">${scoreBenchmarkText(benchmark)}</span>`;
   const skillText=globalThis.SpaceGameShipSkills?.resultText?.()||'',skill=skillText?`<span style="color:#5570ad">${skillText}</span><br>`:'';
-  if(result.scoreSaved===false)return `本局练习得分 <b style="font-size:24px">${result.score}</b> · ${rank} · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br><span style="color:#888">固定种子练习：本局星级正常结算，分数不计入最高分。</span><br>${skill}${reward}`;
+  if(result.scoreSaved===false)return `本局练习得分 <b style="font-size:24px">${result.score}</b> · ${rank} · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br><span style="color:#888">固定种子练习：本局星级正常结算，分数不计入最高分。</span><br>${skill}`;
   const best=(result.bestScore>result.score||result.bestStars>result.stars)?`<span style="color:#888">历史最佳 ${result.bestScore} 分 · ${starText(result.bestStars)}</span><br>`:'';
-  return `本次得分 <b style="font-size:24px">${result.score}</b> · ${rank} · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br>${best}${skill}${reward}`;
+  return `本次得分 <b style="font-size:24px">${result.score}</b> · ${rank} · <span style="color:#e3a600;font-size:21px">${starText(result.stars)}</span><br>${best}${skill}`;
 }
 function performanceDetail(){
   if(!challengeMode) return `教学模式 · 无限燃料 · 时间 ${flightT.toFixed(1)}s（教学模式最高 600 分）`;
-  const upgrades=SG_UPGRADES.effects(true);
-  return `挑战模式 · 剩余燃料 ${challengeRemainingFuel().toFixed(1)} / ${mission.fuelBudget}% · 时间 ${flightT.toFixed(1)}s · 升级：燃料消耗 -${upgrades.fuelSavingPercent}% · 着陆容错 +${upgrades.landingBonusPercent}%`;
+  return `挑战模式 · 剩余燃料 ${challengeRemainingFuel().toFixed(1)} / ${mission.fuelBudget}% · 时间 ${flightT.toFixed(1)}s`;
 }

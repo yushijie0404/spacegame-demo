@@ -647,12 +647,18 @@ function draw(){
       ctx.font=`800 ${11/cam.zoom}px "Microsoft YaHei",sans-serif`;
       ctx.fillStyle='rgba(255,138,164,.96)';
       ctx.fillText(level===9?'远方信号将无限红移':'导航电脑 · 预计碰撞概率 99.9999%',p.x,p.y-6/cam.zoom);
-    }else if(level===5&&pred.moonApproach&&pred.moonApproach.altitude<1800){
+    }else if(level===5&&!rocket.thrusting&&pred.moonApproach&&pred.moonApproach.altitude<1800){
       const p=pred.moonApproach,col=p.altitude<80?'#ef476f':p.altitude<350?'#ffd166':'#4cc9f0';
+      const moonX=p.bodyX,moonY=p.bodyY,eta=Math.max(5,Math.round(p.time/5)*5);
+      ctx.strokeStyle='rgba(159,232,255,.72)';ctx.lineWidth=1.5/cam.zoom;ctx.setLineDash([5/cam.zoom,6/cam.zoom]);
+      ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(moonX,moonY);ctx.stroke();
+      ctx.beginPath();ctx.arc(moonX,moonY,MOON.r,0,TAU);ctx.stroke();ctx.setLineDash([]);
       ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=2.5/cam.zoom; ctx.setLineDash([4/cam.zoom,5/cam.zoom]);
       ctx.beginPath(); ctx.arc(p.x,p.y,12/cam.zoom,0,TAU); ctx.stroke(); ctx.setLineDash([]);
       ctx.font=`900 ${13/cam.zoom}px "Microsoft YaHei",sans-serif`;
-      ctx.fillText(`预计近月 ${Math.max(0,p.altitude).toFixed(0)} u`,p.x,p.y-20/cam.zoom);
+      ctx.fillText('飞船',p.x,p.y-20/cam.zoom);
+      ctx.fillStyle='#9fe8ff';ctx.fillText('届时月球',moonX,moonY-MOON.r-10/cam.zoom);
+      ctx.fillStyle=col;ctx.fillText(`相遇窗口 · 约 ${eta} 秒后 · 近月 ${Math.max(0,p.altitude).toFixed(0)} u`,(p.x+moonX)/2,(p.y+moonY)/2-12/cam.zoom);
     }
     ctx.textAlign='left';
   }

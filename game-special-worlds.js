@@ -379,10 +379,51 @@ function predictThreeBodyPath(ship=rocket){
   const result=ship===rocket?getThreeBodyTimelines():simulateThreeBodyTimelines(ship),coast=result.branches.find(b=>b.id==='coast')||result.branches[1];
   return {pts:coast.pts,markers:[],horizon:result.horizon,steps:result.steps,impact:coast.impact,moonApproach:null};
 }
+function predictLunarPath(ship=rocket){
+  let px=ship.x,py=ship.y,pvx=ship.vx,pvy=ship.vy;
+  // 第五关是确定性轨道问题：用长窗口和细子步给出一条可信的停火预测，
+  // 不把数值误差伪装成第十关那种真正的三体概率区域。
+  const horizon=420,dt=.02,integrationSteps=Math.ceil(horizon/dt);
+  const coarse=lowPowerMode||W<760||(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches);
+  const renderSteps=coarse?(mobileEconomy?110:150):520,sampleEvery=Math.max(1,Math.ceil(integrationSteps/renderSteps));
+  const pts=[],markers=[];let vrPrev=null,impact=null,moonApproach=null,closestMoon=Infinity;
+  for(let i=0;i<integrationSteps;i++){
+    const time=(i+1)*dt,moonAt=moonAngle+MOON_OMEGA*time;
+    let ax=0,ay=0;
+    for(const b of BODIES){
+      const bx=b===MOON?EARTH.x+Math.cos(moonAt)*MOON_ORBIT_R:b.x;
+      const by=b===MOON?EARTH.y+Math.sin(moonAt)*MOON_ORBIT_R:b.y;
+      const dx=bx-px,dy=by-py,d2=Math.max(1,dx*dx+dy*dy),d=Math.sqrt(d2),g=b.mu/d2;
+      ax+=dx/d*g;ay+=dy/d*g;
+    }
+    pvx+=ax*dt;pvy+=ay*dt;px+=pvx*dt;py+=pvy*dt;
+    if(i%sampleEvery===0)pts.push({x:px,y:py});
+
+    const earthDx=px-EARTH.x,earthDy=py-EARTH.y,earthDistance=Math.hypot(earthDx,earthDy);
+    const vr=(pvx*earthDx+pvy*earthDy)/Math.max(1,earthDistance);
+    if(vrPrev!==null&&vrPrev!==0&&vr*vrPrev<0&&earthDistance>EARTH.r+50&&markers.length<2){
+      markers.push({x:px,y:py,apo:vr<0});
+    }
+    vrPrev=vr;
+
+    const moonX=EARTH.x+Math.cos(moonAt)*MOON_ORBIT_R,moonY=EARTH.y+Math.sin(moonAt)*MOON_ORBIT_R;
+    const moonDistance=Math.hypot(px-moonX,py-moonY);
+    if(moonDistance<closestMoon){
+      closestMoon=moonDistance;
+      moonApproach={x:px,y:py,bodyX:moonX,bodyY:moonY,time,distance:moonDistance,altitude:moonDistance-MOON.r};
+    }
+    for(const b of BODIES){
+      const bx=b===MOON?moonX:b.x,by=b===MOON?moonY:b.y;
+      if(Math.hypot(px-bx,py-by)<b.r){impact={x:px,y:py,body:b.name};return{pts,markers,horizon,steps:integrationSteps,impact,moonApproach};}
+    }
+  }
+  return {pts,markers,horizon,steps:integrationSteps,impact,moonApproach};
+}
 function predictPath(ship=rocket){
   if(level===10&&threeBody)return predictThreeBodyPath(ship);
   if(level===9&&blackHole)return predictBlackHolePath(ship);
   if(level===8&&binary)return predictBinaryPath(ship);
+  if(level===5)return predictLunarPath(ship);
   let px=ship.x, py=ship.y, pvx=ship.vx, pvy=ship.vy;
   const dx0=px-EARTH.x, dy0=py-EARTH.y, r0=Math.hypot(dx0,dy0), v20=pvx*pvx+pvy*pvy;
   const energy=v20/2-EARTH.mu/r0;
@@ -424,7 +465,7 @@ function predictPath(ship=rocket){
       const bodyDistance=Math.hypot(px-bx,py-by);
       if(b===MOON&&bodyDistance<closestMoon){
         closestMoon=bodyDistance;
-        moonApproach={x:px,y:py,bodyX:bx,bodyY:by,distance:bodyDistance,altitude:bodyDistance-b.r};
+        moonApproach={x:px,y:py,bodyX:bx,bodyY:by,time:(i+1)*dt,distance:bodyDistance,altitude:bodyDistance-b.r};
       }
       if(bodyDistance<b.r){
         impact={x:px,y:py,body:b.name};

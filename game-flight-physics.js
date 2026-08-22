@@ -115,7 +115,7 @@ function updateMountedAsteroidRocket(dt,dtReal){
   rocket.braking=false;rocket.accelerating=(keys['ArrowUp']||keys['KeyW'])&&(infiniteFuel||rocket.fuel>0);rocket.thrusting=rocket.accelerating;
   rocket.thrustPower=rocket.thrusting?1:0;
   if(rocket.thrusting){
-    const fuelRate=9*SG_UPGRADES.fuelMultiplier(challengeMode);
+    const fuelRate=9;
     const poweredDt=infiniteFuel?Math.min(dt,.02):Math.min(dt,.02,rocket.fuel/fuelRate);
     const accel=(mission.asteroidAnchored?ASTEROID_PUSH_FORCE:ASTEROID_CONTACT_FORCE)/asteroid.mass;
     const dvx=fx*accel*poweredDt,dvy=fy*accel*poweredDt;
@@ -232,7 +232,7 @@ function updateFlightPhysics(dt,dtReal,observationDt){
     rocket.thrustPower=thrustPower;
     // 推进属于玩家输入，单帧最多结算 20ms；掉帧时丢弃多余控制冲量，不在恢复后“补喷”。
     const thrustDt=Math.min(dt,.02);
-    const fuelRate=(level===9?BH_FUEL_RATE:9)*SG_UPGRADES.fuelMultiplier(challengeMode);
+    const fuelRate=level===9?BH_FUEL_RATE:9;
     const poweredDt=infiniteFuel?thrustDt:Math.min(thrustDt,rocket.fuel/Math.max(.001,fuelRate*thrustPower));
     const thrustAccel=THRUST/Math.max(1,rocket.mass||1);
     if(rocket.braking){
@@ -345,7 +345,7 @@ function updateFlightPhysics(dt,dtReal,observationDt){
     let groundVx = rocket.vx-surfaceV.vx, groundVy = rocket.vy-surfaceV.vy;
     const vRel = Math.hypot(groundVx, groundVy);
     const hullLandingMultiplier=globalThis.SpaceGameShipSkills?.landingMultiplier?.()||1;
-    const landingLimit=b.landMax*SG_UPGRADES.landingMultiplier(challengeMode)*hullLandingMultiplier;
+    const landingLimit=b.landMax*hullLandingMultiplier;
 
     // 恒星不是可着陆天体：进入光球表面立即判定烧毁，避免低速时被通用着陆逻辑“停”在太阳上。
     if((level===8||level===10)&&b.isStar&&alt<=RING_OUT){
