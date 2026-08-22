@@ -77,6 +77,9 @@
   .pause-grid #menuPerf{grid-column:1/-1;color:#17213c;background:#9fe8ff}
   .music-volume-setting{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(120px,1fr) 44px;align-items:center;gap:10px;min-height:48px;padding:9px 12px;color:#eaf1ff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:13px;font-size:12px;font-weight:850}.music-volume-setting input{width:100%;accent-color:#4cc9f0}.music-volume-setting output{color:#9fe8ff;text-align:right;font-variant-numeric:tabular-nums}
   .pause-grid #menuCampaignLog{grid-column:1/-1;color:#17213c;background:#ffd166;border-color:#fff1b2}
+  .pause-grid #menuLayoutEditor{color:#10203c;background:linear-gradient(135deg,#9fe8ff,#67e8c3);border-color:#dffcff}.pause-grid #menuLayoutReset{color:#f7e9ff;background:rgba(197,177,255,.16);border-color:rgba(217,198,255,.48)}
+  #layoutEditor{position:fixed;inset:0;z-index:29;display:none;pointer-events:none}#layoutEditor.is-visible{display:block}.layout-editor-bar{position:fixed;z-index:2;top:max(7px,env(safe-area-inset-top));left:50%;width:min(760px,calc(100vw - 14px));display:flex;align-items:center;gap:8px;padding:8px 10px;color:#eef7ff;background:rgba(5,12,35,.96);border:1px solid rgba(159,232,255,.7);border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.42);transform:translateX(-50%);pointer-events:auto}.layout-editor-copy{min-width:0;flex:1}.layout-editor-copy strong{display:block;font-size:13px}.layout-editor-copy span{display:block;overflow:hidden;color:#aebde0;font-size:10px;white-space:nowrap;text-overflow:ellipsis}.layout-editor-bar button{min-height:38px;padding:6px 11px;color:#eaf3ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.23);border-radius:10px;font-size:11px;font-weight:900;cursor:pointer}.layout-editor-bar [data-layout-reset]{color:#251944;background:#d9c6ff}.layout-editor-bar [data-layout-save]{color:#10203c;background:#67e8c3}.layout-editor-handles{position:fixed;inset:0}.layout-drag-handle{position:fixed;z-index:1;min-width:44px;min-height:38px;margin:0;padding:5px;color:#eaf9ff;background:rgba(17,72,116,.2);border:2px dashed #67dcff;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(3,12,31,.5),0 0 18px rgba(76,201,240,.22);cursor:grab;touch-action:none;pointer-events:auto}.layout-drag-handle span{position:absolute;top:4px;left:5px;max-width:calc(100% - 10px);padding:2px 6px;overflow:hidden;color:#071a34;background:#9fe8ff;border-radius:999px;font-size:9px;font-weight:950;white-space:nowrap;text-overflow:ellipsis}.layout-drag-handle i{position:absolute;right:7px;bottom:5px;color:#fff;font-style:normal;font-size:16px;letter-spacing:-3px;text-shadow:0 1px 3px #000}.layout-drag-handle.is-dragging{cursor:grabbing;background:rgba(76,201,240,.32);border-style:solid}.layout-drag-handle.is-collision{color:#fff0f4;background:rgba(239,71,111,.28);border-color:#ff7894}.layout-editing #pauseMenu{display:none!important}.layout-editing .hud,.layout-editing .tool-rail,.layout-editing .flight-controls,.layout-editing #missionAction{pointer-events:none!important;opacity:.72}.layout-editing #missionAction{display:flex!important}.layout-editing #shipSkillButton[hidden]{display:flex!important;opacity:.55}.layout-editing #orientationHint,.layout-editing #conceptCard,.layout-editing #shipSkillIntro{display:none!important}
+  @media(max-width:660px),(max-height:520px){.layout-editor-bar{top:50%;bottom:auto;width:min(430px,calc(100vw - 18px));display:grid;grid-template-columns:repeat(3,1fr);gap:6px;transform:translate(-50%,-50%)}.layout-editor-copy{grid-column:1/-1}.layout-editor-bar button{min-height:36px;padding:5px 7px}.layout-editor-copy span{white-space:normal}}
   #campaignLog,#campaignSummary{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(4,8,24,.86);backdrop-filter:blur(8px)}
   #campaignLog.is-visible,#campaignSummary.is-visible{display:flex}#campaignLog{z-index:18}#campaignSummary{z-index:19;cursor:pointer}
   .campaign-log-card,.campaign-summary-card{position:relative;width:min(760px,100%);max-height:calc(100vh - 36px);overflow:auto;padding:25px;color:#eef4ff;background:linear-gradient(145deg,#111b42,#172852);border:2px solid rgba(255,209,102,.68);border-radius:24px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
@@ -160,7 +163,7 @@
   }
   @media (max-height:520px){
     .hud{top:8px;left:8px;right:auto;max-width:max(190px,calc(100vw - 360px));padding:8px 10px}.hud .brand-mark{display:none}.hud .title{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hud .sub{display:none}.key-strip{display:none}
-    .tool-rail{top:8px;right:8px;grid-template-columns:repeat(4,50px);gap:7px;padding:8px}.icon-btn{width:50px;height:50px}
+    .tool-rail{top:8px;left:50%;right:auto;grid-template-columns:repeat(4,50px);gap:7px;padding:8px;transform:translateX(-50%)}.icon-btn{width:50px;height:50px}
     .flight-controls{left:auto;right:12px;bottom:max(12px,env(safe-area-inset-bottom));gap:24px}.flight-controls .icon-btn{width:60px;height:60px}.flight-controls .thrust{width:72px;height:82px}
     .mission-action{left:12px;right:auto;top:auto;bottom:max(12px,env(safe-area-inset-bottom));transform:none;width:104px;height:58px}
   }
@@ -182,10 +185,10 @@
     #orientationHint{bottom:calc(max(7px,env(safe-area-inset-bottom)) + 84px)}
   }
   @media (orientation:landscape) and (max-height:520px){
-    #levelSelect{align-items:stretch;overflow:hidden;padding:max(6px,env(safe-area-inset-top)) max(9px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(9px,env(safe-area-inset-left))}
-    .level-shell{height:100%;min-height:0;display:flex;flex-direction:column;margin:0 auto}.level-head{flex:0 0 auto;margin-bottom:6px}.level-kicker{display:none}.product-lockup{gap:3px 8px;margin:0}.game-title{font-size:clamp(20px,7vh,29px)}.product-subtitle{padding:2px 8px;font-size:clamp(9px,3vh,12px)}.catalog-heading-row{gap:4px 8px;margin-top:2px}.level-select-heading{font-size:clamp(12px,4vh,16px)}.game-type-line{font-size:clamp(10px,3.2vh,12px)}.save-note{display:none}
-    .level-grid{flex:1;min-height:0;gap:9px;padding:2px 3px 4px;overflow-x:auto;overflow-y:hidden;touch-action:pan-x}.level-card{height:100%;min-height:0;flex:0 0 min(42vw,270px);padding:9px 12px;border-radius:17px}.level-number{font-size:9px}.level-icon{margin:2px 0;font-size:24px}.level-card h2{margin:0 0 3px;font-size:16px}.level-card p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:11px;line-height:1.35}.level-meta{padding-top:3px}.level-stars{font-size:16px}.level-score{font-size:9px}.level-score strong{font-size:15px}.level-play{min-height:34px;margin-top:4px;border-radius:9px;font-size:12px}
-    .catalog-content{display:flex;min-height:0;flex:1;flex-direction:column}.campaign-path{order:0;display:flex;min-height:0;flex:1;flex-direction:column}.reward-direction{display:none}.free-task-section{order:2;flex:0 0 auto;margin-top:4px;padding:4px 6px}.free-task-toggle{min-height:31px;padding:4px 8px;font-size:10px}.free-task-panel{position:absolute;z-index:3;left:9px;right:9px;bottom:46px;max-height:62vh;overflow:auto;padding:7px;background:#0b173d;border:1px solid rgba(255,255,255,.18);border-radius:12px}
+    #levelSelect{align-items:stretch;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:max(6px,env(safe-area-inset-top)) max(9px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(9px,env(safe-area-inset-left))}
+    .level-shell{height:auto;min-height:100%;display:flex;flex-direction:column;margin:0 auto}.level-head{flex:0 0 auto;margin-bottom:6px}.level-kicker{display:none}.product-lockup{gap:3px 8px;margin:0}.game-title{font-size:clamp(20px,7vh,29px)}.product-subtitle{padding:2px 8px;font-size:clamp(9px,3vh,12px)}.catalog-heading-row{gap:4px 8px;margin-top:2px}.level-select-heading{font-size:clamp(12px,4vh,16px)}.game-type-line{font-size:clamp(10px,3.2vh,12px)}.save-note{display:none}
+    .level-grid{height:clamp(176px,56dvh,250px);flex:0 0 clamp(176px,56dvh,250px);min-height:0;gap:9px;padding:2px 3px 4px;overflow-x:auto;overflow-y:hidden;touch-action:pan-x}.level-card{height:100%;min-height:0;flex:0 0 min(42vw,270px);padding:9px 12px;border-radius:17px}.level-number{font-size:9px}.level-icon{margin:2px 0;font-size:24px}.level-card h2{margin:0 0 3px;font-size:16px}.level-card p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:11px;line-height:1.35}.level-meta{padding-top:3px}.level-stars{font-size:16px}.level-score{font-size:9px}.level-score strong{font-size:15px}.level-play{min-height:34px;margin-top:4px;border-radius:9px;font-size:12px}
+    .catalog-content{display:flex;min-height:0;flex:none;flex-direction:column}.campaign-path{order:0;display:flex;min-height:0;flex:none;flex-direction:column}.reward-direction{display:none}.free-task-section{order:2;flex:0 0 auto;margin-top:4px;padding:4px 6px}.free-task-toggle{min-height:31px;padding:4px 8px;font-size:10px}.free-task-panel{position:static;max-height:none;overflow:visible;margin-top:6px;padding:7px;background:#0b173d;border:1px solid rgba(255,255,255,.18);border-radius:12px}.free-task-grid.level-grid{height:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;touch-action:auto}.free-task-grid .level-card{height:auto;min-height:170px}
     .level-footer{order:1;flex:0 0 auto;flex-wrap:nowrap;justify-content:flex-start;gap:7px;margin-top:5px;padding:0 0 3px;overflow-x:auto}.level-footer button{flex:0 0 auto;min-height:36px;padding:6px 12px;font-size:11px}
     .concept-card{padding:8px 12px}.concept-card h2{margin:1px 0;font-size:17px}.concept-pause-note{font-size:9px}.concept-content{grid-template-columns:1.05fr .95fr;gap:8px;margin-top:3px}.concept-figure{padding:4px}.concept-figure svg{max-height:150px}.concept-copy p{font-size:11.5px;line-height:1.35}.concept-copy ul{margin-top:3px;font-size:9.5px;line-height:1.35}.concept-actions{margin-top:3px}.concept-actions button{min-height:32px;padding:4px 10px;font-size:11px}
   }
@@ -247,6 +250,8 @@
     <button id="menuAssist" data-menu-action="assist">模式：教学（无限燃料）</button>
     <button id="menuThreeSeed" data-menu-action="threeseed" aria-pressed="false" hidden>🌌 练习模式：固定本局宇宙种子（关闭）</button>
     <button id="menuThreeSeedCopy" data-menu-action="copyseed" hidden>📋 复制种子</button>
+    <button id="menuLayoutEditor" type="button" onclick="openHudLayoutEditor()">🧩 自定义显示布局</button>
+    <button id="menuLayoutReset" type="button" onclick="resetHudLayout()">↺ 恢复默认布局</button>
     <button id="menuPerf" data-menu-action="copyperf">📋 复制手机性能报告</button>
   </div>
   <section class="hud-info-settings" aria-labelledby="hudInfoTitle"><h3 id="hudInfoTitle">🧭 信息层级</h3><p>关闭暂时不需要的信息；危险警告仍会保留。</p><div class="hud-info-grid">
@@ -265,6 +270,7 @@
     <div class="touch-help">触屏：双指缩放、按住画面拖动视角；点击左侧姿态表或右下角地图可直接切换模式。</div>
   </section>
 </div></div>
+<div id="layoutEditor" role="dialog" aria-modal="false" aria-labelledby="layoutEditorTitle" aria-hidden="true" hidden><div class="layout-editor-bar"><div class="layout-editor-copy"><strong id="layoutEditorTitle">🧩 自定义显示布局</strong><span id="layoutEditorStatus">拖动蓝色框调整仪表和按键；模块之间会自动互斥。</span></div><button type="button" data-layout-cancel>取消</button><button type="button" data-layout-reset>恢复默认</button><button type="button" data-layout-save>保存布局</button></div><div class="layout-editor-handles" aria-label="可拖动显示区域"></div></div>
 <aside id="termHelp" class="term-help" aria-label="航天术语解释" hidden><button type="button" class="term-help-toggle" onclick="toggleTermHelpPanel()" aria-expanded="false">术语 ?</button><div class="term-help-panel"><div class="term-help-terms">
   <button type="button" data-term="apoapsis" onmouseenter="showTermHelp('apoapsis')" onfocus="showTermHelp('apoapsis')" onclick="showTermHelp('apoapsis')">远地点</button>
   <button type="button" data-term="relative" onmouseenter="showTermHelp('relative')" onfocus="showTermHelp('relative')" onclick="showTermHelp('relative')">相对速度·参照物</button>
@@ -371,6 +377,7 @@
 <script src="./game-achievements.js"></script>
 <script src="./game-i18n.js"></script>
 <script src="./game-display.js"></script>
+<script src="./game-layout.js"></script>
 <script src="./game-ship-skins.js"></script>
 <script src="./game-ship-skills.js"></script>
 <script src="./game-special-worlds.js"></script>
@@ -389,6 +396,7 @@ const SG_PERF=globalThis.SpaceGamePerformance||{sample(){},frameGap(){},snapshot
 const SG_AUDIO=globalThis.SpaceGameAudio||{unlock(){},sfx(){},setEngine(){},setTurn(){},setEnabled(){return false;},setSfxVolume(){return 0;},toggle(){return false;},stopAll(){},preloadTrack(){return Promise.resolve(false);},preloadLevel(){return Promise.resolve(false);},preloadMenu(){return Promise.resolve(false);},status(){return {enabled:false,volume:0,supported:false,ready:false,music:{enabled:false,volume:0,supported:false}};},isEnabled(){return false;},playBgm(){},playLevel(){},playMenu(){},playReading(){},setIntensity(){},setMusicDuck(){},clearMusicDuck(){},setMusicEnabled(){return false;},toggleMusic(){return false;},setMusicVolume(){return 0;},musicStatus(){return {enabled:false,volume:0,supported:false,state:'unsupported'};}};
 const SG_ORBIT=globalThis.SpaceGameOrbit;
 const SG_DISPLAY=globalThis.SpaceGameDisplay||{install(){return {mode:'auto',label:'自动旋转'};},cycle(){return {mode:'auto',label:'自动旋转'};},status(){return {mode:'auto',label:'自动旋转'};}};
+const SG_LAYOUT=globalThis.SpaceGameLayout||{install(){},open(){return false;},save(){return false;},cancel(){return false;},resetAll(){return false;},placeCanvas(_id,rect){return {...rect,dx:0,dy:0};},isEditing(){return false;},status(){return {active:false};}};
 const SG_I18N=globalThis.SpaceGameI18n||{t:value=>value,cycle(){return{locale:'zh',label:'中文',button:'🌐 中文'};},status(){return{locale:'zh',label:'中文',button:'🌐 中文'};},refresh(){}};
 const SG_INPUT=globalThis.SpaceGameInput||{install(){},clear(){},resetCameraGestures(){},isInstalled(){return false;}};
 const SG_SKILLS=globalThis.SpaceGameShipSkills||{beginMission(){},snapshot(){return null;},restore(){},use(){return{ok:false};},update(){},sync(){},resultText(){return'';}};
@@ -1246,6 +1254,8 @@ function toggleAssist(){
   setChallengeMode(!challengeMode);
 }
 function togglePause(){ paused=!paused; SG_INPUT.clear(); syncUI(); }
+function openHudLayoutEditor(){paused=true;SG_INPUT.clear();SG_LAYOUT.open();syncUI();}
+function resetHudLayout(){SG_LAYOUT.resetAll();if(mission){mission.toast='显示布局已恢复默认';mission.toastT=2;}syncUI();}
 function performanceReport(){
   const p=SG_PERF.snapshot(),fmt=item=>`${item.average.toFixed(1)}/${item.peak.toFixed(1)}ms`;
   return [

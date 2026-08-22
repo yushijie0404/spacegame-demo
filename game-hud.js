@@ -71,7 +71,9 @@ function drawObjectiveScreenCue(){
 function radarLayout(){
   const landscape=H<=520,portrait=W<760&&!landscape,shortPortrait=portrait&&H<720;
   const ultraShort=landscape&&H<360,RS=landscape?(ultraShort?70:82):portrait?(shortPortrait?92:116):130;
-  const cx=landscape?W-RS-14:(portrait&&shortPortrait&&telemetryExpanded?12:W-RS-(portrait?12:14)),cy=landscape?(ultraShort?Math.max(98,(H-RS)/2):Math.max(156,(H-RS)/2)):portrait?Math.max(176,H-220-RS-12):H-RS-14;
+  const baseCx=landscape?W-RS-14:(portrait&&shortPortrait&&telemetryExpanded?12:W-RS-(portrait?12:14)),baseCy=landscape?(ultraShort?Math.max(98,(H-RS)/2):Math.max(156,(H-RS)/2)):portrait?Math.max(176,H-220-RS-12):H-RS-14;
+  const placed=global.SpaceGameLayout?.placeCanvas?.('radar',{x:baseCx-8,y:baseCy-8,w:RS+16,h:RS+16})||{x:baseCx-8,y:baseCy-8};
+  const cx=placed.x+8,cy=placed.y+8;
   return {landscape,portrait,shortPortrait,RS,cx,cy};
 }
 function drawBinaryRadar(){
@@ -306,8 +308,10 @@ function drawThreeBodyExamChecklist(){
   if(level!==10||!mission||mission.done){threeBodyExamHitBox=null;return;}
   const exam=threeBodyExamState(),compact=W<760,landscape=H<=520;
   const width=landscape?Math.min(380,Math.max(250,W-430)):compact?Math.max(280,W-24):420;
-  const height=threeBodyExamExpanded?(compact?134:146):38,x=(W-width)/2;
-  const y=landscape?8:compact?(threeBodyExamExpanded?Math.min(310,Math.max(286,H-height-220)):207):14;
+  const height=threeBodyExamExpanded?(compact?134:146):38,baseX=(W-width)/2;
+  const baseY=landscape?8:compact?(threeBodyExamExpanded?Math.min(310,Math.max(286,H-height-220)):207):14;
+  const placed=global.SpaceGameLayout?.placeCanvas?.('exam',{x:baseX,y:baseY,w:width,h:height})||{x:baseX,y:baseY};
+  const x=placed.x,y=placed.y;
   threeBodyExamHitBox={x,y,w:width,h:height};
   ctx.save();ctx.fillStyle='rgba(9,15,39,.88)';roundRect(x,y,width,height,13);ctx.fill();
   ctx.strokeStyle='rgba(197,177,255,.78)';ctx.lineWidth=1.5;roundRect(x,y,width,height,13);ctx.stroke();
@@ -424,8 +428,10 @@ function drawHUDOverlay(worldDrawStarted){
   const landscapeHUD=H<=520,ultraShortHUD=landscapeHUD&&H<360,teleCompact=W<760||landscapeHUD,mobileTele=W<760&&!landscapeHUD,teleDetailed=(!mobileTele||telemetryExpanded)&&!ultraShortHUD;
   const teleX=teleCompact?W-190:W-222, teleY=landscapeHUD?8:teleCompact?278:14, teleW=teleCompact?174:206;
   const teleH=teleDetailed?((level===9||level===10)?166:level===8?146:(level===5||level===7)?126:level===1?86:(level===3||level===4||level===6)?106:66):dominantGravity?106:86;
+  const telePlacement=global.SpaceGameLayout?.placeCanvas?.('telemetry',{x:teleX,y:teleY,w:teleW,h:teleH})||{x:teleX,y:teleY},teleDX=telePlacement.x-teleX,teleDY=telePlacement.y-teleY;
+  ctx.save();ctx.translate(teleDX,teleDY);
   if(hudInfo.telemetry){
-  telemetryHitBox=mobileTele?{x:teleX-5,y:teleY-5,w:teleW+10,h:teleH+10}:null;
+  telemetryHitBox=mobileTele?{x:teleX+teleDX-5,y:teleY+teleDY-5,w:teleW+10,h:teleH+10}:null;
   ctx.fillStyle='rgba(8,14,38,.68)'; roundRect(teleX,teleY,teleW,teleH,14); ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1; roundRect(teleX,teleY,teleW,teleH,14); ctx.stroke();
   ctx.textAlign='right';
@@ -533,11 +539,14 @@ function drawHUDOverlay(worldDrawStarted){
   ctx.fillStyle='#fff';
   ctx.textAlign='left';
   }else telemetryHitBox=null;
+  ctx.restore();
 
   // 姿态指示器（左上）：三种显示模式（V 切换）
   // dialMode: 0=世界固定（机头随 rocket.a 转） 1=速度向上（表盘转到速度朝上） 2=机头向上（表盘转到机头朝上）
   const attCompact=W<760||H<520, attX=attCompact?62:90, attY=attCompact?(H<360?132:156):160, attR=attCompact?44:54;
-  attitudeHitBox={x:attX-attR-8,y:attY-attR-8,w:(attR+8)*2,h:(attR+8)*2+22};
+  const attBase={x:attX-attR-8,y:attY-attR-8,w:(attR+8)*2,h:(attR+8)*2+22},attPlacement=global.SpaceGameLayout?.placeCanvas?.('attitude',attBase)||attBase,attDX=attPlacement.x-attBase.x,attDY=attPlacement.y-attBase.y;
+  attitudeHitBox={x:attBase.x+attDX,y:attBase.y+attDY,w:attBase.w,h:attBase.h};
+  ctx.save();ctx.translate(attDX,attDY);
   const attitudeV=attitudeVelocity(), speed2=Math.hypot(attitudeV.vx,attitudeV.vy);
   const vAng=Math.atan2(attitudeV.vy,attitudeV.vx);
   // 表盘旋转角（让参考对象转到"向上"，即屏幕 -y）
@@ -579,6 +588,7 @@ function drawHUDOverlay(worldDrawStarted){
   const offsetDeg=Math.round(velOffset*180/Math.PI), offsetText=(offsetDeg>=0?'+':'')+offsetDeg+'°';
   ctx.fillText(dialNames[dialMode]+' · 点击切换', attX, attY+attR+16);
   ctx.textAlign='left';
+  ctx.restore();
   drawRadar();
   drawThreeBodyExamChecklist();
 
